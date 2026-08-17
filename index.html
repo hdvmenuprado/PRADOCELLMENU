@@ -4399,7 +4399,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             return categoriasCache;
         }
 
-        async function epCadastrarCategoria(){
+        window.epCadastrarCategoria = async function(){
             const input = document.getElementById('epCategoriaInput');
             const nome = input.value.trim();
             if (!nome){ epMostrarToast('Digite o nome da categoria.', true); return; }
@@ -4453,7 +4453,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             return modelosCache;
         }
 
-        async function epCadastrarModelo(){
+        window.epCadastrarModelo = async function(){
             const input = document.getElementById('epModeloInput');
             const nome = input.value.trim();
             if (!nome){ epMostrarToast('Digite o nome do modelo.', true); return; }
