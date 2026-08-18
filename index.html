@@ -1582,6 +1582,28 @@ body.modo-claro .main-content {
             align-items: stretch;
         }
 
+        /* --- LAUDO TÉCNICO: TELA CHEIA --- */
+        body:has(#menu-laudotecnico:not(.hidden)) .main-content {
+            padding: 0 !important;
+            align-items: stretch !important;
+        }
+        body:has(#menu-laudotecnico:not(.hidden)) .workspace-card {
+            max-width: 100% !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            overflow-y: auto;
+        }
+        #menu-laudotecnico:not(.hidden) {
+            display: flex !important;
+            width: 100%;
+            align-items: stretch;
+        }
+
         /* --- PERDAS EM GARANTIA: TELA CHEIA --- */
         body:has(#menu-perdasgarantia:not(.hidden)) .main-content {
             padding: 0 !important;
@@ -1807,7 +1829,7 @@ body.modo-claro .main-content {
             <button class="nav-btn" id="tab-dashboard" data-perfis="gestao" onclick="mudarAba('dashboard', this)"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></button>
             <button class="nav-btn" id="tab-perdasgarantia" data-perfis="gestao" onclick="mudarAba('perdasgarantia', this)"><span class="nav-icon">📉</span><span class="nav-label">Perdas em Garantia</span></button>
             <button class="nav-btn" id="tab-admin" data-perfis="gestao" onclick="mudarAba('admin', this)"><span class="nav-icon">⚙️</span><span class="nav-label">Admin</span></button>
-            <button class="nav-btn" id="tab-diagnostico" data-perfis="gestao" onclick="mudarAba('diagnostico', this)"><span class="nav-icon">📡</span><span class="nav-label">Diagnóstico</span></button>
+            <button class="nav-btn" id="tab-laudotecnico" data-perfis="gestao" onclick="mudarAba('laudotecnico', this)"><span class="nav-icon">📋</span><span class="nav-label">Laudo Técnico</span></button>
             <button class="nav-btn" id="tab-avisos" data-perfis="gestao" onclick="mudarAba('avisos', this)"><span class="nav-icon">📢</span><span class="nav-label">Avisos</span></button>
         </nav>
 
@@ -2268,6 +2290,63 @@ body.modo-claro .main-content {
                 </div>
             </div>
 
+
+            <div id="menu-laudotecnico" class="modulo-aba hidden">
+                <div class="ep-wrap">
+                    <div class="ep-header">
+                        <span class="ep-icon">📋</span>
+                        <h1>Laudo Técnico</h1>
+                        <span class="ep-tag">papel timbrado</span>
+                    </div>
+
+                    <div class="ep-panel">
+                        <div class="ep-panel-title">Dados do atendimento</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+                            <div class="ep-field">
+                                <label>Cliente</label>
+                                <input type="text" id="ltCliente" placeholder="Nome do cliente">
+                            </div>
+                            <div class="ep-field">
+                                <label>Aparelho / Modelo</label>
+                                <input type="text" id="ltAparelho" placeholder="Ex: iPhone 13 Pro Max">
+                            </div>
+                            <div class="ep-field">
+                                <label>IMEI / Nº de série</label>
+                                <input type="text" id="ltImei" placeholder="Opcional">
+                            </div>
+                            <div class="ep-field">
+                                <label>Data</label>
+                                <input type="date" id="ltData">
+                            </div>
+                            <div class="ep-field">
+                                <label>Técnico responsável</label>
+                                <input type="text" id="ltTecnico" placeholder="Quem fez o laudo">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ep-panel">
+                        <div class="ep-panel-title">Diagnóstico técnico</div>
+                        <textarea id="ltDiagnostico" rows="6" placeholder="Descreva o problema encontrado, os testes realizados e o diagnóstico técnico..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+
+                    <div class="ep-panel">
+                        <div class="ep-panel-title">Observações / Conclusão</div>
+                        <textarea id="ltObservacoes" rows="4" placeholder="Recomendações, conclusão do laudo, observações finais..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+
+                    <div class="ep-panel">
+                        <div class="ep-panel-title">Fotos (opcional)</div>
+                        <input type="file" id="ltFotosInput" accept="image/*" multiple onchange="ltAdicionarFotos(this.files)" style="margin-bottom:10px;color:var(--text-main);font-size:12px;">
+                        <div id="ltFotosPreview" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+                    </div>
+
+                    <div style="max-width:1300px;display:flex;gap:10px;">
+                        <button class="ep-btn" style="font-size:14px;padding:12px 22px;" onclick="ltGerarPDF()">🖨 Gerar PDF do Laudo</button>
+                        <button class="ep-btn" style="background:transparent;border:1px solid var(--border-color);color:var(--text-muted);" onclick="ltLimpar()">Limpar formulário</button>
+                    </div>
+                </div>
+            </div>
 
             <div id="menu-perdasgarantia" class="modulo-aba hidden">
                 <div class="ep-wrap">
@@ -3027,51 +3106,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 </div>
             </div>
 
-            <div id="menu-diagnostico" class="modulo-aba hidden">
-                <h2>📡 Diagnóstico de Backend</h2>
-                <p style="color: var(--text-muted); font-size: 13px; margin-top: -20px; margin-bottom: 25px;">Tempo de resposta de cada API (Google Apps Script) usada pelo sistema. Atualiza automaticamente a cada chamada feita durante a navegação.</p>
-
-                <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-                    <button class="action-btn secondary-btn" style="margin-top:0;" onclick="diagLimpar()">🧹 Limpar histórico</button>
-                    <span style="font-size:12px; color:var(--text-muted); align-self:center;">Mostra as últimas chamadas desde que a página foi aberta.</span>
-                </div>
-
-                <div class="result-box" style="padding:0; overflow:hidden;">
-                    <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
-                        <thead>
-                            <tr>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);text-align:left;">API</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);text-align:right;">Última resp.</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);text-align:right;">Média</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);text-align:right;">Máx.</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);text-align:right;">Chamadas</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);text-align:center;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="diagTabelaResumo">
-                            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Nenhuma chamada de backend registrada ainda nesta sessão.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3 style="margin-top:26px;font-size:14px;">Últimas chamadas (mais recente primeiro)</h3>
-                <div class="result-box" style="padding:0; overflow:hidden; max-height:320px; overflow-y:auto;">
-                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                        <thead style="position:sticky; top:0;">
-                            <tr>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:10.5px;padding:7px 10px;border-bottom:1px solid var(--border-color);text-align:left;">Hora</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:10.5px;padding:7px 10px;border-bottom:1px solid var(--border-color);text-align:left;">API</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:10.5px;padding:7px 10px;border-bottom:1px solid var(--border-color);text-align:right;">Duração</th>
-                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:10.5px;padding:7px 10px;border-bottom:1px solid var(--border-color);text-align:center;">Resultado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="diagTabelaHistorico">
-                            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">-</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <div id="menu-avisos" class="modulo-aba hidden">
                 <h2>📢 Avisos</h2>
                 <p style="color: var(--text-muted); font-size: 13px; margin-top: -20px; margin-bottom: 25px;">Avisos criados aqui aparecem como notificação no sino 🔔 dos perfis escolhidos. A pessoa vê o texto quando abre o sino.</p>
@@ -3416,6 +3450,63 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             </div>
         </div>
 
+    </div>
+
+    <!-- LAUDO TÉCNICO: papel timbrado -->
+    <div id="pdf-laudo-template" style="width: 175mm; min-height: 255mm; padding: 16mm 14mm; background: #ffffff !important; color: #1a1a1a !important; font-family: Georgia, 'Times New Roman', serif !important; font-size: 10.5pt !important; line-height: 1.6 !important;">
+
+        <!-- CABEÇALHO: o único lugar com identidade visual mais forte (linhas empilhadas,
+             não lado a lado, pra nunca disputar espaço e cortar texto) -->
+        <div style="padding-bottom: 14px; border-bottom: 3px solid #e67e22; margin-bottom: 22px;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom: 10px;">
+                <img id="pdfLaudoLogo" src="" style="max-height:50px; max-width:95px; display:none; object-fit:contain;">
+                <div>
+                    <div id="pdfLaudoNomeEmpresa" style="font-family: Arial, sans-serif !important; font-size: 19px; font-weight: 700; color: #1a1a1a !important; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1.2;">PRADO CELULARES</div>
+                    <div id="pdfLaudoEnderecoEmpresa" style="font-family: Arial, sans-serif !important; font-size: 9px; color: #555555 !important; margin-top: 4px; letter-spacing: 0.2px;">Foz do Iguaçu - PR | Av. Brasil, 115</div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <span style="font-family: Arial, sans-serif !important; font-size: 13px; font-weight: 700; color: #1a1a1a !important; text-transform: uppercase; letter-spacing: 1.5px;">Laudo Técnico</span>
+                <span style="font-family: Arial, sans-serif !important; font-size: 9px; color: #777777 !important; margin-left: 10px;">Data: <span id="pdfLaudoData">-</span></span>
+            </div>
+        </div>
+
+        <!-- DADOS DO ATENDIMENTO: texto simples, sem caixas -->
+        <table style="width: 100%; border-collapse: collapse; font-size: 10pt; color: #1a1a1a !important; margin-bottom: 20px;">
+            <tbody>
+                <tr>
+                    <td style="padding: 2px 0; width: 55%;"><span style="font-weight: bold;">Cliente:</span> <span id="pdfLaudoCliente">-</span></td>
+                    <td style="padding: 2px 0; width: 45%;"><span style="font-weight: bold;">Técnico responsável:</span> <span id="pdfLaudoTecnico">-</span></td>
+                </tr>
+                <tr>
+                    <td style="padding: 2px 0;"><span style="font-weight: bold;">Aparelho:</span> <span id="pdfLaudoAparelho">-</span></td>
+                    <td style="padding: 2px 0;"><span style="font-weight: bold;">IMEI/Série:</span> <span id="pdfLaudoImei">-</span></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="border-bottom: 1px solid #cccccc; margin-bottom: 20px;"></div>
+
+        <!-- DIAGNÓSTICO -->
+        <div style="margin-bottom: 20px;">
+            <div style="font-family: Arial, sans-serif !important; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a !important; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #1a1a1a;">Diagnóstico Técnico</div>
+            <div style="white-space: pre-wrap; color: #1a1a1a !important; text-align: justify;" id="pdfLaudoDiagnostico">-</div>
+        </div>
+
+        <!-- OBSERVAÇÕES -->
+        <div id="pdfLaudoBlocoObs" style="margin-bottom: 20px;">
+            <div style="font-family: Arial, sans-serif !important; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a !important; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #1a1a1a;">Observações / Conclusão</div>
+            <div style="white-space: pre-wrap; color: #1a1a1a !important; text-align: justify;" id="pdfLaudoObservacoes">-</div>
+        </div>
+
+        <!-- FOTOS -->
+        <div id="pdfLaudoBlocoFotos" style="margin-bottom: 20px;">
+            <div style="font-family: Arial, sans-serif !important; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a !important; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #1a1a1a;">Registro Fotográfico</div>
+            <div id="pdfLaudoFotosGrid" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        </div>
+
+        <div style="margin-top: 26px; text-align: center;">
+            <span style="font-family: Arial, sans-serif !important; font-size: 7.5px; color: #999999 !important; letter-spacing: 0.4px;">Documento gerado eletronicamente</span>
+        </div>
     </div>
 
 </div>
@@ -4314,7 +4405,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (idAba === 'dashboard') dashboardCarregar();
         if (idAba === 'perdasgarantia') pgIniciar();
         if (idAba === 'admin') { carregarDadosAdminAvaliacao(); setTimeout(atualizarPreviewPDF, 100); svaIniciar(); }
-        if (idAba === 'diagnostico') diagAtualizarPainel();
+        if (idAba === 'laudotecnico') ltIniciar();
         if (idAba === 'avisos') avisosCarregar();
         if (idAba === 'pecas') svIniciarConsulta();
         if (idAba === 'estoquepecas') estoquePecasCarregar();
@@ -5484,6 +5575,94 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         html2pdf().set({margin:[10,12,10,12], filename:"Orcamento_"+cliente.replace(/\s+/g,'_')+".pdf", image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2.5,logging:false,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById("pdf-orcamento-template")).save();
     }
 
+    // ==========================================
+    // LAUDO TÉCNICO (papel timbrado, só Gestão)
+    // ==========================================
+    let ltFotos = []; // [{base64}]
+
+    function ltIniciar() {
+        const campoData = document.getElementById('ltData');
+        if (campoData && !campoData.value) campoData.valueAsDate = new Date();
+    }
+
+    function ltAdicionarFotos(files) {
+        Array.from(files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                ltFotos.push(e.target.result);
+                ltRenderizarPreview();
+            };
+            reader.readAsDataURL(file);
+        });
+        document.getElementById('ltFotosInput').value = ''; // permite selecionar o mesmo arquivo de novo depois
+    }
+
+    function ltRenderizarPreview() {
+        const wrap = document.getElementById('ltFotosPreview');
+        wrap.innerHTML = ltFotos.map((foto, i) => `
+            <div style="position:relative;width:80px;height:80px;">
+                <img src="${foto}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid var(--border-color);">
+                <button onclick="ltRemoverFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:#f87171;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;">✕</button>
+            </div>
+        `).join('');
+    }
+
+    function ltRemoverFoto(i) {
+        ltFotos.splice(i, 1);
+        ltRenderizarPreview();
+    }
+
+    function ltLimpar() {
+        document.getElementById('ltCliente').value = '';
+        document.getElementById('ltAparelho').value = '';
+        document.getElementById('ltImei').value = '';
+        document.getElementById('ltTecnico').value = '';
+        document.getElementById('ltDiagnostico').value = '';
+        document.getElementById('ltObservacoes').value = '';
+        document.getElementById('ltData').valueAsDate = new Date();
+        ltFotos = [];
+        ltRenderizarPreview();
+    }
+
+    function ltGerarPDF() {
+        const cliente = document.getElementById('ltCliente').value.trim();
+        const diagnostico = document.getElementById('ltDiagnostico').value.trim();
+        if (!cliente) { alert('Preencha o nome do cliente.'); return; }
+        if (!diagnostico) { alert('Preencha o diagnóstico técnico.'); return; }
+
+        const dataInput = document.getElementById('ltData').value;
+        const dataFormatada = dataInput ? new Date(dataInput + 'T00:00:00').toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
+
+        document.getElementById('pdfLaudoCliente').innerText = cliente;
+        document.getElementById('pdfLaudoData').innerText = dataFormatada;
+        document.getElementById('pdfLaudoAparelho').innerText = document.getElementById('ltAparelho').value.trim() || '-';
+        document.getElementById('pdfLaudoImei').innerText = document.getElementById('ltImei').value.trim() || '-';
+        document.getElementById('pdfLaudoTecnico').innerText = document.getElementById('ltTecnico').value.trim() || '-';
+        document.getElementById('pdfLaudoDiagnostico').innerText = diagnostico;
+
+        const obs = document.getElementById('ltObservacoes').value.trim();
+        document.getElementById('pdfLaudoBlocoObs').style.display = obs ? '' : 'none';
+        document.getElementById('pdfLaudoObservacoes').innerText = obs;
+
+        const blocoFotos = document.getElementById('pdfLaudoBlocoFotos');
+        const gridFotos = document.getElementById('pdfLaudoFotosGrid');
+        if (ltFotos.length) {
+            blocoFotos.style.display = '';
+            gridFotos.innerHTML = ltFotos.map(f => `<img src="${f}" style="width:80mm;max-height:60mm;object-fit:cover;border:1px solid #d4af37;border-radius:4px;">`).join('');
+        } else {
+            blocoFotos.style.display = 'none';
+        }
+
+        html2pdf().set({
+            margin: [10,12,10,12],
+            filename: "Laudo_Tecnico_" + cliente.replace(/\s+/g,'_') + ".pdf",
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2.5, logging: false, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(document.getElementById("pdf-laudo-template")).save();
+    }
+
     function gerarPDFGarantia() {
         const cliente = document.getElementById("crmNome").value.trim();
         const dias = parseInt(document.getElementById("crmDiasGarantia").value) || 90;
@@ -5764,6 +5943,13 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const blocoEl = g('pdfGarBloco'+n);
             if(blocoEl) blocoEl.style.display = cl.texto.trim() ? '' : 'none';
         });
+
+        // Cabeçalho do Laudo Técnico (reaproveita nome/endereço/logo da mesma configuração)
+        const ltNome = g('pdfLaudoNomeEmpresa'); if(ltNome) ltNome.innerText = c.nome;
+        const ltEnd = g('pdfLaudoEnderecoEmpresa'); if(ltEnd) { ltEnd.innerText = c.endereco + (c.mostrarTelefone && c.telefone ? ' | ' + c.telefone : ''); ltEnd.style.display = c.mostrarEndereco ? '' : 'none'; }
+        const ltLogo = g('pdfLaudoLogo');
+        if (ltLogo && c.cupom && c.cupom.logoBase64) { ltLogo.src = c.cupom.logoBase64; ltLogo.style.display = ''; }
+        else if (ltLogo) { ltLogo.style.display = 'none'; }
     }
 
     async function carregarConfigPDF() {
