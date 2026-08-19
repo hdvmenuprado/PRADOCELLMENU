@@ -476,6 +476,55 @@
         }
 
         /* ==========================================
+           TELA DE BOAS-VINDAS (splash depois de escolher o perfil)
+           ========================================== */
+        .tela-boas-vindas {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: var(--bg-base);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.65s ease;
+        }
+        .tela-boas-vindas.ativa { display: flex; }
+        .tela-boas-vindas.visivel { opacity: 1; }
+
+        .bv-spinner { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .bv-spinner-anel {
+            width: 54px; height: 54px;
+            border: 3px solid rgba(212, 175, 55, 0.15);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: bvGirar 0.85s linear infinite;
+        }
+        @keyframes bvGirar { to { transform: rotate(360deg); } }
+        .bv-spinner-texto {
+            color: var(--text-muted);
+            font-size: 12px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .bv-frase {
+            display: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(28px, 5vw, 44px);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .bv-frase.mostrar { opacity: 1; transform: translateY(0); }
+        .bv-frase .bv-dourado { color: var(--primary); }
+        .bv-frase .bv-branco { color: var(--text-main); }
+
+
            ABA ESTOQUE DE PEÇAS: app embutido diretamente na página
            (isolado por seletor #estoquePecasApp, sem iframe)
         ========================================== */
@@ -1798,16 +1847,24 @@ body.modo-claro .main-content {
         <p class="selecao-perfil-subtitulo">Selecione como você vai usar o sistema</p>
 
         <div class="selecao-perfil-opcoes">
-            <button class="selecao-perfil-btn" onclick="selecionarPerfil('loja_norte')">
+            <button class="selecao-perfil-btn" onclick="entrarComoLoja('loja_norte')">
                 <span class="selecao-perfil-nome">Loja Norte</span>
             </button>
-            <button class="selecao-perfil-btn" onclick="selecionarPerfil('loja_sul')">
+            <button class="selecao-perfil-btn" onclick="entrarComoLoja('loja_sul')">
                 <span class="selecao-perfil-nome">Loja Sul</span>
             </button>
         </div>
 
         <button class="selecao-perfil-admin-btn" onclick="solicitarSenhaGestao()" title="Acesso completo, todas as lojas">Gestão</button>
     </div>
+</div>
+
+<div id="telaBoasVindas" class="tela-boas-vindas">
+    <div class="bv-spinner" id="bvSpinner">
+        <div class="bv-spinner-anel"></div>
+        <div class="bv-spinner-texto">Carregando...</div>
+    </div>
+    <div class="bv-frase" id="bvFrase"></div>
 </div>
 
 <div class="app-layout">
@@ -2467,7 +2524,44 @@ body.modo-claro .main-content {
             <div id="menu-admin" class="modulo-aba fade-in hidden">
                 <h2>Console de Administração</h2>
 
-                <div class="admin-section" style="border-color: var(--primary);">
+                <div class="admin-section" style="border-color: #e67e22;">
+                    <h3 class="sub-title" style="color: #e67e22;">🔒 Segurança de Acesso</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">Escolha se cada painel (Loja Norte / Loja Sul) pede senha antes de entrar, e defina qual é a senha. A senha da Gestão você também pode trocar aqui.</p>
+
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+                        <div class="ep-panel" style="margin-bottom:0;">
+                            <div class="ep-panel-title">🏪 Loja Norte</div>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-main);margin-bottom:10px;cursor:pointer;">
+                                <input type="checkbox" id="segLojaNorteAtiva"> Exigir senha pra entrar
+                            </label>
+                            <div class="ep-field">
+                                <label>Senha</label>
+                                <input type="text" id="segLojaNorteSenha" placeholder="Defina a senha">
+                            </div>
+                        </div>
+                        <div class="ep-panel" style="margin-bottom:0;">
+                            <div class="ep-panel-title">🏬 Loja Sul</div>
+                            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-main);margin-bottom:10px;cursor:pointer;">
+                                <input type="checkbox" id="segLojaSulAtiva"> Exigir senha pra entrar
+                            </label>
+                            <div class="ep-field">
+                                <label>Senha</label>
+                                <input type="text" id="segLojaSulSenha" placeholder="Defina a senha">
+                            </div>
+                        </div>
+                        <div class="ep-panel" style="margin-bottom:0;">
+                            <div class="ep-panel-title">⚙️ Gestão</div>
+                            <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Sempre pede senha (não dá pra desativar).</p>
+                            <div class="ep-field">
+                                <label>Senha</label>
+                                <input type="text" id="segGestaoSenha" placeholder="0000">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="ep-btn" style="margin-top:16px;" onclick="salvarConfigSeguranca()">💾 Salvar Segurança</button>
+                </div>
+
+                <div class="admin-section" style="border-color: var(--primary); margin-top: 30px;">
                     <h3 class="sub-title" style="color: var(--primary);">🔍 Valores de Serviços (Tipo → Marca → Modelo → Serviço)</h3>
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">Cadastre e edite tudo que aparece na aba de Valores de Serviços — clique numa marca ou modelo pra entrar nele.</p>
 
@@ -4322,6 +4416,49 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     const PERFIL_ABA_INICIAL = { loja_norte: 'inicio', loja_sul: 'inicio', gestao: 'dashboard' };
     const PERFIL_NOME_LABEL = { loja_norte: '🏪 Loja Norte', loja_sul: '🏬 Loja Sul', gestao: '⚙️ Gestão' };
 
+    // ==========================================
+    // SPLASH DE BOAS-VINDAS (depois de escolher o perfil)
+    // ==========================================
+    const BV_FRASES = [
+        ['Boas', 'Vendas'],
+        ['Bom', 'Trabalho'],
+        ['Ótimo', 'Dia'],
+        ['Foco', 'Total'],
+        ['Vamos', 'Com Tudo'],
+        ['Sucesso', 'Hoje'],
+        ['Boa', 'Energia'],
+        ['Rumo ao', 'Topo'],
+        ['Excelente', 'Atendimento'],
+        ['Metas', 'Batidas'],
+    ];
+
+    function bvMostrar() {
+        const overlay = document.getElementById('telaBoasVindas');
+        const spinner = document.getElementById('bvSpinner');
+        const frase = document.getElementById('bvFrase');
+        if (!overlay || !spinner || !frase) return;
+
+        spinner.style.display = 'flex';
+        frase.style.display = 'none';
+        frase.classList.remove('mostrar');
+        overlay.classList.add('ativa');
+        requestAnimationFrame(() => overlay.classList.add('visivel'));
+
+        setTimeout(() => {
+            // Troca o girador pela frase
+            spinner.style.display = 'none';
+            const [p1, p2] = BV_FRASES[Math.floor(Math.random() * BV_FRASES.length)];
+            frase.innerHTML = `<span class="bv-dourado">${p1}</span> <span class="bv-branco">${p2}</span>`;
+            frase.style.display = 'block';
+            requestAnimationFrame(() => frase.classList.add('mostrar'));
+
+            setTimeout(() => {
+                overlay.classList.remove('visivel');
+                setTimeout(() => { overlay.classList.remove('ativa'); }, 700); // bate com a duração do fade
+            }, 1500);
+        }, 1300);
+    }
+
     async function selecionarPerfil(perfil) {
         PERFIL_ATUAL = perfil;
 
@@ -4351,6 +4488,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
         const overlay = document.getElementById('telaSelecaoPerfil');
         if (overlay) overlay.style.display = 'none';
+
+        bvMostrar(); // splash de boas-vindas por cima, enquanto os dados carregam por trás
 
         precarregarDadosPerfil(perfil);
         mudarAba(PERFIL_ABA_INICIAL[perfil] || 'inicio');
@@ -4404,7 +4543,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (idAba === 'sorteio') { sorteioCarregarConfig(); sorteioCarregarClientes(); }
         if (idAba === 'dashboard') dashboardCarregar();
         if (idAba === 'perdasgarantia') pgIniciar();
-        if (idAba === 'admin') { carregarDadosAdminAvaliacao(); setTimeout(atualizarPreviewPDF, 100); svaIniciar(); }
+        if (idAba === 'admin') { carregarDadosAdminAvaliacao(); setTimeout(atualizarPreviewPDF, 100); svaIniciar(); carregarConfigSeguranca(); }
         if (idAba === 'laudotecnico') ltIniciar();
         if (idAba === 'avisos') avisosCarregar();
         if (idAba === 'pecas') svIniciarConsulta();
@@ -5277,6 +5416,69 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // ==========================================
     let _btnAdmin = null;
 
+    // ==========================================
+    // SEGURANÇA DE ACESSO (senha por painel — Loja Norte/Sul opcional, Gestão sempre)
+    // ==========================================
+    let CONFIG_SEGURANCA = { lojaNorte: { ativo: false, senha: '' }, lojaSul: { ativo: false, senha: '' }, gestao: { senha: '0000' } };
+
+    async function carregarConfigSeguranca() {
+        try {
+            const { data, error } = await supabaseDB.from('config_seguranca').select('dados').eq('chave', 'padrao').single();
+            if (!error && data && data.dados && Object.keys(data.dados).length) {
+                CONFIG_SEGURANCA = Object.assign(
+                    { lojaNorte: { ativo: false, senha: '' }, lojaSul: { ativo: false, senha: '' }, gestao: { senha: '0000' } },
+                    data.dados
+                );
+            }
+        } catch (e) { console.error('Erro ao carregar config de segurança:', e); }
+        // Reflete no formulário do Admin, se ele já estiver na tela
+        const chkNorte = document.getElementById('segLojaNorteAtiva');
+        if (chkNorte) {
+            chkNorte.checked = !!CONFIG_SEGURANCA.lojaNorte.ativo;
+            document.getElementById('segLojaNorteSenha').value = CONFIG_SEGURANCA.lojaNorte.senha || '';
+            document.getElementById('segLojaSulAtiva').checked = !!CONFIG_SEGURANCA.lojaSul.ativo;
+            document.getElementById('segLojaSulSenha').value = CONFIG_SEGURANCA.lojaSul.senha || '';
+            document.getElementById('segGestaoSenha').value = CONFIG_SEGURANCA.gestao.senha || '';
+        }
+    }
+
+    async function salvarConfigSeguranca() {
+        const novaConfig = {
+            lojaNorte: { ativo: document.getElementById('segLojaNorteAtiva').checked, senha: document.getElementById('segLojaNorteSenha').value.trim() },
+            lojaSul: { ativo: document.getElementById('segLojaSulAtiva').checked, senha: document.getElementById('segLojaSulSenha').value.trim() },
+            gestao: { senha: document.getElementById('segGestaoSenha').value.trim() || '0000' }
+        };
+        if (novaConfig.lojaNorte.ativo && !novaConfig.lojaNorte.senha) { mostrarToast('Defina uma senha pra Loja Norte antes de ativar.', 'erro'); return; }
+        if (novaConfig.lojaSul.ativo && !novaConfig.lojaSul.senha) { mostrarToast('Defina uma senha pra Loja Sul antes de ativar.', 'erro'); return; }
+
+        try {
+            const { error } = await supabaseDB.from('config_seguranca').upsert({ chave: 'padrao', dados: novaConfig, atualizado_em: new Date().toISOString() });
+            if (error) throw new Error(error.message);
+            CONFIG_SEGURANCA = novaConfig;
+            mostrarToast('✅ Configuração de segurança salva!');
+        } catch (e) {
+            mostrarToast('❌ Erro ao salvar: ' + e.message, 'erro');
+        }
+    }
+
+    // Chamado pelos botões de Loja Norte/Sul na tela de login. Se a senha estiver
+    // ativada pro painel, pede senha antes; senão, entra direto como sempre.
+    function entrarComoLoja(perfil) {
+        const chave = perfil === 'loja_norte' ? 'lojaNorte' : 'lojaSul';
+        const cfg = CONFIG_SEGURANCA[chave];
+        if (cfg && cfg.ativo && cfg.senha) {
+            _modoModalSenha = perfil;
+            document.getElementById("modalSenhaTitulo").textContent = "⚙️ ACESSO RESTRITO";
+            document.getElementById("modalSenhaSubtitulo").textContent = "Digite a senha de acesso (" + (perfil === 'loja_norte' ? 'Loja Norte' : 'Loja Sul') + ")";
+            document.getElementById("campoSenha").value = "";
+            document.getElementById("senhaErro").innerText = "";
+            document.getElementById("modalSenha").classList.add("ativo");
+            setTimeout(() => document.getElementById("campoSenha").focus(), 100);
+        } else {
+            selecionarPerfil(perfil);
+        }
+    }
+
     let _modoModalSenha = 'admin'; // 'admin' = destrava a aba Admin | 'gestao' = login como Gestão
 
     function solicitarSenha(btn) {
@@ -5308,9 +5510,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     function confirmarSenha() {
         const senha = document.getElementById("campoSenha").value;
         if (_modoModalSenha === 'gestao') {
-            if (senha === "0000") {
+            if (senha === (CONFIG_SEGURANCA.gestao.senha || '0000')) {
                 fecharModal();
                 selecionarPerfil('gestao');
+            } else {
+                document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
+                document.getElementById("campoSenha").value = "";
+            }
+            return;
+        }
+        if (_modoModalSenha === 'loja_norte' || _modoModalSenha === 'loja_sul') {
+            const chave = _modoModalSenha === 'loja_norte' ? 'lojaNorte' : 'lojaSul';
+            if (senha === CONFIG_SEGURANCA[chave].senha) {
+                fecharModal();
+                selecionarPerfil(_modoModalSenha);
             } else {
                 document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
                 document.getElementById("campoSenha").value = "";
@@ -6884,6 +7097,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svIniciarConsulta(); // comum a todos os perfis (Loja Norte, Loja Sul e Gestão usam Valores de Serviços)
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
+        carregarConfigSeguranca();
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); } });
     };
 </script>
