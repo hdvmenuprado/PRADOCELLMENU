@@ -3398,6 +3398,24 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     </div>
 </div>
 
+<div class="modal-overlay" id="modalOsFotos">
+    <div class="modal-box" style="width:520px; max-width:92vw; max-height:88vh; overflow-y:auto; text-align:left; padding:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <h3 style="margin:0; color: var(--primary); font-size:1.05rem; letter-spacing:normal;">📷 Fotos do aparelho</h3>
+            <button onclick="osFecharModalFotos()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;">✖️</button>
+        </div>
+        <p id="osFotosCodigoLabel" style="font-size:12px;color:var(--text-muted);margin:0 0 16px;"></p>
+
+        <label style="display:block;border:2px dashed var(--border-color);border-radius:10px;padding:18px;text-align:center;cursor:pointer;margin-bottom:16px;" id="osFotosDropArea">
+            <input type="file" id="osFotosInput" accept="image/*" multiple style="display:none;" onchange="osUploadFotos(this.files)">
+            <span style="color:var(--text-muted);font-size:13px;">📤 Clique aqui pra escolher foto(s) — ou tire uma foto pelo celular</span>
+        </label>
+
+        <div id="osFotosStatus" style="font-size:12px;color:var(--primary);margin-bottom:10px;display:none;"></div>
+        <div id="osFotosGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;"></div>
+    </div>
+</div>
+
 <div style="position: absolute; left: -9999px; top: -9999px;">
     <div id="pdf-orcamento-template" style="width: 175mm; min-height: 255mm; padding: 5mm; background: #ffffff !important; color: #000000 !important; font-family: Arial, sans-serif !important; font-size: 11pt !important; line-height: 1.5 !important;">
         <div style="text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px;">
@@ -7368,6 +7386,7 @@ function osCriarLinha(os) {
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;text-align:center;white-space:nowrap;">
             <button onclick="osGerarCupom(this)" title="Gerar cupom de O.S." style="background:none;border:none;color:#7c3aed;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;">🧾</button>
+            <button onclick="osAbrirFotos(this)" title="Fotos do aparelho" style="background:none;border:none;color:#0ea5e9;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;">📷</button>
             <button class="osSalvarBtn" onclick="osAtualizarValores(this)" title="Salvar alterações (reparo, peça, mão de obra)" style="background:none;border:none;color:#22c55e;cursor:pointer;font-size:16px;padding:1px 4px;border-radius:4px;">💾</button>
             <button onclick="osExcluir(this)" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;" title="Excluir">🗑️</button>
         </td>
@@ -7978,6 +7997,92 @@ function osAtualizarValores(btn) {
         setTimeout(() => { btn.innerText = '💾'; btn.style.color = '#22c55e'; btn.disabled = false; }, 2000);
         mostrarToast('❌ Não salvou os valores: ' + err.message, true);
     });
+}
+
+// ==========================================
+// FOTOS DO APARELHO NA O.S. (Supabase Storage)
+// ==========================================
+let _osFotosCodigoAtual = null;
+
+function osAbrirFotos(btn) {
+    const tr = btn.closest('tr');
+    const codigo = tr.dataset.codigo;
+    if (!codigo) { alert('Essa O.S. ainda não tem um código salvo — salve a O.S. primeiro.'); return; }
+    _osFotosCodigoAtual = codigo;
+    document.getElementById('osFotosCodigoLabel').textContent = 'O.S. ' + codigo + ' — ' + (tr.dataset.cliente || '');
+    document.getElementById('modalOsFotos').classList.add('ativo');
+    osCarregarFotos(codigo);
+}
+
+function osFecharModalFotos() {
+    document.getElementById('modalOsFotos').classList.remove('ativo');
+    _osFotosCodigoAtual = null;
+}
+
+async function osCarregarFotos(codigo) {
+    const grid = document.getElementById('osFotosGrid');
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:12px;padding:10px;font-style:italic;">Carregando...</div>';
+    try {
+        const { data, error } = await medirPromise('O.S. Fotos', () =>
+            supabaseDB.from('os_fotos').select('*').eq('os_codigo', codigo).order('criado_em', { ascending: false }));
+        if (error) throw new Error(error.message);
+        if (!data || !data.length) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:12px;padding:10px;font-style:italic;">Nenhuma foto ainda.</div>';
+            return;
+        }
+        grid.innerHTML = data.map(f => `
+            <div style="position:relative;aspect-ratio:1;">
+                <img src="${f.url}" onclick="window.open('${f.url}','_blank')" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border-color);cursor:zoom-in;">
+                <button onclick="osExcluirFoto('${f.id}','${f.caminho}')" title="Excluir foto" style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;">✕</button>
+            </div>
+        `).join('');
+    } catch (e) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ef4444;font-size:12px;padding:10px;">Erro ao carregar fotos: ' + e.message + '</div>';
+    }
+}
+
+async function osUploadFotos(files) {
+    if (!files || !files.length || !_osFotosCodigoAtual) return;
+    const status = document.getElementById('osFotosStatus');
+    status.style.display = 'block';
+    let ok = 0, falhou = 0;
+
+    for (const file of Array.from(files)) {
+        status.textContent = `⏳ Enviando ${ok + falhou + 1} de ${files.length}...`;
+        try {
+            const extensao = (file.name.split('.').pop() || 'jpg').toLowerCase();
+            const caminho = `${_osFotosCodigoAtual}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${extensao}`;
+            const { error: erroUpload } = await medirPromise('O.S. Fotos', () =>
+                supabaseDB.storage.from('os-fotos').upload(caminho, file));
+            if (erroUpload) throw new Error(erroUpload.message);
+
+            const { data: urlData } = supabaseDB.storage.from('os-fotos').getPublicUrl(caminho);
+            const { error: erroInsert } = await medirPromise('O.S. Fotos', () =>
+                supabaseDB.from('os_fotos').insert({ os_codigo: _osFotosCodigoAtual, caminho, url: urlData.publicUrl }));
+            if (erroInsert) throw new Error(erroInsert.message);
+            ok++;
+        } catch (e) {
+            console.error('Erro ao enviar foto:', e);
+            falhou++;
+        }
+    }
+
+    status.textContent = falhou ? `⚠️ ${ok} foto(s) enviada(s), ${falhou} falharam.` : `✅ ${ok} foto(s) enviada(s)!`;
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+    document.getElementById('osFotosInput').value = '';
+    osCarregarFotos(_osFotosCodigoAtual);
+}
+
+async function osExcluirFoto(id, caminho) {
+    if (!confirm('Excluir essa foto?')) return;
+    try {
+        await medirPromise('O.S. Fotos', () => supabaseDB.storage.from('os-fotos').remove([caminho]));
+        const { error } = await medirPromise('O.S. Fotos', () => supabaseDB.from('os_fotos').delete().eq('id', id));
+        if (error) throw new Error(error.message);
+        osCarregarFotos(_osFotosCodigoAtual);
+    } catch (e) {
+        mostrarToast('❌ Erro ao excluir foto: ' + e.message, 'erro');
+    }
 }
 
 function osExcluir(btn) {
