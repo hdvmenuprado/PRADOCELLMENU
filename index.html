@@ -1587,6 +1587,22 @@ body.modo-claro .main-content {
             overflow-y: auto;
         }
 
+        /* Esconde as setinhas nativas (brancas) dos campos numéricos de Peça/Mão de
+           Obra — o navegador desenha elas no tema claro do sistema, sem respeitar
+           o fundo escuro do app */
+        .osInputPeca::-webkit-outer-spin-button, .osInputPeca::-webkit-inner-spin-button,
+        .osInputMao::-webkit-outer-spin-button, .osInputMao::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .osInputPeca, .osInputMao { -moz-appearance: textfield; }
+        #osCustoPeca::-webkit-outer-spin-button, #osCustoPeca::-webkit-inner-spin-button,
+        #osMaoObra::-webkit-outer-spin-button, #osMaoObra::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        #osCustoPeca, #osMaoObra { -moz-appearance: textfield; }
+
         /* --- VALORES DE SERVIÇOS: TELA CHEIA --- */
         body:has(#menu-pecas:not(.hidden)) .main-content {
             padding: 0 !important;
@@ -2967,31 +2983,36 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 </div>            </div>
 
             <div id="menu-os" class="modulo-aba hidden">
-                <div style="background:#f8fafc; color:#1e293b; padding:12px; font-family:'Segoe UI',Roboto,sans-serif;">
-                    <div style="background:#fff;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);border:1px solid #e2e8f0;padding:14px;max-width:1300px;margin:0 auto 12px;width:100%;box-sizing:border-box;">
-                        <div style="margin-bottom:10px;border-bottom:2px solid #e2e8f0;padding-bottom:8px;">
-                            <h2 style="font-size:15px;font-weight:600;color:#2563eb;margin:0;">Nova Ordem de Serviço</h2>
-                        </div>
-                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:8px;">
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Data</label>
-                                <input type="date" id="osData" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                <div class="ep-wrap">
+                    <div class="ep-header">
+                        <span class="ep-icon">🛠️</span>
+                        <h1>Ordem de Serviço</h1>
+                        <span class="ep-tag">assistência técnica</span>
+                    </div>
+
+                    <!-- CADASTRO -->
+                    <div class="ep-panel">
+                        <div class="ep-panel-title">Nova Ordem de Serviço</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+                            <div class="ep-field">
+                                <label>Data</label>
+                                <input type="date" id="osData">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Nome do Cliente</label>
-                                <input type="text" id="osCliente" placeholder="Nome do Cliente" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Nome do Cliente</label>
+                                <input type="text" id="osCliente" placeholder="Nome do Cliente">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Telefone / WhatsApp</label>
-                                <input type="tel" id="osTelefone" placeholder="(45) 99999-9999" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Telefone / WhatsApp</label>
+                                <input type="tel" id="osTelefone" placeholder="(45) 99999-9999">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Modelo do Aparelho</label>
-                                <input type="text" id="osModelo" placeholder="Ex: iPhone 13" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Modelo do Aparelho</label>
+                                <input type="text" id="osModelo" placeholder="Ex: iPhone 13">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Origem do Cliente</label>
-                                <select id="osOrigem" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Origem do Cliente</label>
+                                <select id="osOrigem">
                                     <option value="">Selecione...</option>
                                     <option value="Cliente de Porta">🚪 Cliente de Porta</option>
                                     <option value="Cliente Google">🔎 Cliente Google</option>
@@ -3000,50 +3021,50 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                     <option value="Cliente Antigo">♻️ Cliente Antigo</option>
                                 </select>
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Estado do Aparelho</label>
-                                <select id="osEstadoAparelho" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Estado do Aparelho</label>
+                                <select id="osEstadoAparelho">
                                     <option value="">Selecione...</option>
                                     <option value="Aparelho entrou ligado">🔌 Aparelho entrou ligado</option>
                                     <option value="Aparelho entrou desligado (sem condições de testes)">⚠️ Aparelho entrou desligado (sem condições de testes)</option>
                                 </select>
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;grid-column:span 2;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Descrição (Defeito Relatado)</label>
-                                <textarea id="osDescricao" placeholder="Descreva o defeito relatado pelo cliente" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;color:#1e293b;background:#fff;resize:none;height:36px;box-sizing:border-box;"></textarea>
+                            <div class="ep-field" style="grid-column:span 2;">
+                                <label>Descrição (Defeito Relatado)</label>
+                                <textarea id="osDescricao" placeholder="Descreva o defeito relatado pelo cliente" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:none;height:38px;box-sizing:border-box;"></textarea>
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;grid-column:span 2;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Reparo (Feito ou Para Fazer)</label>
-                                <textarea id="osReparo" placeholder="Descreva o defeito ou o serviço" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;color:#1e293b;background:#fff;resize:none;height:36px;box-sizing:border-box;"></textarea>
+                            <div class="ep-field" style="grid-column:span 2;">
+                                <label>Reparo (Feito ou Para Fazer)</label>
+                                <textarea id="osReparo" placeholder="Descreva o defeito ou o serviço" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:none;height:38px;box-sizing:border-box;"></textarea>
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Garantia (Dias)</label>
-                                <select id="osGarantiaDias" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Garantia (Dias)</label>
+                                <select id="osGarantiaDias">
                                     <option value="365">1 ano (365 dias)</option>
                                     <option value="180">180 dias</option>
                                     <option value="90" selected>90 dias (Padrão)</option>
                                     <option value="30">30 dias</option>
                                 </select>
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Custo da Peça (R$)</label>
-                                <input type="number" id="osCustoPeca" step="0.01" value="0.00" oninput="osCalcTotal()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Custo da Peça (R$)</label>
+                                <input type="number" id="osCustoPeca" step="0.01" value="0.00" oninput="osCalcTotal()">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Mão de Obra (R$)</label>
-                                <input type="number" id="osMaoObra" step="0.01" value="0.00" oninput="osCalcTotal()" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Mão de Obra (R$)</label>
+                                <input type="number" id="osMaoObra" step="0.01" value="0.00" oninput="osCalcTotal()">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Total Geral (R$)</label>
-                                <input type="text" id="osTotal" value="0.00" readonly style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;padding:6px 10px;font-size:13px;background:#f1f5f9;color:#475569;font-weight:600;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Total Geral (R$)</label>
+                                <input type="text" id="osTotal" value="0.00" readonly style="background:rgba(212,175,55,0.08);color:var(--primary);font-weight:700;">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Vendedor / Técnico</label>
-                                <input type="text" id="osVendedor" placeholder="Responsável" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Vendedor / Técnico</label>
+                                <input type="text" id="osVendedor" placeholder="Responsável">
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:6px;">
-                                <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">Status</label>
-                                <select id="osStatus" style="width:100%;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;background:#fff;box-sizing:border-box;">
+                            <div class="ep-field">
+                                <label>Status</label>
+                                <select id="osStatus">
                                     <option>Orçando</option>
                                     <option>Aguardando aprov</option>
                                     <option>Orç aprovado</option>
@@ -3053,19 +3074,21 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                     <option>Em Custódia</option>
                                 </select>
                             </div>
-                            <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:6px;">
-                                <button onclick="osSalvar()" style="background:#2563eb;color:#fff;border:none;padding:6px 16px;font-size:13px;font-weight:600;border-radius:6px;cursor:pointer;height:36px;">Salvar O.S.</button>
-                                <button onclick="osSalvar(true)" style="background:#0f172a;color:#facc15;border:1px solid #facc15;padding:4px 16px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;height:28px;" title="Salva a O.S. e abre o cupom para impressão térmica">🧾 Salvar + Cupom</button>
+                            <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:8px;">
+                                <button class="ep-btn" onclick="osSalvar()">Salvar O.S.</button>
+                                <button onclick="osSalvar(true)" style="background:transparent;color:var(--primary);border:1px solid var(--primary);padding:6px 16px;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;height:30px;" title="Salva a O.S. e abre o cupom para impressão térmica">🧾 Salvar + Cupom</button>
                             </div>
                         </div>
                     </div>
-                    <div style="background:#fff;border-radius:8px;border:1px solid #e2e8f0;max-width:1300px;margin:0 auto 10px;width:100%;box-sizing:border-box;padding:8px 10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                        <input type="text" id="osPesquisa" placeholder="🔍 Pesquisar..." oninput="osFiltrarTabela()" style="flex:1 1 120px;min-width:90px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;color:#1e293b;background:#f8fafc;box-sizing:border-box;">
-                        <button id="osBtnEscopo" onclick="osToggleEscopo()" style="flex:0 0 auto;border:none;border-radius:6px;padding:6px 8px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;background:#2563eb;color:#fff;box-sizing:border-box;" title="Clique para alternar entre pesquisar no mês atual ou em todos os meses">📅 Mês Atual</button>
-                        <select id="osFiltroMesEspecifico" onchange="osAplicarFiltroOuRecarregar()" style="flex:0 0 auto;width:96px;padding:6px 4px;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#1e293b;background:#fff;cursor:pointer;box-sizing:border-box;" title="Filtrar por um mês específico (sobrepõe o filtro de Mês Atual / Todos os Meses)">
+
+                    <!-- FILTROS -->
+                    <div class="ep-panel" style="padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <input type="text" id="osPesquisa" placeholder="🔍 Pesquisar..." oninput="osFiltrarTabela()" style="flex:1 1 140px;min-width:100px;padding:8px 10px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:12px;box-sizing:border-box;">
+                        <button id="osBtnEscopo" onclick="osToggleEscopo()" class="ep-btn" style="flex:0 0 auto;padding:8px 10px;font-size:11px;" title="Clique para alternar entre pesquisar no mês atual ou em todos os meses">📅 Mês Atual</button>
+                        <select id="osFiltroMesEspecifico" onchange="osAplicarFiltroOuRecarregar()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por um mês específico (sobrepõe o filtro de Mês Atual / Todos os Meses)">
                             <option value="">📆 Mês...</option>
                         </select>
-                        <select id="osFiltroStatus" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:96px;padding:6px 4px;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#1e293b;background:#fff;cursor:pointer;box-sizing:border-box;" title="Filtrar por status">
+                        <select id="osFiltroStatus" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por status">
                             <option value="">🏷️ Status</option>
                             <option>Orçando</option>
                             <option>Aguardando aprov</option>
@@ -3075,7 +3098,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             <option>Aparelho retirado</option>
                             <option>Em Custódia</option>
                         </select>
-                        <select id="osFiltroOrigem" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:96px;padding:6px 4px;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#1e293b;background:#fff;cursor:pointer;box-sizing:border-box;" title="Filtrar por origem do cliente">
+                        <select id="osFiltroOrigem" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por origem do cliente">
                             <option value="">📍 Origem</option>
                             <option value="Cliente de Porta">🚪 Porta</option>
                             <option value="Cliente Google">🔎 Google</option>
@@ -3083,36 +3106,38 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             <option value="Cliente Indicação">🤝 Indicação</option>
                             <option value="Cliente Antigo">♻️ Antigo</option>
                         </select>
-                        <span id="osAvisoFiltro" style="flex:1 1 100%;font-size:11px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+                        <span id="osAvisoFiltro" style="flex:1 1 100%;font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
                     </div>
-                    <div style="overflow-x:auto;background:#fff;border-radius:8px;border:1px solid #e2e8f0;max-width:1300px;margin:0 auto;width:100%;box-sizing:border-box;">
-                        <table id="osTbody" style="width:100%;border-collapse:collapse;text-align:left;font-size:12px;white-space:nowrap;">
+
+                    <!-- TABELA -->
+                    <div class="ep-table-wrap">
+                        <table id="osTbody" class="ep-table" style="white-space:nowrap;">
                             <thead>
                                 <tr>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Código / Data</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Cliente / Tel.</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Modelo</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Descrição</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Reparo</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Garantia</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Valores (R$)</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Total</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Vend.</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Status</th>
-                                    <th style="background:#f1f5f9;color:#64748b;font-weight:600;text-transform:uppercase;font-size:10px;padding:6px 7px;border-bottom:1px solid #e2e8f0;">Ação</th>
+                                    <th>Código / Data</th>
+                                    <th>Cliente / Tel.</th>
+                                    <th>Modelo</th>
+                                    <th>Descrição</th>
+                                    <th>Reparo</th>
+                                    <th>Garantia</th>
+                                    <th>Valores (R$)</th>
+                                    <th>Total</th>
+                                    <th>Vend.</th>
+                                    <th>Status</th>
+                                    <th>Ação</th>
                                 </tr>
                             </thead>
                             <tbody id="osLinhas">
-                                <tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px;font-style:italic;">Carregando...</td></tr>
+                                <tr><td colspan="11" class="ep-empty">Carregando...</td></tr>
                             </tbody>
                             <tfoot>
-                                <tr style="background:#f1f5f9;font-weight:700;border-top:2px solid #e2e8f0;">
-                                    <td colspan="6" style="padding:8px 10px;text-align:right;font-size:11px;">Totais (dos itens exibidos):</td>
+                                <tr style="background:rgba(255,255,255,0.03);font-weight:700;border-top:2px solid var(--border-color);">
+                                    <td colspan="6" style="padding:8px 10px;text-align:right;font-size:11px;color:var(--text-muted);">Totais (dos itens exibidos):</td>
                                     <td style="padding:6px 7px;font-size:11px;line-height:1.5;">
-                                        <div>Peça: <span id="osTotalPecaAcum" style="color:#2563eb;">R$ 0,00</span></div>
-                                        <div>M.Obra: <span id="osTotalMaoAcum" style="color:#2563eb;">R$ 0,00</span></div>
+                                        <div>Peça: <span id="osTotalPecaAcum" class="ep-mono" style="color:var(--primary);">R$ 0,00</span></div>
+                                        <div>M.Obra: <span id="osTotalMaoAcum" class="ep-mono" style="color:var(--primary);">R$ 0,00</span></div>
                                     </td>
-                                    <td id="osTotalAcum" style="padding:8px 7px;color:#2563eb;font-size:14px;">R$ 0,00</td>
+                                    <td id="osTotalAcum" class="ep-mono" style="padding:8px 7px;color:var(--primary);font-size:14px;">R$ 0,00</td>
                                     <td colspan="3"></td>
                                 </tr>
                             </tfoot>
@@ -3120,6 +3145,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     </div>
                 </div>
             </div>
+
 
             <div id="menu-sorteio" class="modulo-aba hidden">
                 <h2>🎟️ Cupom de Sorteio</h2>
@@ -7254,17 +7280,18 @@ function osCalcTotal() {
 }
 
 function osCorStatus(sel) {
-    const cores = {'Orçando':'#e2e8f0|#334155','Em Custódia':'#fecaca|#991b1b','Aguardando aprov':'#fef08a|#713f12','Orç aprovado':'#bfdbfe|#1e40af','Pronto':'#bbf7d0|#166534','Orçamento reprovado':'#fecaca|#991b1b','Aparelho retirado':'#cbd5e1|#1e293b'};
-    const c = (cores[sel.value]||'#e2e8f0|#334155').split('|');
-    sel.style.background = c[0]; sel.style.color = c[1];
+    // Fundo sempre preto — só a cor da letra muda de acordo com o status
+    const cores = {'Orçando':'#cbd5e1','Em Custódia':'#f87171','Aguardando aprov':'#facc15','Orç aprovado':'#60a5fa','Pronto':'#4ade80','Orçamento reprovado':'#f87171','Aparelho retirado':'#94a3b8'};
+    sel.style.background = '#0d0d0f';
+    sel.style.color = cores[sel.value] || '#cbd5e1';
 }
 
-// Cores de fundo/texto pro select de origem do cliente (cada origem com uma cor própria)
+// Cor da letra pro select de origem do cliente (cada origem com uma cor própria, fundo sempre preto)
 function osCorOrigem(sel) {
     if (!sel) return;
-    const cores = {'Cliente de Porta':'#fef3c7|#92400e','Cliente Google':'#dbeafe|#1e40af','Cliente Meta':'#ede9fe|#5b21b6','Cliente Indicação':'#dcfce7|#166534','Cliente Antigo':'#f1f5f9|#475569'};
-    const c = (cores[sel.value]||'#f8fafc|#94a3b8').split('|');
-    sel.style.background = c[0]; sel.style.color = c[1];
+    const cores = {'Cliente de Porta':'#facc15','Cliente Google':'#60a5fa','Cliente Meta':'#c084fc','Cliente Indicação':'#4ade80','Cliente Antigo':'#94a3b8'};
+    sel.style.background = '#0d0d0f';
+    sel.style.color = cores[sel.value] || '#94a3b8';
 }
 
 // Envia pra planilha a origem do cliente escolhida/alterada na linha da O.S.
@@ -7323,16 +7350,16 @@ function osCriarLinha(os) {
     const tr = document.createElement('tr');
     osPreencherDatasetLinha(tr, os);
     tr.innerHTML = `
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;font-size:11px;white-space:nowrap;">
-            ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:#94a3b8;font-style:italic;">sem código</span>'}
-            <div style="color:#94a3b8;font-size:10px;margin-top:2px;">${data}</div>
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);">
+            ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:var(--text-muted);font-style:italic;">sem código</span>'}
+            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}</div>
         </td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;max-width:110px;">
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
             <input type="text" class="osClienteNomeInput" placeholder="Nome do cliente"
                 oninput="this.closest('tr').dataset.cliente=this.value;osMarcarPendente(this)"
-                style="width:100%;font-weight:600;color:#1e293b;font-size:12px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;box-sizing:border-box;">
-            <div class="osClienteTelefone" style="color:#64748b;font-size:10px;margin-top:2px;">${os.telefone || '-'}</div>
-            <select class="osOrigemSelect" onchange="osCorOrigem(this);osAtualizarOrigem(this)" style="margin-top:3px;width:100%;font-size:9px;padding:1px 2px;border-radius:4px;border:1px solid #cbd5e1;cursor:pointer;box-sizing:border-box;">
+                style="width:100%;font-weight:600;color:var(--text-main);font-size:12px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);box-sizing:border-box;">
+            <div class="osClienteTelefone" style="color:var(--text-muted);font-size:10px;margin-top:2px;">${os.telefone || '-'}</div>
+            <select class="osOrigemSelect" onchange="osCorOrigem(this);osAtualizarOrigem(this)" style="margin-top:3px;width:100%;font-size:9px;padding:1px 2px;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;box-sizing:border-box;">
                 <option value="">Origem...</option>
                 <option value="Cliente de Porta">🚪 Porta</option>
                 <option value="Cliente Google">🔎 Google</option>
@@ -7341,54 +7368,54 @@ function osCriarLinha(os) {
                 <option value="Cliente Antigo">♻️ Antigo</option>
             </select>
         </td>
-        <td class="osModeloCell" style="padding:4px 6px;border-bottom:1px solid #f1f5f9;max-width:100px;">
+        <td class="osModeloCell" style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:100px;">
             <input type="text" class="osModeloInput" placeholder="Modelo"
                 oninput="this.closest('tr').dataset.modelo=this.value;osMarcarPendente(this)"
-                style="width:100%;font-size:12px;padding:2px 4px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#1e293b;box-sizing:border-box;">
+                style="width:100%;font-size:12px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);box-sizing:border-box;">
             <div class="osEstadoIndicator" style="margin-top:2px;font-size:9px;font-weight:600;white-space:nowrap;"></div>
         </td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;max-width:160px;">
-            <textarea class="osDescricaoInput" rows="2" oninput="this.closest('tr').dataset.descricao=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#111;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:160px;">
+            <textarea class="osDescricaoInput" rows="2" oninput="this.closest('tr').dataset.descricao=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
         </td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;max-width:160px;">
-            <textarea class="osReparoInput" rows="2" oninput="this.closest('tr').dataset.reparo=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#111;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:160px;">
+            <textarea class="osReparoInput" rows="2" oninput="this.closest('tr').dataset.reparo=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
         </td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;">
-            <select class="osGarantiaSelect" onchange="this.closest('tr').dataset.garantiaDias=this.value;osMarcarPendente(this)" style="width:100%;font-size:10px;padding:2px 3px;border-radius:4px;border:1px solid #cbd5e1;cursor:pointer;box-sizing:border-box;">
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);">
+            <select class="osGarantiaSelect" onchange="this.closest('tr').dataset.garantiaDias=this.value;osMarcarPendente(this)" style="width:100%;font-size:10px;padding:2px 3px;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;box-sizing:border-box;">
                 <option value="365">1 ano</option>
                 <option value="180">180 dias</option>
                 <option value="90">90 dias</option>
                 <option value="30">30 dias</option>
             </select>
         </td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;">
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);">
             <div style="display:flex;flex-direction:column;gap:2px;">
                 <div style="display:flex;align-items:center;gap:3px;">
-                    <span style="font-size:9px;color:#94a3b8;width:14px;">P</span>
+                    <span style="font-size:9px;color:var(--text-muted);width:14px;">P</span>
                     <input type="number" class="osInputPeca" step="0.01" min="0"
-                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#111;"
+                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);"
                         oninput="osRecalcTotal(this)">
                 </div>
                 <div style="display:flex;align-items:center;gap:3px;">
-                    <span style="font-size:9px;color:#94a3b8;width:14px;">M</span>
+                    <span style="font-size:9px;color:var(--text-muted);width:14px;">M</span>
                     <input type="number" class="osInputMao" step="0.01" min="0"
-                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#111;"
+                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);"
                         oninput="osRecalcTotal(this)">
                 </div>
             </div>
         </td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;" class="osTotalCell"><strong></strong></td>
-        <td class="osVendedorCell" style="padding:4px 6px;border-bottom:1px solid #f1f5f9;max-width:65px;overflow:hidden;text-overflow:ellipsis;"></td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;">
-            <select class="osStatusSelect" style="padding:2px 4px;font-size:11px;font-weight:600;border-radius:4px;border:1px solid #cbd5e1;cursor:pointer;max-width:120px;" onchange="osCorStatus(this);osAtualizarStatus(this)">
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);color:var(--primary);" class="osTotalCell"><strong></strong></td>
+        <td class="osVendedorCell" style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:65px;overflow:hidden;text-overflow:ellipsis;color:var(--text-main);"></td>
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);">
+            <select class="osStatusSelect" style="padding:2px 4px;font-size:11px;font-weight:600;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;max-width:120px;" onchange="osCorStatus(this);osAtualizarStatus(this)">
                 ${opts.map(s=>`<option value="${s}">${s}</option>`).join('')}
             </select>
         </td>
-        <td style="padding:4px 6px;border-bottom:1px solid #f1f5f9;text-align:center;white-space:nowrap;">
-            <button onclick="osGerarCupom(this)" title="Gerar cupom de O.S." style="background:none;border:none;color:#7c3aed;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;">🧾</button>
-            <button onclick="osAbrirFotos(this)" title="Fotos do aparelho" style="background:none;border:none;color:#0ea5e9;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;">📷</button>
-            <button class="osSalvarBtn" onclick="osAtualizarValores(this)" title="Salvar alterações (reparo, peça, mão de obra)" style="background:none;border:none;color:#22c55e;cursor:pointer;font-size:16px;padding:1px 4px;border-radius:4px;">💾</button>
-            <button onclick="osExcluir(this)" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;" title="Excluir">🗑️</button>
+        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);text-align:center;white-space:nowrap;">
+            <button onclick="osGerarCupom(this)" title="Gerar cupom de O.S." style="background:none;border:none;color:#a78bfa;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
+            <button onclick="osAbrirFotos(this)" title="Fotos do aparelho" style="background:none;border:none;color:#38bdf8;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+            <button class="osSalvarBtn" onclick="osAtualizarValores(this)" title="Salvar alterações (reparo, peça, mão de obra)" style="background:none;border:none;color:#4ade80;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+            <button onclick="osExcluir(this)" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;" title="Excluir"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </td>
     `;
     osAtualizarLinha(tr, os, true);
@@ -7523,7 +7550,7 @@ function osLinhaProtegida(chave) {
 function osRenderizarLista(lista) {
     const tbody = document.getElementById('osLinhas');
     if (!lista || !lista.length) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px;font-style:italic;">Nenhuma O.S. encontrada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="ep-empty">Nenhuma O.S. encontrada.</td></tr>';
         osAtualizarTotal();
         return;
     }
@@ -7770,7 +7797,7 @@ function osApiPost(dados) {
 function osCarregar() {
     osAtualizarBotaoEscopo();
     const tbody = document.getElementById('osLinhas');
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px;font-style:italic;">Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="ep-empty">Carregando...</td></tr>';
     const escopo = osEscopoParaBackend();
     const seq = ++_osFetchSeq;
     medirPromise('O.S.', () => osBuscarLista(escopo)).then(lista=>{
@@ -7790,7 +7817,7 @@ function osCarregar() {
         if (seq !== _osFetchSeq) return;
         console.error('Erro ao carregar O.S.:', err);
         atualizarIndicadorConexao(false);
-        tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:#ef4444;padding:12px;">Erro ao carregar. Verifique a conexão.</td></tr>';
+        tbody.innerHTML='<tr><td colspan="11" class="ep-empty" style="color:#f87171;">Erro ao carregar. Verifique a conexão.</td></tr>';
     });
 }
 
