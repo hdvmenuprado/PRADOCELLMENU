@@ -1312,6 +1312,22 @@ body.modo-claro .main-content {
             .pdf-preview-panel { position: static; }
         }
 
+        /* --- LINHA DE ABAS DO EDITOR (Orçamento/Garantia/Cupom): desliza pro lado
+           em vez de espremer/quebrar quando o texto não cabe na tela --- */
+        .editor-tabs-row {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            flex-wrap: nowrap;
+            scroll-snap-type: x proximity;
+        }
+        .editor-tabs-row::-webkit-scrollbar { display: none; }
+        .editor-tabs-row button {
+            flex-shrink: 0;
+            white-space: nowrap;
+            scroll-snap-align: start;
+        }
+
         /* --- RELÓGIO E TEMA --- */
         .sidebar-bottom {
             margin-top: auto;
@@ -1440,12 +1456,14 @@ body.modo-claro .main-content {
 
             .nav-menu {
                 flex-direction: row;
+                flex-wrap: nowrap;
                 flex: 1;
                 gap: 2px;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
                 min-width: 0;
+                scroll-snap-type: x proximity;
             }
             .nav-menu::-webkit-scrollbar { display: none; }
             .nav-btn {
@@ -1459,6 +1477,7 @@ body.modo-claro .main-content {
                 justify-content: center;
                 border-radius: 8px;
                 letter-spacing: 0;
+                scroll-snap-align: start;
             }
             .nav-btn .nav-icon { font-size: 17px; }
             .nav-btn .nav-label { font-size: 9px; white-space: nowrap; }
@@ -1497,10 +1516,12 @@ body.modo-claro .main-content {
 
             .toast { left: 12px; right: 12px; bottom: 16px; padding: 18px 20px; text-align: center; }
 
-            /* Abas internas do editor de PDF (Orçamento/Garantia/Cupom) */
+            /* Abas internas do editor de PDF (Orçamento/Garantia/Cupom):
+               deslizam pro lado em vez de espremer o texto */
+            .editor-tabs-row { gap: 4px; }
             div[id^="tabEditor"], #tabEditorOrc, #tabEditorGar, #tabEditorCupom {
-                font-size: 10px !important;
-                padding: 10px 8px !important;
+                font-size: 11px !important;
+                padding: 10px 16px !important;
             }
         }
 
@@ -1806,7 +1827,17 @@ body.modo-claro .main-content {
         .ep-btn:hover { background: var(--primary-hover); }
         .ep-btn:disabled { opacity:0.5; cursor:default; }
 
-        .ep-table-wrap { max-width:1300px; background: var(--bg-card); border:1px solid var(--border-color); border-radius:10px; overflow:hidden; backdrop-filter: blur(12px); }
+        .ep-table-wrap {
+            max-width:1300px;
+            background: var(--bg-card);
+            border:1px solid var(--border-color);
+            border-radius:10px;
+            backdrop-filter: blur(12px);
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        .ep-table-wrap .ep-table { min-width: 640px; }
         .ep-table { width:100%; border-collapse:collapse; font-size:12.5px; }
         .ep-table th {
             background: rgba(255,255,255,0.03); color:var(--text-muted); font-weight:700; text-transform:uppercase;
@@ -2725,7 +2756,7 @@ body.modo-claro .main-content {
                         </div>
                     </div>
 
-                    <div style="display:flex; gap:0; margin-bottom:20px; border-bottom: 2px solid var(--border-color);">
+                    <div class="editor-tabs-row" style="display:flex; gap:0; margin-bottom:20px; border-bottom: 2px solid var(--border-color);">
                         <button id="tabEditorOrc" onclick="trocarEditorPDF('orc')" style="padding: 12px 24px; border-top-width: medium; border-top-style: none; border-top-color: currentcolor; border-right-width: medium; border-right-style: none; border-right-color: currentcolor; border-left-width: medium; border-left-style: none; border-left-color: currentcolor; border-image: initial; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; background: rgba(212, 175, 55, 0.1); color: var(--primary); border-bottom: 2px solid var(--primary);">📋 Orçamento</button>
                         <button id="tabEditorGar" onclick="trocarEditorPDF('gar')" style="padding: 12px 24px; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; background: transparent; color: var(--text-muted);">📄 Garantia</button>
                         <button id="tabEditorCupom" onclick="trocarEditorPDF('cupom')" style="padding: 12px 24px; border-width: medium medium 2px; border-style: none none solid; border-color: currentcolor currentcolor transparent; border-image: initial; font-weight: 700; font-size: 12px; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; background: transparent; color: var(--text-muted);">🧾 Cupom O.S.</button>
