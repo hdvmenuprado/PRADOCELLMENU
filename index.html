@@ -2,7 +2,7 @@
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PradoCell PRO</title>
+    <title>PRADOWORK SPACE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -2558,7 +2558,9 @@ body.modo-claro .main-content {
                         <span class="ep-tag">comparativo entre lojas</span>
                     </div>
 
-                    <div style="max-width:1300px;display:flex;justify-content:flex-end;margin-bottom:10px;">
+                    <div style="max-width:1300px;display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+                        <label for="dashboardFiltroMes" style="font-size:12px;color:var(--text-muted);font-weight:600;">📅 Mês:</label>
+                        <input type="month" id="dashboardFiltroMes" onchange="dashboardCarregar()" style="padding:8px 10px;min-height:auto;width:auto;">
                         <button class="ep-btn" onclick="dashboardCarregar()">🔄 Atualizar</button>
                     </div>
 
@@ -4253,7 +4255,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     const DASHBOARD_STATUS_FINALIZADOS = ['Pronto', 'Aparelho retirado', 'Orçamento reprovado'];
 
-    function dashboardCardDetalhadoHTML(titulo, n, comNomes) {
+    function dashboardCardDetalhadoHTML(titulo, n, comNomes, mesLabel) {
         const statsNomes = comNomes ? `
                     <div class="ep-stat" style="border-left-color:#60a5fa;">
                         <div class="ep-stat-label">iPhones vendidos · Geovanna</div>
@@ -4273,7 +4275,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     </div>` : '';
         return `
             <div class="ep-panel" style="grid-column:1 / -1;border-color:var(--border-highlight);">
-                <div class="ep-panel-title" style="color:var(--primary);">${titulo} · Detalhado (mês)</div>
+                <div class="ep-panel-title" style="color:var(--primary);">${titulo} · Detalhado — ${mesLabel}</div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
                     <div class="ep-stat" style="border-left-color:#4ade80;">
                         <div class="ep-stat-label">Faturamento Assistência</div>
@@ -4295,10 +4297,27 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             </div>`;
     }
 
-    // Calcula faturamento/perdas de uma loja (por lojaId). Se comNomes=true, também
-    // calcula iPhones vendidos e mão de obra por vendedora (Geovanna/Ester — só existem
-    // na Loja Norte).
-    async function dashboardCalcularDetalhado(lojaId, comNomes) {
+    // Transforma 'AAAA-MM' no intervalo [início, fim) usado nos filtros (fim é
+    // exclusivo = primeiro dia do mês seguinte), pra poder filtrar qualquer mês,
+    // não só o atual.
+    function dashboardMesParaIntervalo(mesStr) {
+        const [ano, mes] = mesStr.split('-').map(Number);
+        const inicio = mesStr + '-01';
+        const proximo = new Date(ano, mes, 1); // mes já é 1-based, então isso cai no 1º dia do mês seguinte
+        const fim = proximo.getFullYear() + '-' + String(proximo.getMonth() + 1).padStart(2, '0') + '-01';
+        return { inicio, fim };
+    }
+
+    function dashboardMesLabel(mesStr) {
+        const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const [ano, mes] = mesStr.split('-');
+        return nomesMeses[parseInt(mes, 10) - 1] + '/' + ano;
+    }
+
+    // Calcula faturamento/perdas de uma loja (por lojaId) no mês escolhido (mesStr = 'AAAA-MM').
+    // Se comNomes=true, também calcula iPhones vendidos e mão de obra por vendedora
+    // (Geovanna/Ester — só existem na Loja Norte).
+    async function dashboardCalcularDetalhado(lojaId, comNomes, mesStr) {
         const resultado = {
             faturamentoAssistencia: 0, faturamentoVendas: 0,
             perdaAssistencia: 0, perdaVendas: 0,
@@ -4306,14 +4325,14 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             maoObraEster: 0, maoObraGeovana: 0
         };
         if (!lojaId) return resultado;
-        const inicioMes = dashboardInicioMesData();
+        const { inicio, fim } = dashboardMesParaIntervalo(mesStr);
 
         // O.S. (faturamento da assistência + mão de obra por técnico, se comNomes)
         try {
             const { data: osData } = await supabaseDB.from('ordens_servico')
                 .select('total, data, vendedor, mao_de_obra').eq('loja_id', lojaId);
             (osData || []).forEach(os => {
-                if (!os.data || os.data < inicioMes) return;
+                if (!os.data || os.data < inicio || os.data >= fim) return;
                 resultado.faturamentoAssistencia += parseFloat(os.total) || 0;
                 if (!comNomes) return;
                 const vend = (os.vendedor || '').trim().toLowerCase();
@@ -4327,7 +4346,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const { data: crmData } = await supabaseDB.from('crm_clientes')
                 .select('produto, vendedor, valor_aparelho, data_compra').eq('loja_id', lojaId);
             (crmData || []).forEach(c => {
-                if (!c.data_compra || c.data_compra < inicioMes) return;
+                if (!c.data_compra || c.data_compra < inicio || c.data_compra >= fim) return;
                 resultado.faturamentoVendas += parseFloat(c.valor_aparelho) || 0;
                 if (!comNomes) return;
                 const vend = (c.vendedor || '').trim().toLowerCase();
@@ -4342,7 +4361,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const { data: perdas } = await supabaseDB.from('garantia_perdas')
                 .select('tipo, valor, data').eq('loja_id', lojaId);
             (perdas || []).forEach(p => {
-                if (!p.data || p.data < inicioMes) return;
+                if (!p.data || p.data < inicio || p.data >= fim) return;
                 if (p.tipo === 'Assistência') resultado.perdaAssistencia += parseFloat(p.valor) || 0;
                 else if (p.tipo === 'Venda') resultado.perdaVendas += parseFloat(p.valor) || 0;
             });
@@ -4356,18 +4375,23 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!grid) return;
         grid.innerHTML = '<div class="ep-panel"><div class="ep-empty">Carregando...</div></div>';
         try {
+            const inputMes = document.getElementById('dashboardFiltroMes');
+            let mesStr = inputMes && inputMes.value ? inputMes.value : dashboardInicioMesData().slice(0, 7);
+            if (inputMes && !inputMes.value) inputMes.value = mesStr;
+
             await carregarLojas();
             const lojaNorte = LOJAS_CACHE.find(l => (l.nome || '').toLowerCase().includes('norte'));
             const lojaSul = LOJAS_CACHE.find(l => (l.nome || '').toLowerCase().includes('sul'));
 
             const [detalhadoNorte, detalhadoSul] = await Promise.all([
-                dashboardCalcularDetalhado(lojaNorte ? lojaNorte.id : null, true),
-                dashboardCalcularDetalhado(lojaSul ? lojaSul.id : null, false)
+                dashboardCalcularDetalhado(lojaNorte ? lojaNorte.id : null, true, mesStr),
+                dashboardCalcularDetalhado(lojaSul ? lojaSul.id : null, false, mesStr)
             ]);
 
+            const mesLabel = dashboardMesLabel(mesStr);
             let html = '';
-            html += dashboardCardDetalhadoHTML('🏪 Loja Norte', detalhadoNorte, true);
-            html += dashboardCardDetalhadoHTML('🏬 Loja Sul', detalhadoSul, false);
+            html += dashboardCardDetalhadoHTML('🏪 Loja Norte', detalhadoNorte, true, mesLabel);
+            html += dashboardCardDetalhadoHTML('🏬 Loja Sul', detalhadoSul, false, mesLabel);
             grid.innerHTML = html;
         } catch (e) {
             console.error('Erro ao carregar dashboard:', e);
