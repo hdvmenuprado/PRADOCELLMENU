@@ -4253,96 +4253,102 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     const DASHBOARD_STATUS_FINALIZADOS = ['Pronto', 'Aparelho retirado', 'Orçamento reprovado'];
 
-    // Calcula os números de uma loja específica (ou de todas, se lojaId vier null)
-    async function dashboardCalcularNumeros(lojaId) {
-        const resultado = { faturamentoMes: 0, osAbertas: 0, clientesMes: 0, clientesTotal: 0, valorEstoque: 0, pecasEstoque: 0, perdaAssistenciaMes: 0, perdaVendaMes: 0 };
+    function dashboardCardDetalhadoHTML(titulo, n, comNomes) {
+        const statsNomes = comNomes ? `
+                    <div class="ep-stat" style="border-left-color:#60a5fa;">
+                        <div class="ep-stat-label">iPhones vendidos · Geovanna</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${n.iphonesGeovanna}</div>
+                    </div>
+                    <div class="ep-stat" style="border-left-color:#60a5fa;">
+                        <div class="ep-stat-label">iPhones vendidos · Ester</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${n.iphonesEster}</div>
+                    </div>
+                    <div class="ep-stat" style="border-left-color:#d4af37;">
+                        <div class="ep-stat-label">Mão de obra Assistência · Ester</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.maoObraEster)}</div>
+                    </div>
+                    <div class="ep-stat" style="border-left-color:#d4af37;">
+                        <div class="ep-stat-label">Mão de obra Assistência · Geovanna</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.maoObraGeovana)}</div>
+                    </div>` : '';
+        return `
+            <div class="ep-panel" style="grid-column:1 / -1;border-color:var(--border-highlight);">
+                <div class="ep-panel-title" style="color:var(--primary);">${titulo} · Detalhado (mês)</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+                    <div class="ep-stat" style="border-left-color:#4ade80;">
+                        <div class="ep-stat-label">Faturamento Assistência</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.faturamentoAssistencia)}</div>
+                    </div>
+                    <div class="ep-stat" style="border-left-color:#4ade80;">
+                        <div class="ep-stat-label">Faturamento Vendas</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.faturamentoVendas)}</div>
+                    </div>
+                    <div class="ep-stat" style="border-left-color:#f87171;">
+                        <div class="ep-stat-label">Perdas Assistência</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.perdaAssistencia)}</div>
+                    </div>
+                    <div class="ep-stat" style="border-left-color:#f87171;">
+                        <div class="ep-stat-label">Perdas Vendas</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.perdaVendas)}</div>
+                    </div>${statsNomes}
+                </div>
+            </div>`;
+    }
 
-        // O.S.
+    // Calcula faturamento/perdas de uma loja (por lojaId). Se comNomes=true, também
+    // calcula iPhones vendidos e mão de obra por vendedora (Geovanna/Ester — só existem
+    // na Loja Norte).
+    async function dashboardCalcularDetalhado(lojaId, comNomes) {
+        const resultado = {
+            faturamentoAssistencia: 0, faturamentoVendas: 0,
+            perdaAssistencia: 0, perdaVendas: 0,
+            iphonesGeovanna: 0, iphonesEster: 0,
+            maoObraEster: 0, maoObraGeovana: 0
+        };
+        if (!lojaId) return resultado;
+        const inicioMes = dashboardInicioMesData();
+
+        // O.S. (faturamento da assistência + mão de obra por técnico, se comNomes)
         try {
-            let q = supabaseDB.from('ordens_servico').select('total, status, data');
-            if (lojaId) q = q.eq('loja_id', lojaId);
-            const { data } = await q;
-            const inicioMes = dashboardInicioMesData();
-            (data || []).forEach(os => {
-                if (os.data && os.data >= inicioMes) resultado.faturamentoMes += parseFloat(os.total) || 0;
-                if (!DASHBOARD_STATUS_FINALIZADOS.includes(os.status)) resultado.osAbertas++;
+            const { data: osData } = await supabaseDB.from('ordens_servico')
+                .select('total, data, vendedor, mao_de_obra').eq('loja_id', lojaId);
+            (osData || []).forEach(os => {
+                if (!os.data || os.data < inicioMes) return;
+                resultado.faturamentoAssistencia += parseFloat(os.total) || 0;
+                if (!comNomes) return;
+                const vend = (os.vendedor || '').trim().toLowerCase();
+                if (vend.startsWith('ester')) resultado.maoObraEster += parseFloat(os.mao_de_obra) || 0;
+                else if (vend.startsWith('geovan')) resultado.maoObraGeovana += parseFloat(os.mao_de_obra) || 0;
             });
         } catch(e) { console.error('Dashboard: erro ao calcular O.S.', e); }
 
-        // CRM
+        // Cadastro de Vendas (faturamento de vendas + iPhones vendidos por vendedora, se comNomes)
         try {
-            let q = supabaseDB.from('crm_clientes').select('id, criado_em');
-            if (lojaId) q = q.eq('loja_id', lojaId);
-            const { data } = await q;
-            const inicioMesISO = dashboardInicioMesISO();
-            resultado.clientesTotal = (data || []).length;
-            resultado.clientesMes = (data || []).filter(c => c.criado_em && c.criado_em >= inicioMesISO).length;
+            const { data: crmData } = await supabaseDB.from('crm_clientes')
+                .select('produto, vendedor, valor_aparelho, data_compra').eq('loja_id', lojaId);
+            (crmData || []).forEach(c => {
+                if (!c.data_compra || c.data_compra < inicioMes) return;
+                resultado.faturamentoVendas += parseFloat(c.valor_aparelho) || 0;
+                if (!comNomes) return;
+                const vend = (c.vendedor || '').trim().toLowerCase();
+                const ehIphone = (c.produto || '').toLowerCase().includes('iphone');
+                if (ehIphone && vend.startsWith('geovan')) resultado.iphonesGeovanna++;
+                else if (ehIphone && vend.startsWith('ester')) resultado.iphonesEster++;
+            });
         } catch(e) { console.error('Dashboard: erro ao calcular CRM', e); }
 
-        // Estoque (iPhone + Android)
+        // Perdas em Garantia (Assistência / Venda)
         try {
-            let q1 = supabaseDB.from('estoque_itens').select('quantidade, custo_unitario');
-            if (lojaId) q1 = q1.eq('loja_id', lojaId);
-            let q2 = supabaseDB.from('estoque_android').select('quantidade, custo_unitario');
-            if (lojaId) q2 = q2.eq('loja_id', lojaId);
-            const [{ data: itens }, { data: android }] = await Promise.all([q1, q2]);
-            [...(itens||[]), ...(android||[])].forEach(it => {
-                resultado.valorEstoque += (it.quantidade||0) * (it.custo_unitario||0);
-                resultado.pecasEstoque += (it.quantidade||0);
-            });
-        } catch(e) { console.error('Dashboard: erro ao calcular estoque', e); }
-
-        // Perdas em Garantia (Assistência + Venda de iPhones)
-        try {
-            let q = supabaseDB.from('garantia_perdas').select('tipo, valor, data');
-            if (lojaId) q = q.eq('loja_id', lojaId);
-            const { data } = await q;
-            const inicioMes = dashboardInicioMesData();
-            (data || []).forEach(p => {
+            const { data: perdas } = await supabaseDB.from('garantia_perdas')
+                .select('tipo, valor, data').eq('loja_id', lojaId);
+            (perdas || []).forEach(p => {
                 if (!p.data || p.data < inicioMes) return;
-                if (p.tipo === 'Assistência') resultado.perdaAssistenciaMes += parseFloat(p.valor) || 0;
-                else if (p.tipo === 'Venda') resultado.perdaVendaMes += parseFloat(p.valor) || 0;
+                if (p.tipo === 'Assistência') resultado.perdaAssistencia += parseFloat(p.valor) || 0;
+                else if (p.tipo === 'Venda') resultado.perdaVendas += parseFloat(p.valor) || 0;
             });
         } catch(e) { console.error('Dashboard: erro ao calcular perdas em garantia', e); }
 
         return resultado;
-    }
-
-    function dashboardCardHTML(nome, n, destaque) {
-        return `
-            <div class="ep-panel" style="${destaque ? 'border-color:var(--border-highlight);' : ''}">
-                <div class="ep-panel-title" style="${destaque ? 'color:var(--primary);' : ''}">${nome}</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div class="ep-stat" style="border-left-color:#4ade80;">
-                        <div class="ep-stat-label">Faturamento (mês)</div>
-                        <div class="ep-stat-value" style="font-size:18px;">${dashboardFormatarMoeda(n.faturamentoMes)}</div>
-                    </div>
-                    <div class="ep-stat" style="border-left-color:#f87171;">
-                        <div class="ep-stat-label">O.S. em aberto</div>
-                        <div class="ep-stat-value" style="font-size:18px;">${n.osAbertas}</div>
-                    </div>
-                    <div class="ep-stat">
-                        <div class="ep-stat-label">Clientes novos (mês)</div>
-                        <div class="ep-stat-value" style="font-size:18px;">${n.clientesMes}</div>
-                    </div>
-                    <div class="ep-stat">
-                        <div class="ep-stat-label">Clientes (total)</div>
-                        <div class="ep-stat-value" style="font-size:18px;">${n.clientesTotal}</div>
-                    </div>
-                    <div class="ep-stat" style="border-left-color:#f87171;">
-                        <div class="ep-stat-label">Perda garantia · Assistência (mês)</div>
-                        <div class="ep-stat-value" style="font-size:16px;">${dashboardFormatarMoeda(n.perdaAssistenciaMes)}</div>
-                    </div>
-                    <div class="ep-stat" style="border-left-color:#f87171;">
-                        <div class="ep-stat-label">Perda garantia · Venda (mês)</div>
-                        <div class="ep-stat-value" style="font-size:16px;">${dashboardFormatarMoeda(n.perdaVendaMes)}</div>
-                    </div>
-                    <div class="ep-stat" style="grid-column:1 / -1;">
-                        <div class="ep-stat-label">Valor em estoque (iPhone + Android)</div>
-                        <div class="ep-stat-value" style="font-size:18px;">${dashboardFormatarMoeda(n.valorEstoque)} <small style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;font-weight:400;">· ${n.pecasEstoque} peça(s)</small></div>
-                    </div>
-                </div>
-            </div>`;
     }
 
     async function dashboardCarregar() {
@@ -4351,18 +4357,24 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         grid.innerHTML = '<div class="ep-panel"><div class="ep-empty">Carregando...</div></div>';
         try {
             await carregarLojas();
-            const resultados = await Promise.all(LOJAS_CACHE.map(l => dashboardCalcularNumeros(l.id)));
-            const totalGeral = await dashboardCalcularNumeros(null);
+            const lojaNorte = LOJAS_CACHE.find(l => (l.nome || '').toLowerCase().includes('norte'));
+            const lojaSul = LOJAS_CACHE.find(l => (l.nome || '').toLowerCase().includes('sul'));
+
+            const [detalhadoNorte, detalhadoSul] = await Promise.all([
+                dashboardCalcularDetalhado(lojaNorte ? lojaNorte.id : null, true),
+                dashboardCalcularDetalhado(lojaSul ? lojaSul.id : null, false)
+            ]);
 
             let html = '';
-            LOJAS_CACHE.forEach((loja, i) => { html += dashboardCardHTML(loja.nome, resultados[i], false); });
-            html += dashboardCardHTML('Total (todas as lojas)', totalGeral, true);
+            html += dashboardCardDetalhadoHTML('🏪 Loja Norte', detalhadoNorte, true);
+            html += dashboardCardDetalhadoHTML('🏬 Loja Sul', detalhadoSul, false);
             grid.innerHTML = html;
         } catch (e) {
             console.error('Erro ao carregar dashboard:', e);
             grid.innerHTML = '<div class="ep-panel"><div class="ep-empty" style="color:#f87171;">Erro ao carregar o dashboard.</div></div>';
         }
     }
+
 
     // ==========================================
     // PERDAS EM GARANTIA (Assistência + Venda de iPhones) — só Gestão
