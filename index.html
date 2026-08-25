@@ -2,7 +2,7 @@
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRADOWORK SPACE</title>
+    <title>PradoCell PRO</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -29,6 +29,24 @@
             --text-muted: #666666;
         }
         body.modo-claro { background-color: var(--bg-base); color: var(--text-main); }
+
+        /* Barra de rolagem (scrollbar) combinando com o tema escuro/claro em qualquer
+           caixa de texto, tabela ou painel que precise rolar — em vez da barra branca
+           padrão do navegador, que destoava do resto da interface. */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-highlight) transparent;
+        }
+        ::-webkit-scrollbar { width: 9px; height: 9px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(212, 175, 55, 0.35);
+            border-radius: 10px;
+            border: 2px solid var(--bg-base);
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(212, 175, 55, 0.6); background-clip: padding-box; }
+        ::-webkit-scrollbar-corner { background: transparent; }
         body.modo-claro select,
         body.modo-claro input,
         body.modo-claro textarea {
