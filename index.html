@@ -6563,8 +6563,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // Aniversário: só aparece numa janela de poucos dias antes/depois da data certa, e desaparece sozinho
     // quando a janela passa (mesmo que ninguém tenha confirmado). Os outros 3 avisos são eventos únicos
     // e continuam aparecendo até serem marcados como feito.
-    const ANIVERSARIO_JANELA_ANTES_DIAS = 3; // a partir de quantos dias antes já avisa
-    const ANIVERSARIO_JANELA_DEPOIS_DIAS = 3; // até quantos dias depois ainda mostra
+    const ANIVERSARIO_JANELA_ANTES_DIAS = 0; // a partir de quantos dias antes já avisa (0 = só no dia)
+    const ANIVERSARIO_JANELA_DEPOIS_DIAS = 0; // até quantos dias depois ainda mostra (0 = só no dia)
     function crmCalcularAlertas(lista) {
         const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
         const anoAtual = hoje.getFullYear();
@@ -7240,7 +7240,8 @@ function osParaBanco(os) {
         total: os.total ? parseFloat(os.total) : 0,
         vendedor: os.vendedor || null,
         status: os.status || 'Orçando',
-        loja_id: lojaIdParaGravar()
+        loja_id: lojaIdParaGravar(),
+        criado_em: os.criadoEm || new Date().toISOString()
     };
 }
 
@@ -7263,7 +7264,8 @@ function osDoBanco(row) {
         total: row.total,
         vendedor: row.vendedor,
         status: row.status,
-        lojaId: row.loja_id
+        lojaId: row.loja_id,
+        criadoEm: row.criado_em
     };
 }
 
@@ -7503,6 +7505,7 @@ function osPreencherDatasetLinha(tr, os) {
     tr.dataset.garantiaDias = os.garantiaDias || '90';
     tr.dataset.vendedor = os.vendedor || '';
     tr.dataset.data = os.data || '';
+    tr.dataset.criadoEm = os.criadoEm || '';
     tr.dataset.total = parseFloat(os.total||0).toFixed(2);
 }
 
@@ -7973,7 +7976,10 @@ function osSalvar(imprimirCupom) {
         maoDeObra: document.getElementById('osMaoObra').value,
         total: document.getElementById('osTotal').value,
         vendedor: document.getElementById('osVendedor').value,
-        status: document.getElementById('osStatus').value
+        status: document.getElementById('osStatus').value,
+        // Horário exato do cadastro, gerado aqui mesmo (não espera o banco responder),
+        // pra já sair certo no cupom mesmo ao clicar em "Salvar + Cupom" na hora.
+        criadoEm: new Date().toISOString()
     };
     if(!dados.cliente||!dados.modelo){ alert('Preencha o Nome do Cliente e o Modelo.'); return; }
     // Adiciona à lista completa em memória e limpa a busca para garantir que a nova O.S. apareça
@@ -8218,6 +8224,7 @@ function osGerarCupom(btn) {
         reparo: tr.dataset.reparo,
         garantiaDias: tr.dataset.garantiaDias,
         vendedor: tr.dataset.vendedor,
+        criadoEm: tr.dataset.criadoEm,
         custoPeca: inputsNum[0] ? inputsNum[0].value : 0,
         maoDeObra: inputsNum[1] ? inputsNum[1].value : 0,
         total: tr.dataset.total,
@@ -8240,11 +8247,21 @@ function osFormatarGarantiaTexto(dias) {
     return n === 365 ? '1 ano' : (n + ' dias');
 }
 
+// Extrai o horário (HH:MM) em que a O.S. foi cadastrada, a partir do timestamp
+// "criado_em" gravado automaticamente pelo banco. Retorna '' se não houver.
+function osFormatarHoraEntrada(criadoEm) {
+    if (!criadoEm) return '';
+    const d = new Date(criadoEm);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
 function montarHtmlCupom(os, paraPreview) {
     const c = getPDFConfig();
     const cu = c.cupom || {};
     const total = parseFloat(os.total||0).toFixed(2).replace('.', ',');
     const dataFmt = osFormatarData(os.data||'') || new Date().toLocaleDateString('pt-BR');
+    const horaFmt = osFormatarHoraEntrada(os.criadoEm);
     const diasGarantia = (os.garantiaDias !== undefined && os.garantiaDias !== '' && os.garantiaDias !== null) ? parseInt(os.garantiaDias, 10) : 90;
     const dataGarantia = osCalcularDataGarantia(diasGarantia);
     const logoSrc = 'logocupom.png';
@@ -8269,7 +8286,7 @@ function montarHtmlCupom(os, paraPreview) {
         ${sep}
         <div class="mc-titulo">${titulo}</div>
         ${sep}
-        <div class="mc-campo"><b>Código:</b> ${os.codigo||'OS260617-A1B2'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}</div>
+        <div class="mc-campo"><b>Código:</b> ${os.codigo||'OS260617-A1B2'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}${horaFmt ? ' às ' + horaFmt : ''}</div>
         <div class="mc-campo"><b>Cliente:</b> ${os.cliente||'João da Silva'}${mostrarTelCliente ? ` — ${os.telefone||'(45) 99999-9999'}` : ''}</div>
         <div class="mc-campo"><b>Aparelho:</b> ${os.modelo||'iPhone 14 Pro Max'}${os.estadoAparelho ? ` (${os.estadoAparelho})` : ''}</div>
         <div class="mc-campo"><b>Status:</b> ${os.status||'Orçando'}</div>
@@ -8294,14 +8311,16 @@ function montarHtmlCupom(os, paraPreview) {
     </div></div>`;
 }
 
-// Monta o HTML de UMA via do cupom (LOJA ou CLIENTE). São geradas duas vias por impressão —
-// ambas idênticas em conteúdo, cada uma com sua própria linha de assinatura — para que loja e
-// cliente fiquem cada um com uma via assinada.
+// Monta o HTML de UMA via do cupom (LOJA ou CLIENTE). A via do CLIENTE traz tudo (inclusive
+// termos), pois é o comprovante que ele leva. A via da LOJA é compacta e sem o bloco de
+// termos (fica só o essencial pro controle interno), economizando papel.
 function montarViaCupom(os, via) {
     const c = getPDFConfig();
     const cu = c.cupom || {};
+    const ehLoja = via === 'LOJA';
     const total = parseFloat(os.total||0).toFixed(2).replace('.', ',');
     const dataFmt = osFormatarData(os.data||'') || new Date().toLocaleDateString('pt-BR');
+    const horaFmt = osFormatarHoraEntrada(os.criadoEm);
     const diasGarantia = (os.garantiaDias !== undefined && os.garantiaDias !== '' && os.garantiaDias !== null) ? parseInt(os.garantiaDias, 10) : 90;
     const dataGarantia = osCalcularDataGarantia(diasGarantia);
     const logoSrc = 'logocupom.png';
@@ -8312,7 +8331,7 @@ function montarViaCupom(os, via) {
     const mostrarTelCliente = cu.mostrarTelefoneCliente !== false;
     const mostrarAss = cu.mostrarAssinatura !== false;
 
-    return `<div class="cupom-via">
+    return `<div class="cupom-via${ehLoja ? ' compacta' : ''}">
         <div class="cupom-via-tag">— VIA ${via} —</div>
         <div class="cupom-cabecalho">
             ${mostrarLogo ? `<img src="${logoSrc}" class="cupom-logo-mini">` : ''}
@@ -8325,7 +8344,7 @@ function montarViaCupom(os, via) {
         ${sep}
         <div class="cupom-titulo">${titulo}</div>
         ${sep}
-        <div class="cupom-campo"><b>Código:</b> ${os.codigo||'-'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}</div>
+        <div class="cupom-campo"><b>Código:</b> ${os.codigo||'-'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}${horaFmt ? ' às ' + horaFmt : ''}</div>
         <div class="cupom-campo"><b>Cliente:</b> ${os.cliente||'-'}${mostrarTelCliente && os.telefone ? ` — ${os.telefone}` : ''}</div>
         <div class="cupom-campo"><b>Aparelho:</b> ${os.modelo||'-'}${os.estadoAparelho ? ` (${os.estadoAparelho})` : ''}</div>
         <div class="cupom-campo"><b>Status:</b> ${os.status||'-'}</div>
@@ -8338,9 +8357,7 @@ function montarViaCupom(os, via) {
         <div class="cupom-texto">${os.reparo||'-'}</div>
         ${sep}
         <div class="cupom-linha-valor cupom-total"><span>TOTAL</span><span>R$ ${total}</span></div>
-        ${sep}
-        <div class="cupom-label">TERMOS</div>
-        <div class="cupom-termos">${termos}</div>
+        ${!ehLoja ? `${sep}<div class="cupom-label">TERMOS</div><div class="cupom-termos">${termos}</div>` : ''}
         ${mostrarAss ? `<div class="cupom-declaracao">Declaro que li e concordo com os termos.</div><div class="cupom-assinatura"><div class="cupom-ass-linha"></div>Assinatura do Cliente</div>` : ''}
         ${via === 'CLIENTE' ? `${sep}<div class="cupom-avaliacao"><img src="qrcodeava.jpeg" class="cupom-qrcode-img" alt="QR Code Google"><span>Avalie-nos<br>no Google</span></div>` : ''}
         ${sep}
@@ -8390,6 +8407,24 @@ function abrirCupomImpressao(os) {
         .cupom-avaliacao span{ font-size:9pt; font-weight:900; text-transform:uppercase; line-height:1.2; }
         .cupom-rodape{ text-align:center; font-size:8.5pt; font-weight:700; margin-top:1.5mm; }
         .cupom-corte{ text-align:center; font-size:8.5pt; font-weight:700; margin:3mm 0; page-break-after: always; }
+        /* Via da loja: compacta e sem termos, pra economizar papel sem perder nenhuma informação essencial */
+        .compacta .cupom-cabecalho{ gap:1.5mm; }
+        .compacta .cupom-logo-mini{ max-width:9mm; max-height:9mm; }
+        .compacta .cupom-empresa{ font-size:11pt; }
+        .compacta .cupom-linha-fina{ font-size:7pt; }
+        .compacta .cupom-sep{ margin:1mm 0; border-top-width:1px; }
+        .compacta .cupom-titulo{ font-size:9.5pt; margin:0.5mm 0; }
+        .compacta .cupom-campo{ font-size:8.5pt; margin:0.5mm 0; }
+        .compacta .cupom-label{ font-size:8pt; margin-bottom:0.5mm; padding-bottom:0.3mm; border-bottom-width:1px; }
+        .compacta .cupom-texto{ font-size:8pt; margin-bottom:0.5mm; }
+        .compacta .cupom-linha-valor{ font-size:8.5pt; }
+        .compacta .cupom-total{ font-size:10.5pt; margin-top:1mm; padding-top:1mm; border-top-width:2px; }
+        .compacta .cupom-garantia{ font-size:8.5pt; padding:1mm; margin:1mm 0; border-width:1px; }
+        .compacta .cupom-garantia-obs{ font-size:6.5pt; }
+        .compacta .cupom-declaracao{ margin-top:1.5mm; font-size:7pt; }
+        .compacta .cupom-assinatura{ margin-top:2mm; font-size:7.5pt; }
+        .compacta .cupom-ass-linha{ margin:0 auto 1mm; }
+        .compacta .cupom-rodape{ font-size:7pt; margin-top:1mm; }
         @media print { body { width:${largura}; } }
     </style></head><body>${html}
     <script>window.onload=function(){ setTimeout(function(){ window.focus(); window.print(); }, 150); };<\/script>
