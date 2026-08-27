@@ -494,6 +494,87 @@
             transform: translateY(-3px);
         }
 
+        /* --- TELA DE LOGIN (Supabase Auth) --- */
+        .tela-login {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: var(--bg-base) url('backgrounginicial.jpg') center center / cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .tela-login::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 10, 12, 0.78);
+            z-index: 0;
+        }
+        .tela-login .login-box {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 360px;
+            width: 100%;
+            background: var(--bg-card, #1a1d24);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 36px 28px;
+        }
+        .login-campo {
+            width: 100%;
+            text-align: left;
+            margin-bottom: 14px;
+        }
+        .login-campo label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .login-campo input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.35);
+            color: var(--text-main);
+            font-size: 14px;
+        }
+        .login-campo input:focus { border-color: var(--border-highlight); outline: none; }
+        .login-btn-entrar {
+            width: 100%;
+            margin-top: 8px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 18px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .login-btn-entrar:hover { background: var(--primary-hover); }
+        .login-btn-entrar:disabled { opacity: 0.6; cursor: default; }
+        .login-erro {
+            color: #e74c3c;
+            font-size: 12px;
+            min-height: 16px;
+            margin: 10px 0 0;
+        }
+
         /* ==========================================
            TELA DE BOAS-VINDAS (splash depois de escolher o perfil)
            ========================================== */
@@ -1906,7 +1987,27 @@ body.modo-claro .main-content {
 </head>
 <body>
 
-<div id="telaSelecaoPerfil" class="tela-selecao-perfil">
+<div id="telaLogin" class="tela-login" style="display:none;">
+    <form class="login-box" onsubmit="fazerLogin(event)">
+        <img src="logo.png" alt="Logo Prado Cell" class="brand-logo" onerror="this.style.display='none'" style="width:60px;height:60px;margin-bottom:14px;">
+        <h1 class="selecao-perfil-titulo" style="margin-bottom:2px;">PRADO <span style="font-weight:400;">Workspace</span></h1>
+        <p class="selecao-perfil-subtitulo" style="margin-bottom:22px;">Entre com seu login para acessar o sistema</p>
+
+        <div class="login-campo">
+            <label for="loginEmail">E-mail</label>
+            <input type="email" id="loginEmail" autocomplete="username" required placeholder="seuemail@exemplo.com">
+        </div>
+        <div class="login-campo">
+            <label for="loginSenha">Senha</label>
+            <input type="password" id="loginSenha" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="login-btn-entrar" id="loginBtnEntrar">Entrar</button>
+        <p class="login-erro" id="loginErro"></p>
+    </form>
+</div>
+
+<div id="telaSelecaoPerfil" class="tela-selecao-perfil" style="display:none;">
     <div class="selecao-perfil-box">
         <img src="logo.png" alt="Logo Prado Cell" class="brand-logo" onerror="this.style.display='none'" style="width:70px;height:70px;margin-bottom:6px;">
         <h1 class="selecao-perfil-titulo">PRADO <span style="font-weight:400;">Workspace</span></h1>
@@ -1964,6 +2065,7 @@ body.modo-claro .main-content {
                 </select>
             </div>
             <button class="nav-btn" id="btnTrocarPerfil" onclick="trocarPerfil()" style="opacity:0.7;"><span class="nav-icon">🔄</span><span class="nav-label" id="labelPerfilAtual">Trocar Usuário</span></button>
+            <button class="nav-btn" onclick="fazerLogout()" style="opacity:0.7;"><span class="nav-icon">🚪</span><span class="nav-label">Sair</span></button>
         </div>
     </aside>
 
@@ -5660,16 +5762,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             }
             return;
         }
-        if (senha === "64081601") {
-            fecharModal();
-            mudarAba('admin', _btnAdmin);
-            carregarDadosAdminAvaliacao();
-            setTimeout(atualizarPreviewPDF, 100);
-        } else {
-            document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
-            document.getElementById("campoSenha").value = "";
-            document.getElementById("campoSenha").focus();
-        }
+        document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
+        document.getElementById("campoSenha").value = "";
+        document.getElementById("campoSenha").focus();
     }
 
     // -> Módulo Avaliação (banco original)
@@ -7220,7 +7315,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         } catch(e) { mostrarToast('❌ ' + e.message, 'erro'); }
     }
 
-    window.onload = function() {
+    window.onload = async function() {
+        // Só mostra a tela de escolha de loja se realmente existir uma sessão de
+        // login válida no Supabase; senão, fica travado na tela de login.
+        await verificarSessaoEIniciar();
+
         atualizarIndicadorConexao(navigator.onLine); // chute inicial instantâneo; o polling da O.S. confirma/corrige em seguida
         popularSelects();
         carregarBancosLocal();
@@ -7229,6 +7328,14 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         carregarConfigPDF();
         carregarConfigSeguranca();
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); } });
+
+        // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
+        supabaseDB.auth.onAuthStateChange((_event, session) => {
+            if (!session) {
+                document.getElementById('telaSelecaoPerfil').style.display = 'none';
+                document.getElementById('telaLogin').style.display = 'flex';
+            }
+        });
     };
 </script>
 
@@ -7240,6 +7347,64 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 const SUPABASE_URL = "https://tfnwojtykhapgjhljxve.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmbndvanR5a2hhcGdqaGxqeHZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NDI4NDAsImV4cCI6MjEwMjIxODg0MH0.HCDfHQodhpVla_9E5aGIYcY1edAPAYBumoFlvkS8x3c";
 const supabaseDB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ==========================================
+// LOGIN REAL (Supabase Auth)
+// ==========================================
+// A chave acima (anon) é pública por design do Supabase — quem realmente tranca
+// os dados são as regras de RLS configuradas no banco + o login abaixo. Sem
+// login válido, a tela de escolha de loja nem aparece.
+//
+// O supabase-js já guarda a sessão sozinho (localStorage) e renova o token
+// automaticamente, então a pessoa continua logada entre visitas sem precisar
+// fazer nada extra pra "salvar como cookie".
+
+// Roda assim que a página carrega: decide se mostra a tela de Login ou já
+// pula pra tela de escolha de loja (quando já existe uma sessão válida).
+async function verificarSessaoEIniciar() {
+    const { data, error } = await supabaseDB.auth.getSession();
+    const logado = !error && data && data.session;
+
+    if (logado) {
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('telaSelecaoPerfil').style.display = 'flex';
+    } else {
+        document.getElementById('telaSelecaoPerfil').style.display = 'none';
+        document.getElementById('telaLogin').style.display = 'flex';
+        setTimeout(() => { const el = document.getElementById('loginEmail'); if (el) el.focus(); }, 100);
+    }
+    return logado;
+}
+
+async function fazerLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const senha = document.getElementById('loginSenha').value;
+    const btn = document.getElementById('loginBtnEntrar');
+    const erroEl = document.getElementById('loginErro');
+    erroEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+
+    try {
+        const { error } = await supabaseDB.auth.signInWithPassword({ email, password: senha });
+        if (error) throw error;
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('telaSelecaoPerfil').style.display = 'flex';
+        document.getElementById('loginSenha').value = '';
+    } catch (e) {
+        erroEl.textContent = '❌ E-mail ou senha inválidos.';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+    }
+}
+
+async function fazerLogout() {
+    if (!confirm('Sair do sistema?')) return;
+    await supabaseDB.auth.signOut();
+    location.reload();
+}
 
 // Converte o objeto usado no front (camelCase) pro formato de colunas do banco (snake_case)
 function osParaBanco(os) {
