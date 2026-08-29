@@ -3646,17 +3646,34 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <label>Valor do Aparelho (R$)</label>
                 <input type="number" id="crmValorAparelho" min="0" step="0.01" placeholder="0,00">
             </div>
-            <div class="form-group">
+            <div class="form-group full-width">
                 <label>Forma de Pagamento</label>
-                <select id="crmFormaPagamento">
-                    <option value="">Selecione...</option>
-                    <option value="Pix">Pix</option>
-                    <option value="Dinheiro">Dinheiro</option>
-                    <option value="Cartão de Débito">Cartão de Débito</option>
-                    <option value="Cartão de Crédito">Cartão de Crédito</option>
-                    <option value="Boleto">Boleto</option>
-                    <option value="Outro">Outro</option>
-                </select>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <select id="crmFormaPagamento" style="flex:1;min-width:160px;">
+                        <option value="">Selecione...</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Boleto">Boleto</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                    <input type="number" id="crmValorPagamento1" min="0" step="0.01" placeholder="Valor pago nessa forma (R$)" style="flex:1;min-width:150px;">
+                    <button type="button" id="crmBtnAdd2aForma" onclick="crmMostrarSegundaForma()" style="background:none;border:1px dashed var(--border-highlight);color:var(--primary);border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;white-space:nowrap;">+ Adicionar 2ª forma de pagamento</button>
+                </div>
+                <div id="crmSegundaFormaWrap" style="display:none;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                    <select id="crmFormaPagamento2" style="flex:1;min-width:160px;">
+                        <option value="">Selecione...</option>
+                        <option value="Pix">Pix</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Boleto">Boleto</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                    <input type="number" id="crmValorPagamento2" min="0" step="0.01" placeholder="Valor pago nessa forma (R$)" style="flex:1;min-width:150px;">
+                    <button type="button" onclick="crmRemoverSegundaForma()" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:12px;padding:0 6px;white-space:nowrap;" title="Remover 2ª forma de pagamento">🗑️ Remover</button>
+                </div>
             </div>
             <div class="form-group">
                 <label>IMEI do Aparelho</label>
@@ -6275,6 +6292,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmObservacoes').value = c.observacoes || '';
         document.getElementById('crmValorAparelho').value = c.valorAparelho || '';
         document.getElementById('crmFormaPagamento').value = c.formaPagamento || '';
+        document.getElementById('crmValorPagamento1').value = c.valorPagamento1 || '';
+        if (c.formaPagamento2 || c.valorPagamento2) {
+            crmMostrarSegundaForma();
+            document.getElementById('crmFormaPagamento2').value = c.formaPagamento2 || '';
+            document.getElementById('crmValorPagamento2').value = c.valorPagamento2 || '';
+        }
 
         document.getElementById('crmTituloForm').innerText = 'Editar Cliente';
         document.getElementById('crmAvisoReimpressao').style.display = 'flex';
@@ -6606,7 +6629,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             data_fim_garantia: c.dataFimGarantia || null,
             observacoes: c.observacoes || null,
             valor_aparelho: c.valorAparelho !== undefined && c.valorAparelho !== '' ? parseFloat(c.valorAparelho) : null,
-            forma_pagamento: c.formaPagamento || null
+            forma_pagamento: c.formaPagamento || null,
+            valor_pagamento: c.valorPagamento1 !== undefined && c.valorPagamento1 !== '' ? parseFloat(c.valorPagamento1) : null,
+            forma_pagamento_2: c.formaPagamento2 || null,
+            valor_pagamento_2: c.valorPagamento2 !== undefined && c.valorPagamento2 !== '' ? parseFloat(c.valorPagamento2) : null
         };
     }
 
@@ -6628,11 +6654,35 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             observacoes: row.observacoes,
             valorAparelho: row.valor_aparelho,
             formaPagamento: row.forma_pagamento,
+            valorPagamento1: row.valor_pagamento,
+            formaPagamento2: row.forma_pagamento_2,
+            valorPagamento2: row.valor_pagamento_2,
             aniversarioConfirmadoAno: row.aniversario_confirmado_ano,
             compra12MesesConfirmado: row.compra_12meses_confirmado,
             garantiaConfirmado: row.garantia_confirmado,
             contato15DiasConfirmado: row.contato_15dias_confirmado
         };
+    }
+
+    // ------------------------------------------------------------------
+    // SEGUNDA FORMA DE PAGAMENTO (cliente que paga parte Pix + parte Cartão, etc.)
+    // ------------------------------------------------------------------
+    function crmMostrarSegundaForma() {
+        document.getElementById('crmSegundaFormaWrap').style.display = 'flex';
+        document.getElementById('crmBtnAdd2aForma').style.display = 'none';
+        setTimeout(() => { const el = document.getElementById('crmFormaPagamento2'); if (el) el.focus(); }, 50);
+    }
+    function crmRemoverSegundaForma() {
+        document.getElementById('crmFormaPagamento2').value = '';
+        document.getElementById('crmValorPagamento2').value = '';
+        document.getElementById('crmSegundaFormaWrap').style.display = 'none';
+        document.getElementById('crmBtnAdd2aForma').style.display = 'inline-block';
+    }
+    // Monta o texto exibido nas listagens/detalhes, juntando as duas formas quando existirem
+    function crmDescricaoPagamento(c) {
+        if (!c.formaPagamento && !c.formaPagamento2) return '';
+        const parte = (forma, valor) => forma ? forma + (valor ? ' (' + epLikeMoeda(valor) + ')' : '') : '';
+        return [parte(c.formaPagamento, c.valorPagamento1), parte(c.formaPagamento2, c.valorPagamento2)].filter(Boolean).join(' + ');
     }
 
     function crmHojeStr() {
@@ -6856,7 +6906,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <td style="font-weight:600;color:var(--text-main);max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="${c.nome || ''}">${c.nome || '-'}<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;">${c.cpf || '-'}</div></td>
                 <td style="color:var(--text-muted);font-size:12px;">${c.telefone || '-'}</td>
                 <td style="color:var(--text-main);max-width:130px;overflow:hidden;text-overflow:ellipsis;" title="${c.produto || ''}">${c.produto || '-'}${c.imei ? '<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;" title="IMEI">IMEI: ' + c.imei + '</div>' : ''}</td>
-                <td class="ep-mono" style="font-size:12px;"><span>${c.valorAparelho ? epLikeMoeda(c.valorAparelho) : '-'}</span><div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;font-family:'Inter',sans-serif;">${c.formaPagamento || ''}</div></td>
+                <td class="ep-mono" style="font-size:12px;"><span>${c.valorAparelho ? epLikeMoeda(c.valorAparelho) : '-'}</span><div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;font-family:'Inter',sans-serif;">${crmDescricaoPagamento(c)}</div></td>
                 <td style="color:var(--text-muted);font-size:12px;">${crmFormatarDataBR(c.dataCompra)}</td>
                 <td style="font-size:12px;font-weight:${vencida ? '700' : '400'};color:${vencida ? '#f87171' : 'var(--text-muted)'};">${crmFormatarDataBR(fimGarantia)}</td>
                 <td style="color:var(--text-muted);font-size:12px;">${c.vendedor || '-'}</td>
@@ -6920,7 +6970,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             campo('Produto', c.produto) +
             campo('IMEI', c.imei) +
             campo('Valor do Aparelho', c.valorAparelho ? epLikeMoeda(c.valorAparelho) : null) +
-            campo('Forma de Pagamento', c.formaPagamento) +
+            campo('Forma de Pagamento', crmDescricaoPagamento(c)) +
             campo('Data da Compra', crmFormatarDataBR(c.dataCompra)) +
             campo('Garantia', (c.diasGarantia || '-') + ' dias (até ' + crmFormatarDataBR(fimGarantia) + ')') +
             campo('Atendido por', c.vendedor) +
@@ -6952,10 +7002,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     function crmResetarFormulario() {
         document.getElementById('crmId').value = '';
-        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmImei', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho'].forEach(id => {
+        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmImei', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho', 'crmValorPagamento1', 'crmValorPagamento2'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         document.getElementById('crmFormaPagamento').value = '';
+        crmRemoverSegundaForma();
         document.getElementById('crmDiasGarantia').value = 90;
         document.getElementById('crmTituloForm').innerText = 'Cadastrar Novo Cliente';
         document.getElementById('crmBtnSalvar').innerText = '💾 Salvar Cliente';
@@ -6981,6 +7032,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmObservacoes').value = c.observacoes || '';
         document.getElementById('crmValorAparelho').value = c.valorAparelho || '';
         document.getElementById('crmFormaPagamento').value = c.formaPagamento || '';
+        document.getElementById('crmValorPagamento1').value = c.valorPagamento1 || '';
+        if (c.formaPagamento2 || c.valorPagamento2) {
+            crmMostrarSegundaForma();
+            document.getElementById('crmFormaPagamento2').value = c.formaPagamento2 || '';
+            document.getElementById('crmValorPagamento2').value = c.valorPagamento2 || '';
+        }
         document.getElementById('crmTituloForm').innerText = 'Editando Cliente: ' + (c.nome || '');
         document.getElementById('crmBtnSalvar').innerText = '🔄 Atualizar Cliente';
         document.getElementById('crmBtnEmitirGarantia').innerText = '🖨 Salvar e Emitir Termo de Garantia';
@@ -7004,7 +7061,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             diasGarantia: document.getElementById('crmDiasGarantia').value || '90',
             observacoes: document.getElementById('crmObservacoes').value.trim(),
             valorAparelho: document.getElementById('crmValorAparelho').value,
-            formaPagamento: document.getElementById('crmFormaPagamento').value
+            formaPagamento: document.getElementById('crmFormaPagamento').value,
+            valorPagamento1: document.getElementById('crmValorPagamento1').value,
+            formaPagamento2: document.getElementById('crmFormaPagamento2').value,
+            valorPagamento2: document.getElementById('crmValorPagamento2').value
         };
         dados.dataFimGarantia = crmCalcularFimGarantia(dados.dataCompra, dados.diasGarantia);
         const btn = document.getElementById('crmBtnSalvar');
