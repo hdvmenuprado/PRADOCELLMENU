@@ -99,7 +99,28 @@
             z-index: 10;
         }
 
-        .brand-box { margin-bottom: 20px; }
+        .brand-box { margin-bottom: 20px; position: relative; padding-bottom: 18px; }
+        .brand-box::after {
+            content: "";
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            bottom: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary) 50%, transparent);
+            background-size: 60% 100%;
+            background-repeat: no-repeat;
+            animation: led-trilho 4.5s ease-in-out infinite;
+            opacity: 0.7;
+        }
+        @keyframes led-trilho {
+            0%   { background-position: -120% 0; }
+            50%  { background-position: 120% 0; }
+            100% { background-position: -120% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .brand-box::after { animation: none; background-position: 0 0; }
+        }
 
         /* AJUSTE DO CONTÊINER DA LOGO */
 .brand-logo-wrap {
@@ -182,7 +203,96 @@
             background: rgba(212, 175, 55, 0.08);
             color: var(--primary);
             border: 1px solid var(--border-highlight);
-            box-shadow: inset 4px 0 0 var(--primary);
+            animation: led-pulse-glow 2.6s ease-in-out infinite;
+        }
+
+        /* ==========================================
+           EFEITO LED — filete de luz percorrendo a borda
+           dos botões do menu (dá a sensação de "sistema vivo").
+           Some sozinho se a pessoa preferir menos animação.
+           ========================================== */
+        @property --led-angle {
+            syntax: '<angle>';
+            inherits: false;
+            initial-value: 0deg;
+        }
+        .nav-btn, .login-btn-entrar { position: relative; overflow: hidden; }
+        .nav-btn::after, .login-btn-entrar::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: conic-gradient(from var(--led-angle, 0deg),
+                transparent 0%, transparent 74%,
+                var(--primary) 86%, #fff8dc 90%, var(--primary) 94%,
+                transparent 100%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            animation: led-rotate 3.4s linear infinite;
+            pointer-events: none;
+        }
+        .nav-btn:hover::after,
+        .nav-btn.active-tab::after,
+        .login-btn-entrar::after { opacity: 0.55; }
+        .nav-btn.active-tab::after { opacity: 1; }
+        .login-btn-entrar:hover::after { opacity: 1; }
+
+        @keyframes led-rotate { to { --led-angle: 360deg; } }
+        @keyframes led-pulse-glow {
+            0%, 100% { box-shadow: inset 4px 0 0 var(--primary), 0 0 8px rgba(212,175,55,0.12); }
+            50%      { box-shadow: inset 4px 0 0 var(--primary), 0 0 18px rgba(212,175,55,0.35); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .nav-btn::after, .login-btn-entrar::after { animation: none; }
+            .nav-btn.active-tab { animation: none; }
+        }
+
+        /* ==========================================
+           FEIXES DE LUZ AMBIENTES — flutuam devagar por cima de
+           tudo (sidebar e fundo), em ângulos e velocidades diferentes,
+           pra dar sensação de "sistema vivo". Puramente decorativo:
+           não recebe clique e não atrapalha o uso.
+           ========================================== */
+        #feixesGlobais {
+            position: fixed;
+            inset: 0;
+            z-index: 15;
+            overflow: hidden;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+        .feixe {
+            position: absolute;
+            top: -35%;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(212,175,55,0) 12%,
+                rgba(212,175,55,0.55) 45%,
+                rgba(255,248,220,0.9) 50%,
+                rgba(212,175,55,0.55) 55%,
+                rgba(212,175,55,0) 88%,
+                transparent 100%);
+            filter: blur(0.6px);
+            opacity: 0;
+            animation-name: feixe-desliza;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+        @keyframes feixe-desliza {
+            0%   { transform: translateY(-10%) rotate(var(--ang, 10deg)); opacity: 0; }
+            10%  { opacity: var(--op, 0.5); }
+            50%  { opacity: var(--op, 0.5); }
+            92%  { opacity: 0; }
+            100% { transform: translateY(160%) rotate(var(--ang, 10deg)); opacity: 0; }
+        }
+        body.modo-claro #feixesGlobais { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+            #feixesGlobais { display: none; }
         }
 
         /* Bolinha de notificação nos botões do menu lateral (ex: CRM com aniversário/garantia pendente) */
@@ -1986,6 +2096,17 @@ body.modo-claro .main-content {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<div id="feixesGlobais" aria-hidden="true">
+    <div class="feixe" style="left:4%;   width:2px; height:75vh; --ang:14deg;  --op:0.55; animation-duration:21s; animation-delay:-3s;"></div>
+    <div class="feixe" style="left:14%;  width:1px; height:60vh; --ang:-9deg;  --op:0.35; animation-duration:26s; animation-delay:-15s;"></div>
+    <div class="feixe" style="left:27%;  width:2px; height:85vh; --ang:19deg;  --op:0.45; animation-duration:33s; animation-delay:-8s;"></div>
+    <div class="feixe" style="left:41%;  width:1px; height:55vh; --ang:-15deg; --op:0.3;  animation-duration:19s; animation-delay:-11s;"></div>
+    <div class="feixe" style="left:58%;  width:2px; height:70vh; --ang:8deg;   --op:0.5;  animation-duration:29s; animation-delay:-1s;"></div>
+    <div class="feixe" style="left:71%;  width:1px; height:65vh; --ang:-12deg; --op:0.35; animation-duration:24s; animation-delay:-19s;"></div>
+    <div class="feixe" style="left:83%;  width:2px; height:80vh; --ang:17deg;  --op:0.5;  animation-duration:31s; animation-delay:-6s;"></div>
+    <div class="feixe" style="left:93%;  width:1px; height:50vh; --ang:-6deg;  --op:0.3;  animation-duration:23s; animation-delay:-14s;"></div>
+</div>
 
 <div id="telaLogin" class="tela-login" style="display:none;">
     <form class="login-box" onsubmit="fazerLogin(event)">
