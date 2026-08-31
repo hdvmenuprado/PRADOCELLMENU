@@ -3752,6 +3752,15 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     </div>
 </div>
 
+<div id="pdfGarantiaLoading" aria-live="assertive" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);">
+    <div style="width:min(330px,calc(100vw - 40px));padding:26px 24px;border:1px solid #d4af37;border-radius:14px;background:#1b1b1f;color:#fff;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.45);">
+        <div style="width:34px;height:34px;margin:0 auto 15px;border:3px solid rgba(212,175,55,.25);border-top-color:#d4af37;border-radius:50%;animation:pdfGarantiaGirar .8s linear infinite;"></div>
+        <strong style="display:block;font-size:16px;">Gerando termo de garantia</strong>
+        <span style="display:block;margin-top:7px;color:#c6c4bf;font-size:13px;line-height:1.4;">Aguarde, o download abrirá automaticamente. Não clique novamente.</span>
+    </div>
+</div>
+<style>@keyframes pdfGarantiaGirar { to { transform:rotate(360deg); } }</style>
+
 <div style="position: absolute; left: -9999px; top: -9999px;">
     <div id="pdf-orcamento-template" style="width: 175mm; min-height: 255mm; padding: 5mm; background: #ffffff !important; color: #000000 !important; font-family: Arial, sans-serif !important; font-size: 11pt !important; line-height: 1.5 !important;">
         <div style="text-align: center; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px;">
@@ -6275,10 +6284,26 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }).from(document.getElementById("pdf-laudo-template")).save();
     }
 
+    let gerandoPDFGarantia = false;
+
     function gerarPDFGarantia() {
+        // Evita que o mesmo clique gere vários downloads enquanto o html2canvas trabalha.
+        if (gerandoPDFGarantia) return;
         const cliente = document.getElementById("crmNome").value.trim();
         const dias = parseInt(document.getElementById("crmDiasGarantia").value) || 90;
         if(!cliente) return alert("O Nome do Cliente é obrigatório!");
+
+        gerandoPDFGarantia = true;
+        const botao = document.getElementById('crmBtnEmitirGarantia');
+        const loading = document.getElementById('pdfGarantiaLoading');
+        const textoOriginal = botao ? botao.innerHTML : '';
+        if (botao) { botao.disabled = true; botao.innerHTML = '⏳ Gerando PDF...'; botao.style.opacity = '.7'; botao.style.cursor = 'wait'; }
+        if (loading) loading.style.display = 'flex';
+        const finalizar = () => {
+            gerandoPDFGarantia = false;
+            if (loading) loading.style.display = 'none';
+            if (botao) { botao.disabled = false; botao.innerHTML = textoOriginal; botao.style.opacity = ''; botao.style.cursor = ''; }
+        };
 
         const campoDataCompra = document.getElementById("crmDataCompra");
         const dCompra = campoDataCompra.value ? new Date(campoDataCompra.value + 'T00:00:00') : new Date();
@@ -6304,7 +6329,21 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         // seguida, gera o PDF. Assim emitir o termo nunca deixa o cadastro pra trás.
         crmSalvar();
 
-        html2pdf().set({margin:[10,12,10,12], filename:"Garantia_"+cliente.replace(/\s+/g,'_')+".pdf", image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2.5,logging:false,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy'], avoid:['#pdfGarAssinaturas', '#pdfGarClausulas > div']}}).from(document.getElementById("pdf-template")).save();
+        // Dá um ciclo de tela para o aviso aparecer antes da parte pesada da geração.
+        requestAnimationFrame(() => setTimeout(() => {
+            html2pdf().set({
+                margin:[10,12,10,12],
+                filename:"Garantia_"+cliente.replace(/\s+/g,'_')+".pdf",
+                image:{type:'jpeg',quality:0.92},
+                html2canvas:{scale:2,logging:false,useCORS:true},
+                jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+                pagebreak:{mode:['css','legacy'], avoid:['#pdfGarAssinaturas', '#pdfGarClausulas > div']}
+            }).from(document.getElementById("pdf-template")).save().then(finalizar).catch(err => {
+                console.error('Erro ao gerar termo de garantia:', err);
+                finalizar();
+                alert('Não foi possível gerar o PDF. Tente novamente.');
+            });
+        }, 60));
     }
 
     // Preenche o modal de Cadastro de Vendas com os dados de um cliente já cadastrado,
