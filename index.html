@@ -295,6 +295,22 @@
             #feixesGlobais { display: none; }
         }
 
+        /* ==========================================
+           MODO LEVE — desliga animações CSS, desfoques e sombras pesadas,
+           pra rodar melhor em aparelhos com pouca RAM/GPU.
+           ========================================== */
+        body.modo-leve #feixesGlobais { display: none !important; }
+        body.modo-leve *,
+        body.modo-leve *::before,
+        body.modo-leve *::after {
+            animation: none !important;
+            transition: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            filter: none !important;
+            box-shadow: none !important;
+        }
+
         /* Bolinha de notificação nos botões do menu lateral (ex: CRM com aniversário/garantia pendente) */
         .nav-badge {
             position: absolute;
@@ -2098,6 +2114,11 @@ body.modo-claro .main-content {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<script>
+    // Aplica o Modo Leve (menos gráficos) o quanto antes, pra não piscar
+    // as animações por uma fração de segundo antes de desativar.
+    try { if (localStorage.getItem('modoLevePrado') === '1') document.body.classList.add('modo-leve'); } catch(e){}
+</script>
 
 <div id="feixesGlobais" aria-hidden="true">
     <div class="feixe" style="left:4%;   width:2px; height:75vh; --ang:14deg;  --op:0.55; animation-duration:21s; animation-delay:-3s;"></div>
@@ -2161,8 +2182,15 @@ body.modo-claro .main-content {
     
     <aside class="sidebar">
         <div class="brand-box">
-            <div class="brand-logo-wrap">
+            <div class="brand-logo-wrap" style="position:relative; display:inline-block;">
                 <img src="logo.png" alt="Logo Prado Cell" class="brand-logo" onerror="this.style.display='none'" onclick="ovoSeisSete()" style="cursor:pointer;">
+                <button id="btnMenuGrafico" onclick="toggleMenuGrafico(event)" aria-label="Opções de desempenho" style="position:absolute; top:-2px; right:-16px; background:none; border:none; color:var(--text-muted); opacity:0.3; font-size:15px; cursor:pointer; padding:5px; line-height:1; transition:opacity 0.2s ease;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.3'">⋮</button>
+                <div id="menuGrafico" style="display:none; position:absolute; top:22px; right:-16px; z-index:50; background:var(--bg-card, #1a1d24); border:1px solid var(--border-color); border-radius:10px; padding:10px 12px; min-width:180px; box-shadow:0 8px 24px rgba(0,0,0,0.5); text-align:left;">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); cursor:pointer; user-select:none;">
+                        <input type="checkbox" id="chkModoLeve" onchange="alternarModoLeve()" style="cursor:pointer;">
+                        Modo leve (menos gráficos)
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -7660,6 +7688,33 @@ async function fazerLogout() {
     if (!confirm('Sair do sistema?')) return;
     await supabaseDB.auth.signOut();
     location.reload();
+}
+
+// ==========================================
+// MODO LEVE (menos gráficos) — pra quem tem pouca RAM/GPU no aparelho.
+// Desliga as animações CSS (LED, feixes de luz, etc.) e outros efeitos
+// pesados (blur, sombra). Fica salvo no navegador da pessoa.
+// ==========================================
+function toggleMenuGrafico(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('menuGrafico');
+    const vaiAbrir = menu.style.display !== 'block';
+    if (vaiAbrir) {
+        document.getElementById('chkModoLeve').checked = document.body.classList.contains('modo-leve');
+    }
+    menu.style.display = vaiAbrir ? 'block' : 'none';
+}
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('menuGrafico');
+    const btn = document.getElementById('btnMenuGrafico');
+    if (menu && menu.style.display === 'block' && !menu.contains(e.target) && e.target !== btn) {
+        menu.style.display = 'none';
+    }
+});
+function alternarModoLeve() {
+    const ativo = document.getElementById('chkModoLeve').checked;
+    document.body.classList.toggle('modo-leve', ativo);
+    try { localStorage.setItem('modoLevePrado', ativo ? '1' : '0'); } catch(e) {}
 }
 
 // Converte o objeto usado no front (camelCase) pro formato de colunas do banco (snake_case)
