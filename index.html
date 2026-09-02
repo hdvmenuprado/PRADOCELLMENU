@@ -2110,7 +2110,136 @@ body.modo-claro .main-content {
 
         .ep-search { width:100%; max-width:1300px; padding:10px 14px; border-radius:8px; border:1px solid var(--border-color); background: var(--bg-card); color:var(--text-main); font-size:13px; margin-bottom:14px; backdrop-filter: blur(12px); }
         .ep-search::placeholder { color:#666; }
+
+        /* ==========================================
+           ABA CUPOM DE SORTEIO — visual de "talão de rifa"
+           (vermelho + dourado, borda perfurada, numeração em mono),
+           propositalmente diferente do resto do sistema.
+           ========================================== */
+        #menu-sorteio {
+            --st-vermelho: #c23a2e;
+            --st-vermelho-forte: #8f2318;
+            --st-dourado: #d4af37;
+            --st-papel: rgba(212, 175, 55, 0.04);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        body.modo-claro #menu-sorteio { --st-papel: rgba(194, 58, 46, 0.03); }
+
+        #menu-sorteio .st-header {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+            padding: 16px 20px; margin-bottom: 22px; border-radius: 10px;
+            background: linear-gradient(90deg, rgba(194,58,46,0.12), rgba(212,175,55,0.06));
+            border: 1px solid rgba(194,58,46,0.25); border-left: 4px solid var(--st-vermelho);
+        }
+        #menu-sorteio .st-header h2 {
+            margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 700;
+            color: var(--text-main); display:flex; align-items:center; gap:10px;
+        }
+        #menu-sorteio .st-header p { margin: 3px 0 0; font-size: 12px; color: var(--text-muted); }
+        #menu-sorteio .st-config { display:flex; align-items:center; gap:8px; }
+        #menu-sorteio .st-config label { font-size: 11px; color: var(--text-muted); text-align:right; }
+        #menu-sorteio .st-config .st-valor-cupom-wrap { display:flex; align-items:center; gap:6px; }
+        #menu-sorteio .st-config input[type="number"] {
+            width: 90px; font-family:'JetBrains Mono',monospace; font-weight:700; text-align:right;
+            border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card);
+            color: var(--st-dourado); padding: 7px 8px; font-size: 13px;
+        }
+        #menu-sorteio .st-save-btn {
+            border: none; border-radius: 6px; padding: 8px 10px; cursor: pointer;
+            background: var(--st-dourado); color: #1a1200; font-weight: 700; font-size: 12px;
+            transition: filter 0.15s ease;
+        }
+        #menu-sorteio .st-save-btn:hover { filter: brightness(1.12); }
+
+        #menu-sorteio .st-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 900px) { #menu-sorteio .st-grid { grid-template-columns: 1fr; } }
+
+        /* "Talão" principal: cantos retos à esquerda, borda pontilhada simulando destacável à direita */
+        #menu-sorteio .st-ticket {
+            position: relative; background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 10px 4px 4px 10px; padding: 22px 24px; overflow: hidden;
+        }
+        #menu-sorteio .st-ticket::before {
+            content: ""; position: absolute; top: 0; bottom: 0; right: 34px; width: 0;
+            border-left: 2px dashed rgba(212,175,55,0.35);
+        }
+        #menu-sorteio .st-ticket::after {
+            content: "🎟️"; position: absolute; top: 50%; right: 6px; transform: translateY(-50%) rotate(90deg);
+            font-size: 20px; opacity: 0.35;
+        }
+        #menu-sorteio .st-ticket-body { padding-right: 40px; }
+        #menu-sorteio .st-section-label {
+            font-size: 11px; font-weight: 700; color: var(--st-vermelho); letter-spacing: 0.3px;
+            margin: 0 0 12px; display:flex; align-items:center; gap:6px;
+        }
+        body.modo-claro #menu-sorteio .st-section-label { color: var(--st-vermelho-forte); }
+        #menu-sorteio .st-row { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        #menu-sorteio .st-field label { display:block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+        #menu-sorteio .st-field input {
+            width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 7px;
+            border: 1px solid var(--border-color); background: var(--st-papel); color: var(--text-main); font-size: 13.5px;
+        }
+        #menu-sorteio .st-field input:focus { outline: none; border-color: var(--st-vermelho); }
+        #menu-sorteio .st-calc-box {
+            background: var(--st-papel); border: 1px dashed rgba(212,175,55,0.4); border-radius: 8px;
+            padding: 12px 14px; margin: 4px 0 16px;
+        }
+        #menu-sorteio .st-calc-result {
+            font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-main); margin: 0;
+        }
+        #menu-sorteio .st-calc-result strong { color: var(--st-dourado); font-size: 16px; }
+        #menu-sorteio #sorteioConfigStatus { font-size: 11px; color: var(--text-muted); font-style: italic; margin: 6px 0 0; }
+        #menu-sorteio .st-btn-imprimir {
+            width: 100%; border: none; border-radius: 8px; padding: 13px; margin-top: 4px;
+            background: linear-gradient(90deg, var(--st-vermelho), var(--st-vermelho-forte)); color: #fff;
+            font-weight: 700; font-size: 14px; cursor: pointer; letter-spacing: 0.2px;
+            box-shadow: 0 4px 14px rgba(194,58,46,0.25); transition: transform 0.12s ease, filter 0.15s ease;
+        }
+        #menu-sorteio .st-btn-imprimir:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+        /* Painel lateral: reimpressão */
+        #menu-sorteio .st-side { display: flex; flex-direction: column; gap: 16px; }
+        #menu-sorteio .st-card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px 20px;
+        }
+        #menu-sorteio .st-btn-outline {
+            width: 100%; margin-top: 10px; border-radius: 7px; padding: 10px; cursor: pointer;
+            background: transparent; border: 1.5px solid var(--st-dourado); color: var(--st-dourado); font-weight: 700; font-size: 13px;
+        }
+        #menu-sorteio .st-btn-outline:hover { background: rgba(212,175,55,0.1); }
+
+        /* Tabela de clientes em estilo "livro de talões": zebra sutil + números em mono */
+        #menu-sorteio .st-clientes-wrap { margin-top: 26px; }
+        #menu-sorteio .st-clientes-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom: 12px; }
+        #menu-sorteio .st-clientes-head h3 {
+            margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 15px; color: var(--text-main); display:flex; align-items:center; gap:7px;
+        }
+        #menu-sorteio #sorteioClientesLoadingStatus { font-size: 11px; color: var(--st-dourado); font-weight: 600; }
+        #menu-sorteio #sorteioPesquisaClientes {
+            width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 7px; margin-bottom: 10px;
+            border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 13px;
+        }
+        #menu-sorteio .st-table-box { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-card); }
+        #menu-sorteio table.st-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        #menu-sorteio table.st-table thead th {
+            background: rgba(194,58,46,0.08); color: var(--text-muted); font-weight: 700; text-transform: uppercase;
+            font-size: 10.5px; letter-spacing: 0.3px; padding: 9px 12px; border-bottom: 1px solid var(--border-color);
+        }
+        #menu-sorteio table.st-table tbody tr { border-bottom: 1px dashed var(--border-color); }
+        #menu-sorteio table.st-table tbody tr:hover { background: rgba(212,175,55,0.05); }
+        #menu-sorteio table.st-table td { padding: 9px 12px; }
+        #menu-sorteio .st-total-pill {
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--st-dourado);
+            background: rgba(212,175,55,0.12); border-radius: 20px; padding: 2px 10px; font-size: 12.5px;
+        }
+        #menu-sorteio .st-reimprimir-btn {
+            background: none; border: 1px solid var(--st-vermelho); color: var(--st-vermelho); border-radius: 6px;
+            cursor: pointer; font-size: 12px; padding: 4px 8px;
+        }
+        body.modo-claro #menu-sorteio .st-reimprimir-btn { color: var(--st-vermelho-forte); border-color: var(--st-vermelho-forte); }
+        #menu-sorteio .st-reimprimir-btn:hover { background: rgba(194,58,46,0.1); }
     </style>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -3469,74 +3598,81 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
 
             <div id="menu-sorteio" class="modulo-aba hidden">
-                <h2>🎟️ Cupom de Sorteio</h2>
-                <p style="color: var(--text-muted); font-size: 13px; margin-top: -20px; margin-bottom: 25px;">Gera os cupons na impressora térmica e salva o registro na planilha — cada geração de cupons vira uma linha só, com a quantidade ao lado (não repete uma linha por cupom).</p>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Nome do Cliente</label>
-                        <input type="text" id="sorteioCliente" placeholder="Ex: João da Silva">
+                <div class="st-header">
+                    <div>
+                        <h2>🎟️ Cupom de Sorteio</h2>
+                        <p>Cadastre o cliente, gere os cupons e imprima na hora. Cada geração fica salva e pode ser reimpressa depois.</p>
                     </div>
-                    <div class="form-group">
-                        <label>Telefone</label>
-                        <input type="text" id="sorteioTelefone" placeholder="Ex: 45999999999">
+                    <div class="st-config">
+                        <label>Valor por cupom (R$)</label>
+                        <div class="st-valor-cupom-wrap">
+                            <input type="number" id="sorteioValorCupom" min="0.01" step="0.01" value="250.00" oninput="sorteioCalcular()">
+                            <button type="button" class="st-save-btn" onclick="sorteioSalvarValorPadrao()" title="Salvar como valor padrão">💾 Salvar</button>
+                        </div>
                     </div>
                 </div>
+                <p id="sorteioConfigStatus" style="margin:-14px 0 18px;"></p>
 
-                <div style="background: rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:12px; padding:14px 16px; margin:18px 0;">
-                    <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">🧮 Calculadora — quanto o cliente gastou? (opcional, calcula os cupons automaticamente)</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Valor Gasto (R$)</label>
-                            <input type="number" id="sorteioValorGasto" min="0" step="0.01" placeholder="Ex: 5000" oninput="sorteioCalcular()">
-                        </div>
-                        <div class="form-group">
-                            <label>Valor por Cupom (R$)</label>
-                            <div style="display:flex;gap:8px;align-items:center;">
-                                <input type="number" id="sorteioValorCupom" min="0.01" step="0.01" value="250.00" oninput="sorteioCalcular()" style="flex:1;">
-                                <button type="button" class="action-btn secondary-btn" style="margin-top:0;width:auto;padding:9px 12px;font-size:11px;white-space:nowrap;" onclick="sorteioSalvarValorPadrao()" title="Salva este valor como padrão no Apps Script, sem precisar mexer em código">💾 Salvar padrão</button>
+                <div class="st-grid">
+                    <div class="st-ticket">
+                        <div class="st-ticket-body">
+                            <p class="st-section-label">🎫 Gerar cupons</p>
+                            <div class="st-row">
+                                <div class="st-field">
+                                    <label>Nome do Cliente</label>
+                                    <input type="text" id="sorteioCliente" placeholder="Ex: João da Silva">
+                                </div>
+                                <div class="st-field">
+                                    <label>Telefone</label>
+                                    <input type="text" id="sorteioTelefone" placeholder="Ex: 45999999999">
+                                </div>
                             </div>
+
+                            <div class="st-calc-box">
+                                <div class="st-row" style="margin-bottom:8px;">
+                                    <div class="st-field">
+                                        <label>Valor Gasto (R$)</label>
+                                        <input type="number" id="sorteioValorGasto" min="0" step="0.01" placeholder="Ex: 5000" oninput="sorteioCalcular()">
+                                    </div>
+                                    <div class="st-field">
+                                        <label>Quantidade de Cupons</label>
+                                        <input type="number" id="sorteioQuantidade" min="1" step="1" value="1">
+                                    </div>
+                                </div>
+                                <p class="st-calc-result" id="sorteioCalculoInfo"></p>
+                            </div>
+
+                            <button class="st-btn-imprimir" onclick="sorteioGerar()">🖨️ Gerar, Salvar e Imprimir Cupons</button>
                         </div>
                     </div>
-                    <p id="sorteioCalculoInfo" style="font-size:11.5px;color:var(--text-muted);margin:8px 0 0;"></p>
-                    <p id="sorteioConfigStatus" style="font-size:11px;color:var(--text-muted);margin:4px 0 0;font-style:italic;"></p>
-                </div>
 
-                <div class="form-group" style="max-width:220px;">
-                    <label>Quantidade de Cupons</label>
-                    <input type="number" id="sorteioQuantidade" min="1" step="1" value="1">
-                </div>
-
-                <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
-                    <button class="action-btn success-btn" style="margin-top:0;flex:1;min-width:220px;" onclick="sorteioGerar()">🖨️ Gerar e Imprimir Cupons</button>
-                </div>
-
-                <div style="background: rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:12px; padding:14px 16px; margin:22px 0 0;">
-                    <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">🔁 Reimprimir cupom já cadastrado — busca o cliente na planilha e reimprime na hora.</div>
-                    <div class="form-grid">
-                        <div class="form-group" style="flex:1;">
-                            <label>Nome do Cliente</label>
-                            <input type="text" id="sorteioReimprimirNome" placeholder="Ex: João da Silva">
+                    <div class="st-side">
+                        <div class="st-card">
+                            <p class="st-section-label">🔁 Reimprimir</p>
+                            <div class="st-field">
+                                <label>Nome do Cliente</label>
+                                <input type="text" id="sorteioReimprimirNome" placeholder="Ex: João da Silva">
+                            </div>
+                            <button id="sorteioBtnReimprimir" class="st-btn-outline" onclick="sorteioReimprimirCupom()">🔁 Buscar e Reimprimir</button>
                         </div>
                     </div>
-                    <button id="sorteioBtnReimprimir" class="action-btn secondary-btn" style="margin-top:12px;" onclick="sorteioReimprimirCupom()">🔁 Reimprimir Cupom</button>
                 </div>
 
-                <div style="margin-top:26px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
-                        <h3 class="sub-title" style="margin:0;color:var(--primary);">Clientes Cadastrados</h3>
-                        <span id="sorteioClientesLoadingStatus" style="font-size:11px;color:var(--primary);font-weight:600;display:none;">Carregando...</span>
+                <div class="st-clientes-wrap">
+                    <div class="st-clientes-head">
+                        <h3>📖 Clientes Cadastrados</h3>
+                        <span id="sorteioClientesLoadingStatus" style="display:none;">Carregando...</span>
                     </div>
-                    <input type="text" id="sorteioPesquisaClientes" placeholder="🔍 Pesquisar cliente..." oninput="sorteioFiltrarClientes()" style="width:100%;box-sizing:border-box;margin-bottom:10px;">
-                    <div style="overflow-x:auto;background:var(--bg-card);border-radius:10px;border:1px solid var(--border-color);width:100%;box-sizing:border-box;">
-                        <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px;white-space:nowrap;">
+                    <input type="text" id="sorteioPesquisaClientes" placeholder="🔍 Pesquisar cliente..." oninput="sorteioFiltrarClientes()">
+                    <div class="st-table-box">
+                        <table class="st-table">
                             <thead>
                                 <tr>
-                                    <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Cliente</th>
-                                    <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Telefone</th>
-                                    <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Total de Cupons</th>
-                                    <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Último Cadastro</th>
-                                    <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Ações</th>
+                                    <th>Cliente</th>
+                                    <th>Telefone</th>
+                                    <th>Total de Cupons</th>
+                                    <th>Último Cadastro</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="sorteioClientesLinhas">
@@ -8982,29 +9118,74 @@ function sorteioLimparForm() {
     const info = document.getElementById('sorteioCalculoInfo'); if (info) info.textContent = '';
 }
 
-// Busca no Apps Script o valor padrão do cupom (configurado no backend, sem precisar mexer em código)
+// Busca no Supabase o valor padrão do cupom (tabela sorteio_config, linha única id=1)
 // e preenche o campo "Valor por Cupom" com ele.
-// Backend do Cupom de Sorteio foi desativado de propósito (a aba continua na tela,
-// mas sem salvar/consultar nada em nenhum servidor por enquanto).
-function sorteioCarregarConfig() {
+async function sorteioCarregarConfig() {
     const status = document.getElementById('sorteioConfigStatus');
-    if (status) status.textContent = 'ℹ️ Backend desativado — o valor do cupom não é salvo entre sessões por enquanto.';
+    try {
+        const { data, error } = await medirPromise('Sorteio Config', () =>
+            supabaseDB.from('sorteio_config').select('valor_cupom').eq('id', 1).maybeSingle());
+        if (error) throw new Error(error.message);
+        const valorCupomEl = document.getElementById('sorteioValorCupom');
+        if (data && valorCupomEl) valorCupomEl.value = Number(data.valor_cupom).toFixed(2);
+        if (status) status.textContent = '';
+    } catch (e) {
+        console.error('Erro ao carregar config do sorteio:', e);
+        if (status) status.textContent = '⚠️ Não foi possível carregar o valor padrão salvo — usando o valor atual do campo.';
+    }
 }
 
-// Salva o valor atual do campo "Valor por Cupom" como padrão no Apps Script (Propriedades do
-// Script), pra não precisar mais editar código quando esse valor mudar.
-function sorteioSalvarValorPadrao() {
-    mostrarToast('⚠️ Backend do Cupom de Sorteio está desativado — esse valor não é salvo em lugar nenhum agora.', 'erro');
+// Salva o valor atual do campo "Valor por Cupom" como padrão no Supabase (tabela sorteio_config),
+// pra não precisar mais editar código quando esse valor mudar.
+async function sorteioSalvarValorPadrao() {
+    const valor = parseFloat(document.getElementById('sorteioValorCupom').value) || 0;
+    if (valor <= 0) { mostrarToast('Informe um valor por cupom válido.', 'erro'); return; }
+    try {
+        const { error } = await medirPromise('Sorteio Config', () =>
+            supabaseDB.from('sorteio_config').upsert({ id: 1, valor_cupom: valor, atualizado_em: new Date().toISOString() }));
+        if (error) throw new Error(error.message);
+        mostrarToast('✅ Valor padrão do cupom salvo!');
+    } catch (e) { mostrarToast('❌ ' + e.message, 'erro'); }
 }
 
 let _sorteioClientesCompleta = [];
 
-// Busca no Apps Script a lista de clientes já cadastrados com o total de cupons de cada um
-// (soma de todos os lotes gerados para aquele cliente).
-function sorteioCarregarClientes() {
-    _sorteioClientesCompleta = [];
+// Busca no Supabase (tabela sorteio_lotes) e agrega por cliente: total de cupons (soma da
+// quantidade de todos os lotes), telefone e data do último lote gerado.
+async function sorteioCarregarClientes() {
     const tbody = document.getElementById('sorteioClientesLinhas');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Backend desativado — histórico de clientes indisponível no momento.</td></tr>`;
+    const loading = document.getElementById('sorteioClientesLoadingStatus');
+    if (loading) loading.style.display = 'inline';
+    try {
+        await carregarLojas();
+        let query = supabaseDB.from('sorteio_lotes').select('*').order('criado_em', { ascending: false });
+        const filtroLoja = lojaIdParaFiltro();
+        if (filtroLoja) query = query.eq('loja_id', filtroLoja);
+        const { data, error } = await medirPromise('Sorteio Clientes', () => query);
+        if (error) throw new Error(error.message);
+
+        const porCliente = new Map();
+        (data || []).forEach(l => {
+            const chave = (l.cliente || '').trim().toLowerCase();
+            if (!chave) return;
+            const atual = porCliente.get(chave) || { cliente: l.cliente, telefone: l.telefone, total: 0, ultimaData: null, ultimaDataISO: null };
+            atual.total += Number(l.quantidade) || 0;
+            if (!atual.ultimaDataISO || l.criado_em > atual.ultimaDataISO) {
+                atual.ultimaDataISO = l.criado_em;
+                atual.ultimaData = l.criado_em ? new Date(l.criado_em).toLocaleDateString('pt-BR') : '-';
+                atual.telefone = l.telefone || atual.telefone;
+            }
+            porCliente.set(chave, atual);
+        });
+        _sorteioClientesCompleta = Array.from(porCliente.values()).sort((a,b) => (b.ultimaDataISO||'').localeCompare(a.ultimaDataISO||''));
+        sorteioFiltrarClientes();
+    } catch (e) {
+        console.error('Erro ao carregar clientes do sorteio:', e);
+        _sorteioClientesCompleta = [];
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#f87171;padding:20px;">Erro ao carregar clientes.</td></tr>`;
+    } finally {
+        if (loading) loading.style.display = 'none';
+    }
 }
 
 // Filtra a lista de clientes carregada pelo texto digitado na busca e renderiza a tabela
@@ -9030,13 +9211,13 @@ function sorteioRenderizarClientes(lista) {
         const dataFmt = c.ultimaData || '-';
         const nomeSeguro = String(c.cliente || '').replace(/'/g, "\\'");
         return `
-            <tr style="border-bottom:1px solid var(--border-color);">
-                <td style="padding:7px 10px;font-weight:600;color:var(--text-main);">${c.cliente || '-'}</td>
-                <td style="padding:7px 10px;color:var(--text-muted);font-size:12px;">${c.telefone || '-'}</td>
-                <td style="padding:7px 10px;font-weight:700;color:var(--primary);">${c.total || 0}</td>
-                <td style="padding:7px 10px;color:var(--text-muted);font-size:12px;">${dataFmt}</td>
-                <td style="padding:7px 10px;white-space:nowrap;">
-                    <button onclick="sorteioReimprimirPorNome('${nomeSeguro}')" title="Reimprimir cupons deste cliente" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:14px;">🔁</button>
+            <tr>
+                <td style="font-weight:600;color:var(--text-main);">${c.cliente || '-'}</td>
+                <td style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:12px;">${c.telefone || '-'}</td>
+                <td><span class="st-total-pill">${c.total || 0}</span></td>
+                <td style="color:var(--text-muted);font-size:12px;">${dataFmt}</td>
+                <td>
+                    <button class="st-reimprimir-btn" onclick="sorteioReimprimirPorNome('${nomeSeguro}')" title="Reimprimir cupons deste cliente">🔁 Reimprimir</button>
                 </td>
             </tr>
         `;
@@ -9050,42 +9231,73 @@ function sorteioReimprimirPorNome(nome) {
     sorteioReimprimirCupom();
 }
 
-// Valida o formulário, gera os N cupons (um número único por cupom, usado na impressão física)
-// e manda imprimir na impressora térmica. No backend, essa geração inteira vira UMA linha na
-// planilha (não uma por cupom), com a quantidade total ao lado.
-function sorteioGerar() {
+// Valida o formulário, gera os N cupons (um número único por cupom, usado na impressão física),
+// grava UMA linha no Supabase (sorteio_lotes) com a quantidade total, e manda imprimir na
+// impressora térmica.
+async function sorteioGerar() {
     const cliente = (document.getElementById('sorteioCliente').value || '').trim();
     const telefone = (document.getElementById('sorteioTelefone').value || '').trim();
+    const valorGasto = parseFloat(document.getElementById('sorteioValorGasto').value) || null;
     const quantidade = parseInt(document.getElementById('sorteioQuantidade').value, 10) || 0;
 
     if (!cliente) { alert('Preencha o nome do cliente.'); return; }
     if (quantidade < 1) { alert('A quantidade de cupons precisa ser pelo menos 1.'); return; }
 
+    const lojaId = lojaIdParaGravar();
+    if (!lojaId) { mostrarToast('Escolha uma loja no seletor à esquerda antes de gerar cupons.', 'erro'); return; }
+
     const lote = sorteioGerarCodigoLote();
     const dataHoje = new Date().toLocaleDateString('pt-BR');
 
-    // Cada cupom ganho vira sua própria via numerada (lote-0001, lote-0002, ...),
-    // usada na impressão física — o número impresso é só pra controle do papel,
-    // já que não existe mais nenhum registro salvo em servidor (backend desativado).
-    const cupons = [];
-    for (let i = 1; i <= quantidade; i++) {
-        cupons.push({
-            numeroCupom: `${lote}-${String(i).padStart(4,'0')}`,
-            cliente, telefone, data: dataHoje
-        });
-    }
+    try {
+        const { error } = await medirPromise('Sorteio Gerar', () =>
+            supabaseDB.from('sorteio_lotes').insert({
+                loja_id: lojaId, lote, cliente, telefone, valor_gasto: valorGasto, quantidade
+            }));
+        if (error) throw new Error(error.message);
 
-    sorteioImprimirCupom(cliente, telefone, lote, dataHoje, cupons);
+        // Cada cupom ganho vira sua própria via numerada (lote-0001, lote-0002, ...),
+        // usada na impressão física — a linha gravada acima guarda só o total, não uma
+        // linha por cupom, pra poder reimprimir tudo de novo mais tarde.
+        const cupons = [];
+        for (let i = 1; i <= quantidade; i++) {
+            cupons.push({ numeroCupom: `${lote}-${String(i).padStart(4,'0')}`, cliente, telefone, data: dataHoje });
+        }
+        sorteioImprimirCupom(cliente, telefone, lote, dataHoje, cupons);
 
-    mostrarToast(`✅ ${quantidade} cupom(ns) impresso(s) para ${cliente}! (backend desativado — nada foi salvo)`, 'info');
-    sorteioLimparForm();
+        mostrarToast(`✅ ${quantidade} cupom(ns) impresso(s) e salvo(s) para ${cliente}!`);
+        sorteioLimparForm();
+        sorteioCarregarClientes();
+    } catch (e) { mostrarToast('❌ ' + e.message, 'erro'); }
 }
 
-// Backend do Cupom de Sorteio desativado: sem servidor pra buscar, não dá mais
-// pra reconstruir os cupons de um cliente só pelo nome. A reimpressão só
-// funciona enquanto você ainda tiver a via física original.
-function sorteioReimprimirCupom() {
-    alert('A busca de cupons pra reimpressão depende do backend, que está desativado no momento.\n\nSó é possível reimprimir guardando a via física original.');
+// Busca todos os lotes já gerados para o cliente digitado (tabela sorteio_lotes) e reimprime
+// todas as vias de cada lote encontrado, na ordem em que foram geradas.
+async function sorteioReimprimirCupom() {
+    const nome = (document.getElementById('sorteioReimprimirNome').value || '').trim();
+    if (!nome) { alert('Digite o nome do cliente para buscar.'); return; }
+
+    try {
+        let query = supabaseDB.from('sorteio_lotes').select('*').ilike('cliente', nome).order('criado_em', { ascending: true });
+        const filtroLoja = lojaIdParaFiltro();
+        if (filtroLoja) query = query.eq('loja_id', filtroLoja);
+        const { data, error } = await medirPromise('Sorteio Reimprimir', () => query);
+        if (error) throw new Error(error.message);
+
+        if (!data || !data.length) { mostrarToast(`Nenhum cupom encontrado para "${nome}".`, 'erro'); return; }
+
+        const cupons = [];
+        data.forEach(l => {
+            const dataFmt = l.criado_em ? new Date(l.criado_em).toLocaleDateString('pt-BR') : '-';
+            for (let i = 1; i <= (Number(l.quantidade) || 0); i++) {
+                cupons.push({ numeroCupom: `${l.lote}-${String(i).padStart(4,'0')}`, cliente: l.cliente, telefone: l.telefone, data: dataFmt });
+            }
+        });
+
+        const ultimo = data[data.length - 1];
+        sorteioImprimirCupom(ultimo.cliente, ultimo.telefone, 'REIMPRESSAO', new Date().toLocaleDateString('pt-BR'), cupons);
+        mostrarToast(`🔁 ${cupons.length} cupom(ns) reimpresso(s) para ${ultimo.cliente}.`);
+    } catch (e) { mostrarToast('❌ ' + e.message, 'erro'); }
 }
 
 // Abre a janela de impressão térmica já com TODAS as vias geradas (uma por cupom
