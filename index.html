@@ -7748,6 +7748,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         carregarConfigPDF();
         carregarConfigSeguranca();
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); } });
+        iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
         supabaseDB.auth.onAuthStateChange((_event, session) => {
@@ -7757,6 +7758,56 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             }
         });
     };
+
+    // ==========================================
+    // VERIFICAÇÃO DE ATUALIZAÇÃO DO APP
+    // Não existe número de versão pra manter atualizado a cada deploy: a gente
+    // simplesmente pergunta pro servidor "esse arquivo mudou desde que eu carreguei?"
+    // usando o cabeçalho ETag/Last-Modified que o GitHub Pages já manda sozinho.
+    // Se mudou, é porque saiu um deploy novo — trava a tela com aviso pra recarregar.
+    // ==========================================
+    let _versaoAppCarregada = null;
+    let _verificarVersaoInterval = null;
+    const VERIFICAR_VERSAO_INTERVALO_MS = 3 * 60 * 1000; // a cada 3 minutos
+
+    async function verificarNovaVersaoApp() {
+        try {
+            const resp = await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
+            const versao = resp.headers.get('etag') || resp.headers.get('last-modified');
+            if (!versao) return; // hospedagem não expôs nenhum dos dois; não dá pra checar por aqui
+            if (_versaoAppCarregada === null) {
+                _versaoAppCarregada = versao; // primeira checagem: só grava a versão atual como referência
+                return;
+            }
+            if (versao !== _versaoAppCarregada) {
+                mostrarAvisoNovaVersao();
+            }
+        } catch (e) {
+            // falha de rede pontual não deve incomodar ninguém; só tenta de novo na próxima rodada
+        }
+    }
+
+    function mostrarAvisoNovaVersao() {
+        if (document.getElementById('overlayNovaVersao')) return; // já está mostrando, evita duplicar
+        if (_verificarVersaoInterval) clearInterval(_verificarVersaoInterval); // já achou, para de checar
+
+        const overlay = document.createElement('div');
+        overlay.id = 'overlayNovaVersao';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML = `
+            <div style="background:var(--bg-card, #1a1a1a);border:1px solid var(--border-color, #333);border-radius:14px;padding:32px 28px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                <div style="font-size:42px;margin-bottom:10px;">🔄</div>
+                <h3 style="margin:0 0 10px;color:var(--text-main, #fff);font-size:18px;">Nova versão disponível</h3>
+                <p style="margin:0 0 22px;color:var(--text-muted, #999);font-size:13.5px;line-height:1.5;">O sistema foi atualizado. Recarregue a página pra continuar usando a versão mais recente — pode salvar o que estiver fazendo antes.</p>
+                <button onclick="window.location.reload()" style="width:100%;padding:13px;border:none;border-radius:8px;background:var(--primary, #d4af37);color:#1a1200;font-weight:700;font-size:14px;cursor:pointer;">🔄 Atualizar agora</button>
+            </div>`;
+        document.body.appendChild(overlay);
+    }
+
+    function iniciarVerificacaoDeAtualizacao() {
+        verificarNovaVersaoApp(); // grava a versão de referência assim que a página carrega
+        _verificarVersaoInterval = setInterval(verificarNovaVersaoApp, VERIFICAR_VERSAO_INTERVALO_MS);
+    }
 </script>
 
 <script>
