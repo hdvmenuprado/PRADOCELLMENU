@@ -2246,7 +2246,7 @@ body.modo-claro .main-content {
         .cli-icon { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
         .cli-icon svg { width:100%; height:100%; }
 
-        #menu-clientes .cli-dash { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px; }
+        #menu-clientes .cli-dash { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:18px; max-width:520px; }
         @media (max-width:700px) { #menu-clientes .cli-dash { grid-template-columns:1fr; } }
         #menu-clientes .cli-dash-card {
             display:flex; align-items:center; gap:12px; background:var(--bg-card); border:1px solid var(--border-color);
@@ -3765,10 +3765,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     <div class="cli-dash-card">
                         <div class="cli-dash-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
                         <div><div class="cli-dash-valor" id="cliDashTotalInteracoes">-</div><div class="cli-dash-label">Interações no total</div></div>
-                    </div>
-                    <div class="cli-dash-card">
-                        <div class="cli-dash-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2Z"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2Z"/><path d="M18 13h.01"/></svg></div>
-                        <div><div class="cli-dash-valor" id="cliDashValorTotal">-</div><div class="cli-dash-label">Valor movimentado</div></div>
                     </div>
                 </div>
 
@@ -9621,10 +9617,8 @@ async function clientesCarregar() {
 function clientesAtualizarDash() {
     const total = _clientesListaCompleta.length;
     const interacoes = _clientesListaCompleta.reduce((soma, c) => soma + (Number(c.total_eventos) || 0), 0);
-    const valor = _clientesListaCompleta.reduce((soma, c) => soma + (Number(c.valor_total) || 0), 0);
     document.getElementById('cliDashTotalClientes').innerText = total;
     document.getElementById('cliDashTotalInteracoes').innerText = interacoes;
-    document.getElementById('cliDashValorTotal').innerText = 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function clientesFiltrar() {
