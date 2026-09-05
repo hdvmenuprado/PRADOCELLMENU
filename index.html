@@ -7900,6 +7900,29 @@ function osDoBanco(row) {
     };
 }
 
+// Se uma resposta do Supabase vier com token de sessão vencido/inválido (JWT expirado),
+// força logout e mostra a tela de login de novo com um aviso — sem isso, a pessoa só via
+// a tela travada/vazia sem entender por quê (bug real visto nos logs de produção).
+let _tratandoSessaoExpirada = false;
+function ehErroDeSessaoExpirada(error) {
+    if (!error) return false;
+    const msg = (error.message || '').toLowerCase();
+    return error.code === 'PGRST301' || msg.includes('jwt') || error.status === 401;
+}
+async function tratarSessaoExpirada() {
+    if (_tratandoSessaoExpirada) return;
+    _tratandoSessaoExpirada = true;
+    try { await supabaseDB.auth.signOut(); } catch (e) { /* já não tinha sessão válida mesmo */ }
+    document.querySelectorAll('.modulo-aba').forEach(el => el.classList.add('hidden'));
+    const selecaoEl = document.getElementById('telaSelecaoPerfil');
+    if (selecaoEl) selecaoEl.style.display = 'none';
+    const loginEl = document.getElementById('telaLogin');
+    if (loginEl) loginEl.style.display = 'flex';
+    const erroEl = document.getElementById('loginErro');
+    if (erroEl) erroEl.textContent = 'Sua sessão expirou. Faça login novamente.';
+    _tratandoSessaoExpirada = false;
+}
+
 // Mede a duração de qualquer chamada assíncrona (não só fetch) e registra no
 // painel de Diagnóstico, do mesmo jeito que medirFetch já fazia com o Apps Script.
 // Mede a duração de qualquer chamada assíncrona (não só fetch) e registra no painel de
@@ -7914,10 +7937,20 @@ async function medirPromise(nomeApi, promessaFn) {
     const inicio = performance.now();
     try {
         const resultado = await promessaFn();
+        if (resultado && ehErroDeSessaoExpirada(resultado.error)) {
+            _diagRegistrar(nomeApi, performance.now() - inicio, 'sessão expirada', false);
+            tratarSessaoExpirada();
+            return resultado;
+        }
         _diagRegistrar(nomeApi, performance.now() - inicio, 'ok', true);
         return resultado;
     } catch (e) {
-        _diagRegistrar(nomeApi, performance.now() - inicio, 'erro', false);
+        if (ehErroDeSessaoExpirada(e)) {
+            _diagRegistrar(nomeApi, performance.now() - inicio, 'sessão expirada', false);
+            tratarSessaoExpirada();
+        } else {
+            _diagRegistrar(nomeApi, performance.now() - inicio, 'erro', false);
+        }
         throw e;
     }
 }
