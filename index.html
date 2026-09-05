@@ -2331,6 +2331,7 @@ body.modo-claro .main-content {
             <button class="nav-btn" id="tab-estoquepecas" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('estoquepecas', this)"><span class="nav-icon">📦</span><span class="nav-label">Estoque Peças</span></button>
             <button class="nav-btn" id="tab-os" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('os', this)"><span class="nav-icon">🛠️</span><span class="nav-label">O.S.</span></button>
             <button class="nav-btn" id="tab-sorteio" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('sorteio', this)"><span class="nav-icon">🎟️</span><span class="nav-label">Cupom Sorteio</span></button>
+            <button class="nav-btn" id="tab-clientes" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('clientes', this)"><span class="nav-icon">👤</span><span class="nav-label">Clientes</span></button>
             <button class="nav-btn" id="tab-dashboard" data-perfis="gestao" onclick="mudarAba('dashboard', this)"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></button>
             <button class="nav-btn" id="tab-perdasgarantia" data-perfis="gestao" onclick="mudarAba('perdasgarantia', this)"><span class="nav-icon">📉</span><span class="nav-label">Perdas em Garantia</span></button>
             <button class="nav-btn" id="tab-admin" data-perfis="gestao" onclick="mudarAba('admin', this)"><span class="nav-icon">⚙️</span><span class="nav-label">Admin</span></button>
@@ -3684,6 +3685,31 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 </div>
             </div>
 
+            <div id="menu-clientes" class="modulo-aba hidden">
+                <h2>👤 Clientes</h2>
+                <p style="color: var(--text-muted); font-size: 13px; margin-top: -20px; margin-bottom: 25px;">Cruza automaticamente Vendas, O.S. e Cupom de Sorteio pelo telefone — não existe cadastro manual de cliente aqui, a lista se monta sozinha conforme os outros módulos são usados. Você só adiciona comentários.</p>
+
+                <input type="text" id="clientesPesquisa" placeholder="🔍 Pesquisar por nome, telefone ou CPF..." oninput="clientesFiltrar()" style="width:100%;box-sizing:border-box;margin-bottom:14px;">
+
+                <div style="overflow-x:auto;background:var(--bg-card);border-radius:10px;border:1px solid var(--border-color);width:100%;box-sizing:border-box;">
+                    <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Cliente</th>
+                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Telefone</th>
+                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">CPF</th>
+                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Interações</th>
+                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Último Contato</th>
+                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesLinhas">
+                            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Abra esta aba para carregar os clientes.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div id="menu-avisos" class="modulo-aba hidden">
                 <h2>📢 Avisos</h2>
                 <p style="color: var(--text-muted); font-size: 13px; margin-top: -20px; margin-bottom: 25px;">Avisos criados aqui aparecem como notificação no sino 🔔 dos perfis escolhidos. A pessoa vê o texto quando abre o sino.</p>
@@ -3896,6 +3922,26 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             <button class="action-btn" style="margin-top:0;flex:1;min-width:160px;" onclick="crmFecharModalDetalhes(); crmEditar(_crmDetalhesIdAtual);">✏️ Editar Cliente</button>
             <button class="action-btn secondary-btn" style="margin-top:0;flex:0 0 auto;" onclick="crmFecharModalDetalhes()">Fechar</button>
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalClienteDetalhe">
+    <div class="modal-box" style="width:600px; max-width:92vw; max-height:88vh; overflow-y:auto; text-align:left; padding:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <h3 id="clienteDetalheNome" style="margin:0; color: var(--primary); font-size:1.1rem; letter-spacing:normal;">Cliente</h3>
+            <button onclick="clientesFecharDetalhe()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;">✖️</button>
+        </div>
+        <p id="clienteDetalheContato" style="margin:0 0 18px;color:var(--text-muted);font-size:12.5px;"></p>
+
+        <h4 style="margin:0 0 10px;color:var(--text-main);font-size:13px;">📜 Histórico</h4>
+        <div id="clienteDetalheTimeline" style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;max-height:220px;overflow-y:auto;"></div>
+
+        <h4 style="margin:0 0 10px;color:var(--text-main);font-size:13px;">💬 Comentários</h4>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <input type="text" id="clienteNovaNota" placeholder="Adicionar um comentário sobre este cliente..." style="flex:1;" onkeydown="if(event.key==='Enter') clientesAdicionarNota()">
+            <button class="action-btn secondary-btn" style="margin-top:0;flex:0 0 auto;" onclick="clientesAdicionarNota()">Adicionar</button>
+        </div>
+        <div id="clienteDetalheNotas" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
 </div>
 
@@ -5121,6 +5167,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         else { avalDesacelerarSincronia(); }
         if (idAba === 'crm') crmCarregar();
         if (idAba === 'sorteio') { sorteioCarregarConfig(); sorteioCarregarClientes(); }
+        if (idAba === 'clientes') clientesCarregar();
         if (idAba === 'dashboard') dashboardCarregar();
         if (idAba === 'perdasgarantia') pgIniciar();
         if (idAba === 'admin') { carregarDadosAdminAvaliacao(); setTimeout(atualizarPreviewPDF, 100); svaIniciar(); carregarConfigSeguranca(); }
@@ -9432,6 +9479,150 @@ function sorteioImprimirCupom(cliente, telefone, lote, data, cupons) {
     <\/script>
     </body></html>`);
     win.document.close();
+}
+
+// ==========================================
+// ABA CLIENTES — cruza Vendas + O.S. + Cupom de Sorteio pelo telefone.
+// Não existe cadastro manual de cliente aqui: as views v_clientes_resumo e
+// v_clientes_eventos (Supabase) já fazem esse cruzamento sozinhas a partir do
+// que existe nas outras tabelas. A única coisa gravada por esta aba é
+// comentário (tabela clientes_notas).
+// ==========================================
+let _clientesListaCompleta = [];
+let _clienteDetalheAtual = null; // telefone_norm do cliente aberto no modal
+
+async function clientesCarregar() {
+    const tbody = document.getElementById('clientesLinhas');
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando...</td></tr>`;
+    try {
+        let query = supabaseDB.from('v_clientes_resumo').select('*').order('ultimo_contato', { ascending: false });
+        const filtroLoja = lojaIdParaFiltro();
+        if (filtroLoja) query = query.eq('loja_id', filtroLoja);
+        const { data, error } = await medirPromise('Clientes Lista', () => query);
+        if (error) throw new Error(error.message);
+        _clientesListaCompleta = data || [];
+        clientesFiltrar();
+    } catch (e) {
+        console.error('Erro ao carregar clientes:', e);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#f87171;padding:20px;">Erro ao carregar clientes.</td></tr>`;
+    }
+}
+
+function clientesFiltrar() {
+    const termo = (document.getElementById('clientesPesquisa').value || '').trim().toLowerCase();
+    const lista = !termo ? _clientesListaCompleta : _clientesListaCompleta.filter(c =>
+        (c.nome || '').toLowerCase().includes(termo) ||
+        (c.telefone || '').toLowerCase().includes(termo) ||
+        (c.cpf || '').toLowerCase().includes(termo)
+    );
+    clientesRenderizar(lista);
+}
+
+function clientesRenderizar(lista) {
+    const tbody = document.getElementById('clientesLinhas');
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Nenhum cliente encontrado.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = lista.map(c => {
+        const dataFmt = c.ultimo_contato ? new Date(c.ultimo_contato + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
+        const telefoneSeguro = String(c.telefone_norm || '').replace(/'/g, "\\'");
+        return `
+            <tr style="border-bottom:1px solid var(--border-color);">
+                <td style="padding:7px 10px;font-weight:600;color:var(--text-main);">${c.nome || '-'}</td>
+                <td style="padding:7px 10px;color:var(--text-muted);font-size:12px;">${c.telefone || '-'}</td>
+                <td style="padding:7px 10px;color:var(--text-muted);font-size:12px;">${c.cpf || '-'}</td>
+                <td style="padding:7px 10px;font-weight:700;color:var(--primary);">${c.total_eventos}</td>
+                <td style="padding:7px 10px;color:var(--text-muted);font-size:12px;">${dataFmt}</td>
+                <td style="padding:7px 10px;white-space:nowrap;">
+                    <button class="action-btn secondary-btn" style="margin-top:0;padding:6px 10px;font-size:11px;" onclick="clientesAbrirDetalhe('${telefoneSeguro}')">Ver histórico</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function clientesAbrirDetalhe(telefoneNorm) {
+    _clienteDetalheAtual = telefoneNorm;
+    const cliente = _clientesListaCompleta.find(c => c.telefone_norm === telefoneNorm);
+    document.getElementById('clienteDetalheNome').innerText = cliente ? (cliente.nome || 'Cliente') : 'Cliente';
+    document.getElementById('clienteDetalheContato').innerText = cliente
+        ? `📞 ${cliente.telefone || '-'} ${cliente.cpf ? '· CPF ' + cliente.cpf : ''} · 💰 total: R$ ${Number(cliente.valor_total || 0).toFixed(2)}`
+        : '';
+    document.getElementById('clienteDetalheTimeline').innerHTML = '<p style="color:var(--text-muted);font-size:12.5px;">Carregando...</p>';
+    document.getElementById('clienteDetalheNotas').innerHTML = '';
+    document.getElementById('modalClienteDetalhe').classList.add('ativo');
+
+    try {
+        const [eventosRes, notasRes] = await Promise.all([
+            medirPromise('Clientes Eventos', () =>
+                supabaseDB.from('v_clientes_eventos').select('*').eq('telefone_norm', telefoneNorm).order('data_evento', { ascending: false })),
+            medirPromise('Clientes Notas', () =>
+                supabaseDB.from('clientes_notas').select('*').eq('telefone_norm', telefoneNorm).order('criado_em', { ascending: false }))
+        ]);
+        if (eventosRes.error) throw new Error(eventosRes.error.message);
+        if (notasRes.error) throw new Error(notasRes.error.message);
+        clientesRenderizarTimeline(eventosRes.data || []);
+        clientesRenderizarNotas(notasRes.data || []);
+    } catch (e) {
+        document.getElementById('clienteDetalheTimeline').innerHTML = '<p style="color:#f87171;font-size:12.5px;">Erro ao carregar histórico.</p>';
+    }
+}
+
+const CLIENTES_ICONE_TIPO = { venda: '🛒', os: '🛠️', sorteio: '🎟️' };
+const CLIENTES_LABEL_TIPO = { venda: 'Venda', os: 'O.S.', sorteio: 'Sorteio' };
+
+function clientesRenderizarTimeline(eventos) {
+    const el = document.getElementById('clienteDetalheTimeline');
+    if (!eventos.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:12.5px;">Nenhum histórico encontrado.</p>'; return; }
+    el.innerHTML = eventos.map(ev => {
+        const dataFmt = ev.data_evento ? new Date(ev.data_evento + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
+        const valorFmt = ev.valor ? `· R$ ${Number(ev.valor).toFixed(2)}` : '';
+        return `
+            <div style="display:flex;gap:10px;padding:8px 10px;background:var(--bg-sidebar);border-radius:8px;border-left:3px solid var(--primary);">
+                <div style="font-size:16px;">${CLIENTES_ICONE_TIPO[ev.tipo] || '•'}</div>
+                <div style="flex:1;">
+                    <div style="font-size:12.5px;color:var(--text-main);"><b>${CLIENTES_LABEL_TIPO[ev.tipo] || ev.tipo}</b> — ${ev.descricao || '-'} ${valorFmt}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${dataFmt}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function clientesRenderizarNotas(notas) {
+    const el = document.getElementById('clienteDetalheNotas');
+    if (!notas.length) { el.innerHTML = '<p style="color:var(--text-muted);font-size:12px;font-style:italic;">Nenhum comentário ainda.</p>'; return; }
+    el.innerHTML = notas.map(n => {
+        const dataFmt = n.criado_em ? new Date(n.criado_em).toLocaleString('pt-BR') : '';
+        return `
+            <div style="padding:8px 10px;background:var(--bg-sidebar);border-radius:8px;">
+                <div style="font-size:12.5px;color:var(--text-main);">${n.comentario}</div>
+                <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px;">${dataFmt}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function clientesAdicionarNota() {
+    const input = document.getElementById('clienteNovaNota');
+    const texto = (input.value || '').trim();
+    if (!texto || !_clienteDetalheAtual) return;
+    try {
+        const { error } = await medirPromise('Clientes Nota Adicionar', () =>
+            supabaseDB.from('clientes_notas').insert({ telefone_norm: _clienteDetalheAtual, comentario: texto }));
+        if (error) throw new Error(error.message);
+        input.value = '';
+        const { data } = await supabaseDB.from('clientes_notas').select('*').eq('telefone_norm', _clienteDetalheAtual).order('criado_em', { ascending: false });
+        clientesRenderizarNotas(data || []);
+    } catch (e) {
+        mostrarToast('❌ ' + e.message, 'erro');
+    }
+}
+
+function clientesFecharDetalhe() {
+    document.getElementById('modalClienteDetalhe').classList.remove('ativo');
+    _clienteDetalheAtual = null;
 }
 </script>
 </body></html>
