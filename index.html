@@ -3045,7 +3045,13 @@ body.modo-claro .main-content {
             <div id="menu-admin" class="modulo-aba fade-in hidden">
                 <h2>Console de Administração</h2>
 
-                <div class="admin-section" style="border-color: #e67e22;">
+                <div class="admin-section" style="border-color: #2ecc71;">
+                    <h3 class="sub-title" style="color: #2ecc71;">🧑‍💼 Vendedores</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">Cadastre aqui quem atende em cada loja. Só quem estiver na lista aparece pra escolher no Cadastro de Vendas e na O.S. — isso evita nome digitado errado ou com variação (ex: "Geovana" e "geovana" viravam pessoas diferentes nos relatórios).</p>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;" id="vendedoresAdminGrid"></div>
+                </div>
+
+                <div class="admin-section" style="border-color: #e67e22; margin-top: 30px;">
                     <h3 class="sub-title" style="color: #e67e22;">🔒 Segurança de Acesso</h3>
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">Escolha se cada painel (Loja Norte / Loja Sul) pede senha antes de entrar, e defina qual é a senha. A senha da Gestão você também pode trocar aqui.</p>
 
@@ -3583,7 +3589,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             </div>
                             <div class="ep-field">
                                 <label>Vendedor / Técnico</label>
-                                <input type="text" id="osVendedor" placeholder="Responsável">
+                                <select id="osVendedor"><option value="">Selecione...</option></select>
                             </div>
                             <div class="ep-field">
                                 <label>Status</label>
@@ -3974,7 +3980,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             </div>
             <div class="form-group">
                 <label>Quem Atendeu</label>
-                <input type="text" id="crmVendedor" placeholder="Responsável">
+                <select id="crmVendedor"><option value="">Selecione...</option></select>
             </div>
             <div class="form-group">
                 <label>Dias de Garantia</label>
@@ -4807,6 +4813,104 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     // Id de loja a usar em toda LEITURA (SELECT). null = sem filtro = todas as lojas
     // (só acontece com a Gestão, quando o seletor está em "Todas").
+    // Popula um <select> de vendedor com quem está cadastrado (Admin > Vendedores)
+    // pra loja do contexto atual (loja fixa do perfil, ou a escolhida pela Gestão no
+    // seletor). Se um valorSelecionado for passado, tenta deixar ele marcado depois
+    // de carregar as opções — usado ao editar um cadastro já existente.
+    async function vendedoresPopularSelect(selectId, valorSelecionado) {
+        const el = document.getElementById(selectId);
+        if (!el) return;
+        const lojaId = lojaIdParaGravar();
+        let opcoes = '<option value="">Selecione...</option>';
+        if (lojaId) {
+            try {
+                const { data, error } = await medirPromise('Vendedores', () =>
+                    supabaseDB.from('vendedores').select('nome').eq('loja_id', lojaId).eq('ativo', true).order('nome'));
+                if (error) throw new Error(error.message);
+                opcoes += (data || []).map(v => `<option value="${v.nome}">${v.nome}</option>`).join('');
+            } catch (e) { console.error('Erro ao carregar vendedores:', e); }
+        }
+        el.innerHTML = opcoes;
+        el.value = valorSelecionado || '';
+    }
+
+    // ==========================================
+    // ADMIN > VENDEDORES — gerenciamento por loja (Gestão vê e mexe nas duas)
+    // ==========================================
+    let _vendedoresPorLoja = {}; // lojaId -> [{id, nome}]
+
+    async function vendedoresAdminCarregar() {
+        const grid = document.getElementById('vendedoresAdminGrid');
+        if (!grid) return;
+        grid.innerHTML = '<p style="color:var(--text-muted);font-size:12.5px;">Carregando...</p>';
+        try {
+            await carregarLojas();
+            const { data, error } = await medirPromise('Vendedores Admin', () =>
+                supabaseDB.from('vendedores').select('*').eq('ativo', true).order('nome'));
+            if (error) throw new Error(error.message);
+            _vendedoresPorLoja = {};
+            (data || []).forEach(v => {
+                if (!_vendedoresPorLoja[v.loja_id]) _vendedoresPorLoja[v.loja_id] = [];
+                _vendedoresPorLoja[v.loja_id].push(v);
+            });
+            grid.innerHTML = LOJAS_CACHE.map(loja => `
+                <div class="admin-section" style="border-color: rgba(46,204,113,0.3); padding:16px;">
+                    <h4 style="margin:0 0 10px;color:#fff;font-size:0.9rem;">${loja.nome}</h4>
+                    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;" id="vendedoresLista_${loja.id}">
+                        ${vendedoresAdminRenderizarLista(loja.id)}
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="vendedorNovoNome_${loja.id}" placeholder="Nome do vendedor" style="flex:1;" onkeydown="if(event.key==='Enter') vendedoresAdminAdicionar('${loja.id}')">
+                        <button class="action-btn secondary-btn" style="margin-top:0;width:auto;padding:8px 14px;white-space:nowrap;" onclick="vendedoresAdminAdicionar('${loja.id}')">➕ Adicionar</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('Erro ao carregar vendedores (admin):', e);
+            grid.innerHTML = '<p style="color:#f87171;font-size:12.5px;">Erro ao carregar vendedores.</p>';
+        }
+    }
+
+    function vendedoresAdminRenderizarLista(lojaId) {
+        const lista = _vendedoresPorLoja[lojaId] || [];
+        if (!lista.length) return '<p style="color:var(--text-muted);font-size:12px;font-style:italic;margin:0;">Nenhum vendedor cadastrado ainda.</p>';
+        return lista.map(v => `
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border-radius:6px;padding:6px 10px;">
+                <span style="font-size:12.5px;color:var(--text-main);">${v.nome}</span>
+                <button onclick="vendedoresAdminRemover('${v.id}','${lojaId}')" title="Remover" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:15px;line-height:1;">✕</button>
+            </div>
+        `).join('');
+    }
+
+    async function vendedoresAdminAdicionar(lojaId) {
+        const input = document.getElementById('vendedorNovoNome_' + lojaId);
+        const nome = (input.value || '').trim();
+        if (!nome) return;
+        try {
+            const { error } = await medirPromise('Vendedores Admin Adicionar', () =>
+                supabaseDB.from('vendedores').insert({ loja_id: lojaId, nome }));
+            if (error) throw new Error(error.message);
+            input.value = '';
+            mostrarToast(`✅ ${nome} adicionado(a)!`);
+            vendedoresAdminCarregar();
+        } catch (e) {
+            // Nome duplicado na mesma loja bate na constraint UNIQUE e cai aqui — mensagem já dá pra entender.
+            mostrarToast('❌ ' + (e.message.includes('duplicate') ? 'Esse nome já está cadastrado nessa loja.' : e.message), 'erro');
+        }
+    }
+
+    async function vendedoresAdminRemover(id, lojaId) {
+        if (!confirm('Remover este vendedor da lista? Vendas e O.S. já cadastradas com o nome dele continuam normalmente, só some da lista de seleção.')) return;
+        try {
+            const { error } = await medirPromise('Vendedores Admin Remover', () =>
+                supabaseDB.from('vendedores').delete().eq('id', id));
+            if (error) throw new Error(error.message);
+            vendedoresAdminCarregar();
+        } catch (e) {
+            mostrarToast('❌ ' + e.message, 'erro');
+        }
+    }
+
     function lojaIdParaFiltro() {
         if (PERFIL_ATUAL === 'gestao') return GESTAO_FILTRO_LOJA;
         return LOJA_ATUAL_ID;
@@ -4843,6 +4947,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
         if (typeof pgCarregar === 'function' && document.getElementById('menu-perdasgarantia') && !document.getElementById('menu-perdasgarantia').classList.contains('hidden')) pgCarregar();
         if (typeof dashboardCarregar === 'function' && document.getElementById('menu-dashboard') && !document.getElementById('menu-dashboard').classList.contains('hidden')) dashboardCarregar();
+        if (document.getElementById('menu-os') && !document.getElementById('menu-os').classList.contains('hidden')) vendedoresPopularSelect('osVendedor');
+        if (typeof vendedoresAdminCarregar === 'function' && document.getElementById('menu-admin') && !document.getElementById('menu-admin').classList.contains('hidden')) vendedoresAdminCarregar();
     }
 
     // ==========================================
@@ -5263,7 +5369,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (idAba === 'clientes') clientesCarregar();
         if (idAba === 'dashboard') dashboardCarregar();
         if (idAba === 'perdasgarantia') pgIniciar();
-        if (idAba === 'admin') { carregarDadosAdminAvaliacao(); setTimeout(atualizarPreviewPDF, 100); svaIniciar(); carregarConfigSeguranca(); }
+        if (idAba === 'admin') { carregarDadosAdminAvaliacao(); setTimeout(atualizarPreviewPDF, 100); svaIniciar(); carregarConfigSeguranca(); vendedoresAdminCarregar(); }
         if (idAba === 'laudotecnico') ltIniciar();
         if (idAba === 'avisos') avisosCarregar();
         if (idAba === 'pecas') svIniciarConsulta();
@@ -5271,6 +5377,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         else if (window.estoquePecasPararAutoRefresh) window.estoquePecasPararAutoRefresh();
         if (idAba === 'os') {
             const d=document.getElementById('osData'); if(d&&!d.value) d.valueAsDate=new Date();
+            vendedoresPopularSelect('osVendedor');
             osAtualizarBotaoEscopo();
             // Só refiltra/renderiza aqui se já existe algum dado real carregado. Se a busca
             // inicial (osIniciarFundo, chamada ao selecionar um perfil que usa O.S.)
@@ -6658,7 +6765,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         const c = _crmListaCompleta.find(x => String(x.id) === String(id));
         if (!c) { alert('Cliente não encontrado.'); return; }
 
-        crmAbrirModalCadastro();
+        crmAbrirModalCadastro(c.vendedor);
 
         document.getElementById('crmId').value = c.id;
         document.getElementById('crmNome').value = c.nome || '';
@@ -6669,7 +6776,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmDataCompra').value = c.dataCompra ? String(c.dataCompra).split('T')[0] : '';
         document.getElementById('crmProduto').value = c.produto || '';
         document.getElementById('crmImei').value = c.imei || '';
-        document.getElementById('crmVendedor').value = c.vendedor || '';
         document.getElementById('crmDiasGarantia').value = c.diasGarantia || 90;
         document.getElementById('crmObservacoes').value = c.observacoes || '';
         document.getElementById('crmValorAparelho').value = c.valorAparelho || '';
@@ -7369,10 +7475,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
 
 
-    function crmAbrirModalCadastro() {
+    function crmAbrirModalCadastro(vendedorPreSelecionado) {
         crmResetarFormulario();
         const dc = document.getElementById('crmDataCompra');
         if (dc && !dc.value) dc.valueAsDate = new Date();
+        vendedoresPopularSelect('crmVendedor', vendedorPreSelecionado || '');
         document.getElementById('modalCrmCadastro').classList.add('ativo');
         setTimeout(() => { const el = document.getElementById('crmNome'); if (el) el.focus(); }, 100);
     }
@@ -7409,7 +7516,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmDataCompra').value = c.dataCompra ? String(c.dataCompra).split('T')[0] : '';
         document.getElementById('crmProduto').value = c.produto || '';
         document.getElementById('crmImei').value = c.imei || '';
-        document.getElementById('crmVendedor').value = c.vendedor || '';
+        vendedoresPopularSelect('crmVendedor', c.vendedor);
         document.getElementById('crmDiasGarantia').value = c.diasGarantia || 90;
         document.getElementById('crmObservacoes').value = c.observacoes || '';
         document.getElementById('crmValorAparelho').value = c.valorAparelho || '';
