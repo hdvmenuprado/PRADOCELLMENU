@@ -4972,8 +4972,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     function dashboardCardDetalhadoHTML(titulo, n, comNomes, mesLabel) {
         const statsNomes = comNomes ? `
                     <div class="ep-stat" style="border-left-color:#60a5fa;">
-                        <div class="ep-stat-label">iPhones vendidos · Geovanna</div>
-                        <div class="ep-stat-value" style="font-size:17px;">${n.iphonesGeovanna}</div>
+                        <div class="ep-stat-label">iPhones vendidos · Geovana</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${n.iphonesGeovana}</div>
                     </div>
                     <div class="ep-stat" style="border-left-color:#60a5fa;">
                         <div class="ep-stat-label">iPhones vendidos · Ester</div>
@@ -4984,7 +4984,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.maoObraEster)}</div>
                     </div>
                     <div class="ep-stat" style="border-left-color:#d4af37;">
-                        <div class="ep-stat-label">Mão de obra Assistência · Geovanna</div>
+                        <div class="ep-stat-label">Mão de obra Assistência · Geovana</div>
                         <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.maoObraGeovana)}</div>
                     </div>` : '';
         return `
@@ -5030,12 +5030,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     // Calcula faturamento/perdas de uma loja (por lojaId) no mês escolhido (mesStr = 'AAAA-MM').
     // Se comNomes=true, também calcula iPhones vendidos e mão de obra por vendedora
-    // (Geovanna/Ester — só existem na Loja Norte).
+    // (Geovana/Ester — só existem na Loja Norte).
     async function dashboardCalcularDetalhado(lojaId, comNomes, mesStr) {
         const resultado = {
             faturamentoAssistencia: 0, faturamentoVendas: 0,
             perdaAssistencia: 0, perdaVendas: 0,
-            iphonesGeovanna: 0, iphonesEster: 0,
+            iphonesGeovana: 0, iphonesEster: 0,
             maoObraEster: 0, maoObraGeovana: 0
         };
         if (!lojaId) return resultado;
@@ -5065,7 +5065,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 if (!comNomes) return;
                 const vend = (c.vendedor || '').trim().toLowerCase();
                 const ehIphone = (c.produto || '').toLowerCase().includes('iphone');
-                if (ehIphone && vend.startsWith('geovan')) resultado.iphonesGeovanna++;
+                if (ehIphone && vend.startsWith('geovan')) resultado.iphonesGeovana++;
                 else if (ehIphone && vend.startsWith('ester')) resultado.iphonesEster++;
             });
         } catch(e) { console.error('Dashboard: erro ao calcular CRM', e); }
