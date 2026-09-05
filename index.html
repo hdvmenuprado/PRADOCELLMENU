@@ -5031,6 +5031,16 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // Calcula faturamento/perdas de uma loja (por lojaId) no mês escolhido (mesStr = 'AAAA-MM').
     // Se comNomes=true, também calcula iPhones vendidos e mão de obra por vendedora
     // (Geovana/Ester — só existem na Loja Norte).
+    // Reconhece se o texto do "produto" digitado é um iPhone, mesmo quando o vendedor
+    // abrevia (a maioria dos cadastros não escreve "iphone" por extenso — usam "IP 16
+    // pro max...", ou só o número do modelo tipo "15 pro max 512gb"). Só descarta se
+    // vier explicitamente uma marca Android (a loja também vende Android à parte).
+    function dashboardProdutoEhIphone(produto) {
+        const p = (produto || '').toLowerCase();
+        if (/samsung|xiaomi|redmi|poco|motorola|\bmoto\b|\blg\b|huawei|realme|nokia|asus/.test(p)) return false;
+        return /iphone|\bip\b|^\s*(5s?|se|6s?\+?|7\+?|8\+?|xr|xs|x\b|10|11|12|13|14|15|16|17)\b/.test(p);
+    }
+
     async function dashboardCalcularDetalhado(lojaId, comNomes, mesStr) {
         const resultado = {
             faturamentoAssistencia: 0, faturamentoVendas: 0,
@@ -5064,7 +5074,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 resultado.faturamentoVendas += parseFloat(c.valor_aparelho) || 0;
                 if (!comNomes) return;
                 const vend = (c.vendedor || '').trim().toLowerCase();
-                const ehIphone = (c.produto || '').toLowerCase().includes('iphone');
+                const ehIphone = dashboardProdutoEhIphone(c.produto);
                 if (ehIphone && vend.startsWith('geovan')) resultado.iphonesGeovana++;
                 else if (ehIphone && vend.startsWith('ester')) resultado.iphonesEster++;
             });
