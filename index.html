@@ -201,6 +201,25 @@
         .nav-btn:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
         .nav-btn .nav-icon { display: inline-flex; }
         .nav-btn .nav-icon svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        /* Teclado numérico usado nos modais de senha/PIN (Admin, Gestão, acesso de loja).
+           Substitui o <input type="password"> — evita de vez o navegador oferecer pra
+           salvar a senha, já que não existe mais campo de senha nativo pra ele detectar. */
+        .pin-tecla {
+            padding: 14px 0; border-radius: 10px; border: 1px solid var(--border-color);
+            background: var(--bg-sidebar); color: var(--text-main); font-size: 18px; font-weight: 600;
+            cursor: pointer; transition: background 0.12s ease, transform 0.08s ease;
+        }
+        .pin-tecla:hover { background: rgba(212,175,55,0.12); }
+        .pin-tecla:active { transform: scale(0.94); }
+        .pin-tecla-apagar { color: #f87171; font-size: 15px; }
+        .pin-tecla-ok { background: var(--primary); color: #1a1200; border-color: var(--primary); }
+        .pin-tecla-ok:hover { filter: brightness(1.08); background: var(--primary); }
+        .pin-bolinha {
+            width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--primary);
+            background: transparent; transition: background 0.1s ease;
+        }
+        .pin-bolinha.preenchida { background: var(--primary); }
         .nav-btn.active-tab {
             background: rgba(212, 175, 55, 0.08);
             color: var(--primary);
@@ -3788,11 +3807,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                 <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">CPF</th>
                                 <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Interações</th>
                                 <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Último Contato</th>
+                                <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);">Segmento</th>
                                 <th style="background:var(--bg-sidebar);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:11px;padding:8px 10px;border-bottom:1px solid var(--border-color);"></th>
                             </tr>
                         </thead>
                         <tbody id="clientesLinhas">
-                            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Abra esta aba para carregar os clientes.</td></tr>
+                            <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Abra esta aba para carregar os clientes.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -3893,11 +3913,25 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     <div class="modal-box">
         <h3 id="modalSenhaTitulo">⚙️ ACESSO RESTRITO</h3>
         <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;" id="modalSenhaSubtitulo">Digite a senha do administrador</p>
-        <input type="password" id="campoSenha" placeholder="••••••••" onkeydown="if(event.key==='Enter') confirmarSenha()">
-        <p id="senhaErro" style="color:#e74c3c; font-size:12px; min-height:18px; margin:5px 0;"></p>
+        <input type="hidden" id="campoSenha" value="">
+        <div id="campoSenhaDisplay" style="display:flex;justify-content:center;gap:9px;margin:14px 0;min-height:16px;"></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto;">
+            <button type="button" class="pin-tecla" onclick="pinDigitar('1')">1</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('2')">2</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('3')">3</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('4')">4</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('5')">5</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('6')">6</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('7')">7</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('8')">8</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('9')">9</button>
+            <button type="button" class="pin-tecla pin-tecla-apagar" onclick="pinApagar()">⌫</button>
+            <button type="button" class="pin-tecla" onclick="pinDigitar('0')">0</button>
+            <button type="button" class="pin-tecla pin-tecla-ok" onclick="confirmarSenha()">✓</button>
+        </div>
+        <p id="senhaErro" style="color:#e74c3c; font-size:12px; min-height:18px; margin:10px 0 0;text-align:center;"></p>
         <div class="modal-btn-row">
             <button class="action-btn secondary-btn" onclick="fecharModal()" style="margin-top:0;">Cancelar</button>
-            <button class="action-btn" onclick="confirmarSenha()" style="margin-top:0;">Entrar</button>
         </div>
     </div>
 </div>
@@ -4969,7 +5003,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     const DASHBOARD_STATUS_FINALIZADOS = ['Pronto', 'Aparelho retirado', 'Orçamento reprovado'];
 
-    function dashboardCardDetalhadoHTML(titulo, n, comNomes, mesLabel) {
+    function dashboardCardDetalhadoHTML(titulo, n, comNomes, mesLabel, anterior, projecaoInfo) {
         const statsNomes = comNomes ? `
                     <div class="ep-stat" style="border-left-color:#60a5fa;">
                         <div class="ep-stat-label">iPhones vendidos · Geovana</div>
@@ -4987,6 +5021,37 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         <div class="ep-stat-label">Mão de obra Assistência · Geovana</div>
                         <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.maoObraGeovana)}</div>
                     </div>` : '';
+
+        // Faturamento total do mês em exibição, usado tanto na projeção quanto na
+        // comparação com o mês anterior.
+        const totalAtual = (n.faturamentoAssistencia || 0) + (n.faturamentoVendas || 0);
+
+        let blocoPreditivo = '';
+        if (projecaoInfo || anterior) {
+            const partes = [];
+            if (projecaoInfo && projecaoInfo.diaAtual > 0) {
+                const projecao = (totalAtual / projecaoInfo.diaAtual) * projecaoInfo.diasNoMes;
+                partes.push(`
+                    <div class="ep-stat" style="border-left-color:#a78bfa;">
+                        <div class="ep-stat-label">📈 Projeção do mês (no ritmo atual)</div>
+                        <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(projecao)}</div>
+                    </div>`);
+            }
+            if (anterior) {
+                const totalAnterior = (anterior.faturamentoAssistencia || 0) + (anterior.faturamentoVendas || 0);
+                const diff = totalAnterior > 0 ? ((totalAtual - totalAnterior) / totalAnterior) * 100 : null;
+                const corDiff = diff === null ? '#9ca3af' : (diff >= 0 ? '#4ade80' : '#f87171');
+                const setaDiff = diff === null ? '' : (diff >= 0 ? '▲ ' : '▼ ');
+                const textoDiff = diff === null ? 'sem base de comparação' : `${setaDiff}${Math.abs(diff).toFixed(1)}% vs mês anterior`;
+                partes.push(`
+                    <div class="ep-stat" style="border-left-color:#a78bfa;">
+                        <div class="ep-stat-label">Comparado ao mês anterior (${dashboardFormatarMoeda(totalAnterior)})</div>
+                        <div class="ep-stat-value" style="font-size:15px;color:${corDiff};">${textoDiff}</div>
+                    </div>`);
+            }
+            blocoPreditivo = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px;">${partes.join('')}</div>`;
+        }
+
         return `
             <div class="ep-panel" style="grid-column:1 / -1;border-color:var(--border-highlight);">
                 <div class="ep-panel-title" style="color:var(--primary);">${titulo} · Detalhado — ${mesLabel}</div>
@@ -5007,7 +5072,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         <div class="ep-stat-label">Perdas Vendas</div>
                         <div class="ep-stat-value" style="font-size:17px;">${dashboardFormatarMoeda(n.perdaVendas)}</div>
                     </div>${statsNomes}
-                </div>
+                </div>${blocoPreditivo}
             </div>`;
     }
 
@@ -5107,20 +5172,40 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const lojaNorte = LOJAS_CACHE.find(l => (l.nome || '').toLowerCase().includes('norte'));
             const lojaSul = LOJAS_CACHE.find(l => (l.nome || '').toLowerCase().includes('sul'));
 
-            const [detalhadoNorte, detalhadoSul] = await Promise.all([
+            const mesAtualStr = dashboardInicioMesData().slice(0, 7);
+            const mesAnteriorStr = dashboardMesAnterior(mesStr);
+
+            const [detalhadoNorte, detalhadoSul, anteriorNorte, anteriorSul] = await Promise.all([
                 dashboardCalcularDetalhado(lojaNorte ? lojaNorte.id : null, true, mesStr),
-                dashboardCalcularDetalhado(lojaSul ? lojaSul.id : null, false, mesStr)
+                dashboardCalcularDetalhado(lojaSul ? lojaSul.id : null, false, mesStr),
+                dashboardCalcularDetalhado(lojaNorte ? lojaNorte.id : null, false, mesAnteriorStr),
+                dashboardCalcularDetalhado(lojaSul ? lojaSul.id : null, false, mesAnteriorStr)
             ]);
+
+            // Projeção de fechamento só faz sentido pro mês corrente (mês passado já
+            // fechou, mês futuro ainda não começou a vender nada).
+            let projecaoInfo = null;
+            if (mesStr === mesAtualStr) {
+                const hoje = new Date();
+                projecaoInfo = { diaAtual: hoje.getDate(), diasNoMes: new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate() };
+            }
 
             const mesLabel = dashboardMesLabel(mesStr);
             let html = '';
-            html += dashboardCardDetalhadoHTML('🏪 Loja Norte', detalhadoNorte, true, mesLabel);
-            html += dashboardCardDetalhadoHTML('🏬 Loja Sul', detalhadoSul, false, mesLabel);
+            html += dashboardCardDetalhadoHTML('🏪 Loja Norte', detalhadoNorte, true, mesLabel, anteriorNorte, projecaoInfo);
+            html += dashboardCardDetalhadoHTML('🏬 Loja Sul', detalhadoSul, false, mesLabel, anteriorSul, projecaoInfo);
             grid.innerHTML = html;
         } catch (e) {
             console.error('Erro ao carregar dashboard:', e);
             grid.innerHTML = '<div class="ep-panel"><div class="ep-empty" style="color:#f87171;">Erro ao carregar o dashboard.</div></div>';
         }
+    }
+
+    // 'AAAA-MM' do mês anterior ao informado (vira dezembro do ano anterior quando mes=janeiro).
+    function dashboardMesAnterior(mesStr) {
+        const [ano, mes] = mesStr.split('-').map(Number);
+        const d = new Date(ano, mes - 2, 1); // mes é 1-based; -2 pra cair no mês anterior em índice 0-based
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     }
 
 
@@ -6307,10 +6392,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             _modoModalSenha = perfil;
             document.getElementById("modalSenhaTitulo").textContent = "⚙️ ACESSO RESTRITO";
             document.getElementById("modalSenhaSubtitulo").textContent = "Digite a senha de acesso (" + (perfil === 'loja_norte' ? 'Loja Norte' : 'Loja Sul') + ")";
-            document.getElementById("campoSenha").value = "";
+            pinLimparCampo();
             document.getElementById("senhaErro").innerText = "";
             document.getElementById("modalSenha").classList.add("ativo");
-            setTimeout(() => document.getElementById("campoSenha").focus(), 100);
         } else {
             selecionarPerfil(perfil);
         }
@@ -6323,20 +6407,47 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         _btnAdmin = btn;
         document.getElementById("modalSenhaTitulo").textContent = "⚙️ ACESSO RESTRITO";
         document.getElementById("modalSenhaSubtitulo").textContent = "Digite a senha do administrador";
-        document.getElementById("campoSenha").value = "";
+        pinLimparCampo();
         document.getElementById("senhaErro").innerText = "";
         document.getElementById("modalSenha").classList.add("ativo");
-        setTimeout(() => document.getElementById("campoSenha").focus(), 100);
     }
 
     function solicitarSenhaGestao() {
         _modoModalSenha = 'gestao';
         document.getElementById("modalSenhaTitulo").textContent = "⚙️ ACESSO GESTÃO";
         document.getElementById("modalSenhaSubtitulo").textContent = "Digite a senha de gestão";
-        document.getElementById("campoSenha").value = "";
+        pinLimparCampo();
         document.getElementById("senhaErro").innerText = "";
         document.getElementById("modalSenha").classList.add("ativo");
-        setTimeout(() => document.getElementById("campoSenha").focus(), 100);
+    }
+
+    // Teclado numérico do modal de senha/PIN — evita depender do teclado nativo do
+    // navegador (e, de quebra, evita o navegador oferecer pra "salvar a senha", já
+    // que não tem input type="password" nenhum pra ele detectar).
+    const PIN_MAX_DIGITOS = 10;
+    function pinAtualizarDisplay() {
+        const valor = document.getElementById('campoSenha').value;
+        const disp = document.getElementById('campoSenhaDisplay');
+        if (!disp) return;
+        disp.innerHTML = Array.from({ length: Math.max(valor.length, 4) }).map((_, i) =>
+            `<div class="pin-bolinha${i < valor.length ? ' preenchida' : ''}"></div>`
+        ).join('');
+    }
+    function pinDigitar(d) {
+        const campo = document.getElementById('campoSenha');
+        if (campo.value.length >= PIN_MAX_DIGITOS) return;
+        campo.value += d;
+        document.getElementById('senhaErro').innerText = '';
+        pinAtualizarDisplay();
+    }
+    function pinApagar() {
+        const campo = document.getElementById('campoSenha');
+        campo.value = campo.value.slice(0, -1);
+        pinAtualizarDisplay();
+    }
+    function pinLimparCampo() {
+        document.getElementById('campoSenha').value = '';
+        pinAtualizarDisplay();
     }
 
     function fecharModal() {
@@ -6352,7 +6463,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 selecionarPerfil('gestao');
             } else {
                 document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
-                document.getElementById("campoSenha").value = "";
+                pinLimparCampo();
             }
             return;
         }
@@ -6363,13 +6474,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 selecionarPerfil(_modoModalSenha);
             } else {
                 document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
-                document.getElementById("campoSenha").value = "";
+                pinLimparCampo();
             }
             return;
         }
         document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
-        document.getElementById("campoSenha").value = "";
-        document.getElementById("campoSenha").focus();
+        pinLimparCampo();
     }
 
     // -> Módulo Avaliação (banco original)
@@ -9716,7 +9826,7 @@ const CLIENTES_LABEL_TIPO = { venda: 'Venda', os: 'O.S.', sorteio: 'Sorteio' };
 
 async function clientesCarregar() {
     const tbody = document.getElementById('clientesLinhas');
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando...</td></tr>`;
     try {
         let query = supabaseDB.from('v_clientes_resumo').select('*').order('ultimo_contato', { ascending: false });
         const filtroLoja = lojaIdParaFiltro();
@@ -9724,12 +9834,45 @@ async function clientesCarregar() {
         const { data, error } = await medirPromise('Clientes Lista', () => query);
         if (error) throw new Error(error.message);
         _clientesListaCompleta = data || [];
+        clientesCalcularSegmentos();
         clientesAtualizarDash();
         clientesFiltrar();
     } catch (e) {
         console.error('Erro ao carregar clientes:', e);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#f87171;padding:20px;">Erro ao carregar clientes.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#f87171;padding:20px;">Erro ao carregar clientes.</td></tr>`;
     }
+}
+
+// Segmentação automática — não grava nada no banco, é calculada na hora em cima do
+// que já foi carregado: VIP (valor alto), Recorrente (mais de uma interação),
+// Inativo (sem contato há mais de 90 dias) e Possível duplicata (mesmo CPF
+// aparecendo em mais de um telefone — sinal de cadastro repetido).
+const CLIENTES_SEGMENTO_INFO = {
+    vip: { label: 'VIP', cor: '#d4af37' },
+    recorrente: { label: 'Recorrente', cor: '#60a5fa' },
+    inativo: { label: 'Inativo', cor: '#9ca3af' },
+    duplicata: { label: 'Poss. duplicata', cor: '#f87171' }
+};
+function clientesCalcularSegmentos() {
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const msDia = 24 * 60 * 60 * 1000;
+
+    const cpfContagem = {};
+    _clientesListaCompleta.forEach(c => {
+        if (c.cpf) { const k = c.cpf.trim(); cpfContagem[k] = (cpfContagem[k] || 0) + 1; }
+    });
+
+    _clientesListaCompleta.forEach(c => {
+        const segs = [];
+        if (Number(c.valor_total) >= 5000) segs.push('vip');
+        if (Number(c.total_eventos) > 1) segs.push('recorrente');
+        if (c.ultimo_contato) {
+            const dias = Math.round((hoje - new Date(c.ultimo_contato + 'T00:00:00')) / msDia);
+            if (dias > 90) segs.push('inativo');
+        }
+        if (c.cpf && cpfContagem[c.cpf.trim()] > 1) segs.push('duplicata');
+        c.segmentos = segs;
+    });
 }
 
 // Totais do mini-dashboard no topo da aba — tudo calculado em cima da lista já
@@ -9746,7 +9889,8 @@ function clientesFiltrar() {
     const lista = !termo ? _clientesListaCompleta : _clientesListaCompleta.filter(c =>
         (c.nome || '').toLowerCase().includes(termo) ||
         (c.telefone || '').toLowerCase().includes(termo) ||
-        (c.cpf || '').toLowerCase().includes(termo)
+        (c.cpf || '').toLowerCase().includes(termo) ||
+        (c.segmentos || []).some(s => (CLIENTES_SEGMENTO_INFO[s].label.toLowerCase()).includes(termo))
     );
     clientesRenderizar(lista);
 }
@@ -9760,6 +9904,10 @@ function clientesRenderizar(lista) {
     tbody.innerHTML = lista.map(c => {
         const dataFmt = c.ultimo_contato ? new Date(c.ultimo_contato + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
         const telefoneSeguro = String(c.telefone_norm || '').replace(/'/g, "\\'");
+        const badges = (c.segmentos || []).map(s => {
+            const info = CLIENTES_SEGMENTO_INFO[s];
+            return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin:1px 3px 1px 0;background:${info.cor}22;color:${info.cor};">${info.label}</span>`;
+        }).join('');
         return `
             <tr style="border-bottom:1px solid var(--border-color);">
                 <td style="padding:7px 10px;font-weight:600;color:var(--text-main);">${c.nome || '-'}</td>
@@ -9767,6 +9915,7 @@ function clientesRenderizar(lista) {
                 <td style="padding:7px 10px;color:var(--text-muted);font-size:12px;">${c.cpf || '-'}</td>
                 <td style="padding:7px 10px;font-weight:700;color:var(--primary);">${c.total_eventos}</td>
                 <td style="padding:7px 10px;color:var(--text-muted);font-size:12px;">${dataFmt}</td>
+                <td style="padding:7px 10px;white-space:nowrap;">${badges || '<span style="color:var(--text-muted);font-size:11px;">-</span>'}</td>
                 <td style="padding:7px 10px;white-space:nowrap;">
                     <button class="action-btn secondary-btn" style="margin-top:0;padding:6px 10px;font-size:11px;width:auto;" onclick="clientesAbrirDetalhe('${telefoneSeguro}')">Ver histórico</button>
                 </td>
