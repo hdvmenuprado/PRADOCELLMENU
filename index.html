@@ -2460,13 +2460,6 @@ body.modo-claro .main-content {
                 </div>
 
                 <div id="step1" class="step-container fade-in">
-                    <label>Buscar modelo por IMEI (opcional):</label>
-                    <div style="display:flex; gap:8px; align-items:stretch; width:100%; margin-bottom:6px;">
-                        <input type="text" id="avalImeiBusca" placeholder="Digite o IMEI (14 a 16 dígitos)" inputmode="numeric" maxlength="16" style="flex:1;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:14px;font-family:'Inter',sans-serif;">
-                        <button class="action-btn" id="avalImeiBtn" style="margin-top:0;flex:0 0 auto;padding:0 18px;" onclick="avalBuscarPorIMEI()">🔍 Buscar</button>
-                    </div>
-                    <div id="avalImeiStatus" style="font-size:11.5px;color:var(--text-muted);margin-bottom:16px;min-height:14px;"></div>
-
                     <label>Selecione o modelo do aparelho do cliente:</label>
                     <select id="modelo"><option value="iPhone 11">iPhone 11</option><option value="iPhone 11 Pro">iPhone 11 Pro</option><option value="iPhone 11 Pro Max">iPhone 11 Pro Max</option><option value="iPhone 12">iPhone 12</option><option value="iPhone 12 Mini">iPhone 12 Mini</option><option value="iPhone 12 Pro">iPhone 12 Pro</option><option value="iPhone 12 Pro Max">iPhone 12 Pro Max</option><option value="iPhone 13">iPhone 13</option><option value="iPhone 13 Mini">iPhone 13 Mini</option><option value="iPhone 13 Pro">iPhone 13 Pro</option><option value="iPhone 13 Pro Max">iPhone 13 Pro Max</option><option value="iPhone 14">iPhone 14</option><option value="iPhone 14 Plus">iPhone 14 Plus</option><option value="iPhone 14 Pro">iPhone 14 Pro</option><option value="iPhone 14 Pro Max">iPhone 14 Pro Max</option><option value="iPhone 15">iPhone 15</option><option value="iPhone 15 Plus">iPhone 15 Plus</option><option value="iPhone 15 Pro">iPhone 15 Pro</option><option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option><option value="iPhone 16">iPhone 16</option><option value="iPhone 16 Plus">iPhone 16 Plus</option><option value="iPhone 16 Pro">iPhone 16 Pro</option><option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option><option value="iPhone 16e">iPhone 16e</option><option value="iPhone 17">iPhone 17</option><option value="iPhone 17 Air">iPhone 17 Air</option><option value="iPhone 17 Pro">iPhone 17 Pro</option><option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option></select>
                     <div style="display:flex; gap:12px; align-items:stretch; width:100%; margin-top:24px;">
@@ -2576,6 +2569,14 @@ body.modo-claro .main-content {
                         <button class="action-btn success-btn" id="btnCopiar" onclick="copiarResumo()" style="margin-top: 0;">📋 Copiar Resumo</button>
                         <button class="action-btn secondary-btn" onclick="voltarInicio()" style="margin-top: 0;">↻ Nova Avaliação</button>
                     </div>
+                </div>
+
+                <div id="avalImeiPanel" style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px 20px; margin-top: 24px;">
+                    <h3 class="sub-title" style="margin:0 0 4px;font-size:0.95rem;color:var(--primary);">🔍 Buscar modelo por IMEI</h3>
+                    <p style="font-size:11.5px;color:var(--text-muted);margin:0 0 14px;">Opcional: digite o IMEI do aparelho pra tentar identificar o modelo automaticamente.</p>
+                    <input type="text" id="avalImeiBusca" placeholder="Digite o IMEI (14 a 16 dígitos)" inputmode="numeric" maxlength="16" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:14px;font-family:'Inter',sans-serif;margin-bottom:12px;">
+                    <button class="action-btn" id="avalImeiBtn" style="margin-top:0;" onclick="avalBuscarPorIMEI()">🔍 Buscar</button>
+                    <div id="avalImeiStatus" style="font-size:11.5px;color:var(--text-muted);margin-top:10px;min-height:14px;"></div>
                 </div>
             </div>
 
