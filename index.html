@@ -2460,6 +2460,13 @@ body.modo-claro .main-content {
                 </div>
 
                 <div id="step1" class="step-container fade-in">
+                    <label>Buscar modelo por IMEI (opcional):</label>
+                    <div style="display:flex; gap:8px; align-items:stretch; width:100%; margin-bottom:6px;">
+                        <input type="text" id="avalImeiBusca" placeholder="Digite o IMEI (14 a 16 dígitos)" inputmode="numeric" maxlength="16" style="flex:1;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:14px;font-family:'Inter',sans-serif;">
+                        <button class="action-btn" id="avalImeiBtn" style="margin-top:0;flex:0 0 auto;padding:0 18px;" onclick="avalBuscarPorIMEI()">🔍 Buscar</button>
+                    </div>
+                    <div id="avalImeiStatus" style="font-size:11.5px;color:var(--text-muted);margin-bottom:16px;min-height:14px;"></div>
+
                     <label>Selecione o modelo do aparelho do cliente:</label>
                     <select id="modelo"><option value="iPhone 11">iPhone 11</option><option value="iPhone 11 Pro">iPhone 11 Pro</option><option value="iPhone 11 Pro Max">iPhone 11 Pro Max</option><option value="iPhone 12">iPhone 12</option><option value="iPhone 12 Mini">iPhone 12 Mini</option><option value="iPhone 12 Pro">iPhone 12 Pro</option><option value="iPhone 12 Pro Max">iPhone 12 Pro Max</option><option value="iPhone 13">iPhone 13</option><option value="iPhone 13 Mini">iPhone 13 Mini</option><option value="iPhone 13 Pro">iPhone 13 Pro</option><option value="iPhone 13 Pro Max">iPhone 13 Pro Max</option><option value="iPhone 14">iPhone 14</option><option value="iPhone 14 Plus">iPhone 14 Plus</option><option value="iPhone 14 Pro">iPhone 14 Pro</option><option value="iPhone 14 Pro Max">iPhone 14 Pro Max</option><option value="iPhone 15">iPhone 15</option><option value="iPhone 15 Plus">iPhone 15 Plus</option><option value="iPhone 15 Pro">iPhone 15 Pro</option><option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option><option value="iPhone 16">iPhone 16</option><option value="iPhone 16 Plus">iPhone 16 Plus</option><option value="iPhone 16 Pro">iPhone 16 Pro</option><option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option><option value="iPhone 16e">iPhone 16e</option><option value="iPhone 17">iPhone 17</option><option value="iPhone 17 Air">iPhone 17 Air</option><option value="iPhone 17 Pro">iPhone 17 Pro</option><option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option></select>
                     <div style="display:flex; gap:12px; align-items:stretch; width:100%; margin-top:24px;">
@@ -6196,6 +6203,79 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!confirm('Limpar o histórico de avaliações de hoje?')) return;
         try { localStorage.setItem(AVAL_HISTORICO_KEY, JSON.stringify([])); } catch (e) {}
         avalHistoricoRenderizar([]);
+    }
+
+    // Chama a Edge Function 'imei-lookup' (Supabase) pra descobrir marca/modelo
+    // a partir do IMEI digitado, e tenta selecionar automaticamente no <select id="modelo">.
+    async function avalBuscarPorIMEI() {
+        const input = document.getElementById('avalImeiBusca');
+        const btn = document.getElementById('avalImeiBtn');
+        const status = document.getElementById('avalImeiStatus');
+        const imei = (input.value || '').replace(/\D/g, '');
+
+        if (imei.length < 14 || imei.length > 16) {
+            status.style.color = '#e74c3c';
+            status.innerText = 'Digite um IMEI válido (14 a 16 dígitos).';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = '⏳ Buscando...';
+        status.style.color = 'var(--text-muted)';
+        status.innerText = 'Consultando...';
+
+        try {
+            const { data, error } = await supabaseDB.functions.invoke('imei-lookup', { body: { imei } });
+
+            if (error) {
+                status.style.color = '#e74c3c';
+                status.innerText = 'Erro ao consultar. Tente novamente.';
+                return;
+            }
+            if (data && data.error) {
+                status.style.color = '#e74c3c';
+                status.innerText = data.mensagem || 'Não foi possível consultar esse IMEI.';
+                return;
+            }
+
+            const marca = (data.marca || '').toString().trim();
+            const modeloDetectado = (data.modelo || '').toString().trim();
+            const textoDetectado = [marca, modeloDetectado].filter(Boolean).join(' ');
+
+            if (!textoDetectado) {
+                status.style.color = '#e67e22';
+                status.innerText = 'IMEI encontrado, mas sem marca/modelo retornado. Selecione manualmente.';
+                return;
+            }
+
+            // tenta casar com uma opção do <select id="modelo"> (só tem iPhones)
+            const select = document.getElementById('modelo');
+            const alvo = textoDetectado.toLowerCase().replace(/[^a-z0-9]/g, '');
+            let casou = false;
+            for (const opt of select.options) {
+                const valOpt = opt.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (alvo.includes(valOpt) || valOpt.includes(alvo)) {
+                    select.value = opt.value;
+                    casou = true;
+                    break;
+                }
+            }
+
+            const restantes = (typeof data.restantes === 'number') ? ` (${data.restantes} consultas restantes este mês)` : '';
+            if (casou) {
+                status.style.color = '#2ecc71';
+                status.innerText = `Detectado: ${textoDetectado} — modelo selecionado.${restantes}`;
+            } else {
+                status.style.color = '#e67e22';
+                status.innerText = `Detectado: ${textoDetectado} — não é um iPhone da lista, selecione manualmente.${restantes}`;
+            }
+        } catch (e) {
+            status.style.color = '#e74c3c';
+            status.innerText = 'Erro ao consultar. Verifique sua conexão.';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = '🔍 Buscar';
+        }
     }
 
     function next(n) {
