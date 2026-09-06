@@ -6239,8 +6239,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 return;
             }
 
-            const marca = (data.marca || '').toString().trim();
-            const modeloDetectado = (data.modelo || '').toString().trim();
+            const marcaRaw = data.marca;
+            const modeloRaw = data.modelo;
+
+            // debug temporário: se vier objeto em vez de texto, mostra o retorno bruto
+            // pra eu conseguir ajustar o parsing certinho.
+            if ((marcaRaw && typeof marcaRaw === 'object') || (modeloRaw && typeof modeloRaw === 'object')) {
+                status.style.color = '#e67e22';
+                status.innerText = 'DEBUG (manda print disso): ' + JSON.stringify(data.bruto);
+                console.log('imei-lookup bruto:', data.bruto);
+                return;
+            }
+
+            const marca = (marcaRaw || '').toString().trim();
+            const modeloDetectado = (modeloRaw || '').toString().trim();
             const textoDetectado = [marca, modeloDetectado].filter(Boolean).join(' ');
 
             if (!textoDetectado) {
