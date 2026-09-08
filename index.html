@@ -2787,9 +2787,19 @@ body.modo-claro .main-content {
                     <div id="svResultadoBox" class="ep-table-wrap hidden" style="max-width:1300px;">
                         <div class="ep-panel-title" id="svResultadoTitulo" style="padding:14px 16px 12px; margin:0; border-bottom:1px solid var(--border-color); color:var(--primary);">-</div>
                         <table class="ep-table">
-                            <thead><tr><th>Serviço</th><th style="text-align:right;">Valor</th></tr></thead>
+                            <thead><tr><th>Serviço</th><th style="text-align:right;">Valor</th><th style="width:44px;" title="Adicionar ao orçamento">🧾</th><th style="width:60px;">Copiar</th></tr></thead>
                             <tbody id="svResultadoLinhas"></tbody>
                         </table>
+                    </div>
+
+                    <!-- BARRA FLUTUANTE: resumo do orçamento na consulta rápida -->
+                    <div id="svResumoBarra" class="hidden" style="max-width:1300px; position:sticky; bottom:12px; margin-top:16px; background:rgba(20,20,24,0.92); backdrop-filter:blur(16px); border:1px solid var(--border-highlight); border-radius:16px; padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:20;">
+                        <div style="flex:1; min-width:180px;">
+                            <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Orçamento — <span id="svResumoQtd">0</span> item(ns)</div>
+                            <div style="font-size:17px; font-weight:700; color:var(--primary); font-family:'JetBrains Mono',monospace;">R$ <span id="svResumoTotal">0,00</span></div>
+                        </div>
+                        <button class="ep-btn" onclick="svCopiarResumo()" style="background:linear-gradient(135deg, var(--primary), #a6841e); color:#000; font-weight:700;">📋 Copiar Resumo</button>
+                        <button class="ep-btn" onclick="svLimparResumo()" style="background:rgba(255,255,255,0.08);">🗑️ Limpar</button>
                     </div>
                 </div>
             </div>
@@ -3251,12 +3261,23 @@ body.modo-claro .main-content {
                         </div>
                         <div class="ep-table-wrap" style="max-width:none;">
                             <table class="ep-table">
-                                <thead><tr><th>Serviço</th><th style="width:140px;">Valor (R$)</th><th style="width:60px;">Excluir</th></tr></thead>
-                                <tbody id="svaServicosLinhas"><tr><td colspan="3" class="ep-empty">Selecione um modelo acima.</td></tr></tbody>
+                                <thead><tr><th>Serviço</th><th style="width:140px;">Valor (R$)</th><th style="width:44px;" title="Adicionar ao orçamento">🧾</th><th style="width:60px;">Copiar</th><th style="width:60px;">Excluir</th></tr></thead>
+                                <tbody id="svaServicosLinhas"><tr><td colspan="5" class="ep-empty">Selecione um modelo acima.</td></tr></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
+
+                <!-- BARRA FLUTUANTE: resumo do orçamento (vários itens escolhidos p/ copiar de uma vez) -->
+                <div id="svaResumoBarra" class="hidden" style="position:sticky; bottom:12px; margin-top:16px; background:rgba(20,20,24,0.92); backdrop-filter:blur(16px); border:1px solid var(--border-highlight); border-radius:16px; padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:20;">
+                    <div style="flex:1; min-width:180px;">
+                        <div style="font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Orçamento — <span id="svaResumoQtd">0</span> item(ns)</div>
+                        <div style="font-size:17px; font-weight:700; color:var(--primary); font-family:'JetBrains Mono',monospace;">R$ <span id="svaResumoTotal">0,00</span></div>
+                    </div>
+                    <button class="ep-btn" onclick="svaCopiarResumo()" style="background:linear-gradient(135deg, var(--primary), #a6841e); color:#000; font-weight:700;">📋 Copiar Resumo</button>
+                    <button class="ep-btn" onclick="svaLimparResumo()" style="background:rgba(255,255,255,0.08);">🗑️ Limpar</button>
+                </div>
+
 
                 <div class="admin-section" id="adminAvaliacaoSecao" style="border-color: var(--primary); margin-top: 30px;">
                     <h3 class="sub-title" style="color: var(--primary);">🍎 Banco de Dados: Avaliação (Apenas iPhones)</h3>
@@ -7850,6 +7871,67 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // CONSULTA (aba "Valores de Serviços")
     // ------------------------------------------------------------------
     let svTipoSelecionadoId = null;
+    let svMarcaSelecionadaNome = '';
+    let svItensCacheAtual = [];
+    let svResumoItens = [];
+
+    function svNomeParaMensagem(modeloNome) {
+        const marca = svMarcaSelecionadaNome || '';
+        if (!marca || marca.trim().toLowerCase() === 'apple') return modeloNome;
+        return `${marca} ${modeloNome}`.trim();
+    }
+
+    async function svCopiarMensagem(texto) {
+        try {
+            await navigator.clipboard.writeText(texto);
+            mostrarToast('📋 Copiado! Já pode colar pro cliente.');
+        } catch (e) {
+            mostrarToast('❌ Não consegui copiar. Copie manualmente: ' + texto, 'erro');
+        }
+    }
+
+    function svCopiarItemUnico(id) {
+        const item = svItensCacheAtual.find(x => x.id === id);
+        if (!item) return;
+        const texto = `${item.servico} do ${item._nomeAparelho} fica ${svFormatarMoeda(item.valor)}`;
+        svCopiarMensagem(texto);
+    }
+
+    function svToggleResumo(id, marcado) {
+        const item = svItensCacheAtual.find(x => x.id === id);
+        if (!item) return;
+        if (marcado) {
+            if (!svResumoItens.some(r => r.id === id)) {
+                svResumoItens.push({ id: item.id, servico: item.servico, valor: Number(item.valor||0), nomeAparelho: item._nomeAparelho });
+            }
+        } else {
+            svResumoItens = svResumoItens.filter(r => r.id !== id);
+        }
+        svAtualizarBarraResumo();
+    }
+
+    function svAtualizarBarraResumo() {
+        const barra = document.getElementById('svResumoBarra');
+        if (!svResumoItens.length) { barra.classList.add('hidden'); return; }
+        barra.classList.remove('hidden');
+        const total = svResumoItens.reduce((acc, r) => acc + r.valor, 0);
+        document.getElementById('svResumoQtd').innerText = svResumoItens.length;
+        document.getElementById('svResumoTotal').innerText = total.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+
+    function svCopiarResumo() {
+        if (!svResumoItens.length) return;
+        const linhas = svResumoItens.map(r => `• ${r.servico} do ${r.nomeAparelho}: ${svFormatarMoeda(r.valor)}`);
+        const total = svResumoItens.reduce((acc, r) => acc + r.valor, 0);
+        const texto = linhas.join('\n') + `\n\nTotal: ${svFormatarMoeda(total)}`;
+        svCopiarMensagem(texto);
+    }
+
+    function svLimparResumo() {
+        svResumoItens = [];
+        svAtualizarBarraResumo();
+        document.querySelectorAll('#svResultadoLinhas input[type="checkbox"]').forEach(chk => chk.checked = false);
+    }
     let SV_TODOS_MODELOS_BUSCA = []; // cache achatado pra busca rápida: [{modeloId, modeloNome, marcaId, marcaNome, tipoId, tipoNome, tipoIcone}]
 
     async function svIniciarConsulta() {
@@ -7888,11 +7970,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('svResultadoVazio').classList.add('hidden');
         const box = document.getElementById('svResultadoBox');
         document.getElementById('svResultadoTitulo').textContent = modeloNome;
+        const nomeAparelho = svNomeParaMensagem(modeloNome);
+        svItensCacheAtual = itens.map(it => ({ ...it, _nomeAparelho: nomeAparelho }));
         const tbody = document.getElementById('svResultadoLinhas');
         if (!itens.length) {
-            tbody.innerHTML = '<tr><td colspan="2" class="ep-empty">Nenhum serviço cadastrado pra esse modelo ainda. Cadastre na aba Admin.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Nenhum serviço cadastrado pra esse modelo ainda. Cadastre na aba Admin.</td></tr>';
         } else {
-            tbody.innerHTML = itens.map(it => `<tr><td>${it.servico}</td><td class="ep-mono" style="text-align:right;">${svFormatarMoeda(it.valor)}</td></tr>`).join('');
+            tbody.innerHTML = svItensCacheAtual.map(it => `
+                <tr>
+                    <td>${it.servico}</td>
+                    <td class="ep-mono" style="text-align:right;">${svFormatarMoeda(it.valor)}</td>
+                    <td style="text-align:center;"><input type="checkbox" title="Adicionar ao orçamento" onchange="svToggleResumo('${it.id}', this.checked)" ${svResumoItens.some(r => r.id === it.id) ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;"></td>
+                    <td style="text-align:center;"><button onclick="svCopiarItemUnico('${it.id}')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:15px;" title="Copiar mensagem desse serviço">📋</button></td>
+                </tr>
+            `).join('');
         }
         box.classList.remove('hidden');
     }
@@ -7916,6 +8007,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     async function svSelecionarMarcaConsulta(marcaId) {
         document.querySelectorAll('#svMarcasWrap .ep-tab').forEach(b => b.classList.toggle('active', b.dataset.id === marcaId));
+        const marcaBtn = document.querySelector(`#svMarcasWrap .ep-tab[data-id="${marcaId}"]`);
+        svMarcaSelecionadaNome = marcaBtn ? marcaBtn.textContent.trim() : '';
         const modelos = await svCarregarModelos(marcaId);
         const sel = document.getElementById('svModeloSelect');
         sel.innerHTML = '<option value="">Selecione um modelo…</option>' + modelos.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
@@ -7953,6 +8046,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!info) return;
         document.getElementById('svBuscaRapida').value = info.modeloNome;
         svBuscaRapidaEsconder();
+        svMarcaSelecionadaNome = info.marcaNome || '';
 
         // Sincroniza os seletores de Tipo/Marca/Modelo pra refletir a escolha feita na busca
         svTipoSelecionadoId = info.tipoId;
@@ -8143,17 +8237,91 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaAtualizarBreadcrumb();
     }
 
+    let svaResumoItens = []; // itens escolhidos p/ copiar um resumo de orçamento com vários serviços
+
+    function svaFormatarValor(v) {
+        return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function svaNomeParaMensagem() {
+        // monta "iPhone 11 Pro Max" ou "Samsung Galaxy A54" (só inclui a marca se não for Apple, pra não ficar "Apple iPhone 11")
+        const marca = (svaMarcaAtual && svaMarcaAtual.nome) || '';
+        const modelo = (svaModeloAtual && svaModeloAtual.nome) || '';
+        if (!marca || marca.trim().toLowerCase() === 'apple') return modelo;
+        return `${marca} ${modelo}`.trim();
+    }
+
     async function svaCarregarServicosAdmin() {
         svaServicosCache = await svCarregarItens(svaModeloAtual.id);
         const tbody = document.getElementById('svaServicosLinhas');
-        if (!svaServicosCache.length) { tbody.innerHTML = '<tr><td colspan="3" class="ep-empty">Nenhum serviço cadastrado ainda.</td></tr>'; return; }
+        if (!svaServicosCache.length) { tbody.innerHTML = '<tr><td colspan="5" class="ep-empty">Nenhum serviço cadastrado ainda.</td></tr>'; return; }
         tbody.innerHTML = svaServicosCache.map(s => `
             <tr>
                 <td><input type="text" value="${(s.servico||'').replace(/"/g,'&quot;')}" onchange="svaSalvarServico('${s.id}', this, 'nome')" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);color:var(--text-main);font-size:13px;padding:5px 7px;border-radius:5px;"></td>
                 <td><input type="number" min="0" step="0.01" value="${Number(s.valor||0).toFixed(2)}" onchange="svaSalvarServico('${s.id}', this, 'valor')" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);color:var(--text-main);font-size:13px;padding:5px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;"></td>
+                <td style="text-align:center;"><input type="checkbox" title="Adicionar ao orçamento" onchange="svaToggleResumo('${s.id}', this.checked)" ${svaResumoItens.some(r => r.id === s.id) ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;"></td>
+                <td style="text-align:center;"><button onclick="svaCopiarItemUnico('${s.id}')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:15px;" title="Copiar mensagem desse serviço">📋</button></td>
                 <td style="text-align:center;"><button onclick="svaExcluirServico('${s.id}')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px;" title="Excluir">🗑️</button></td>
             </tr>
         `).join('');
+    }
+
+    async function svaCopiarMensagem(texto) {
+        try {
+            await navigator.clipboard.writeText(texto);
+            mostrarToast('📋 Copiado! Já pode colar pro cliente.');
+        } catch (e) {
+            mostrarToast('❌ Não consegui copiar. Copie manualmente: ' + texto, 'erro');
+        }
+    }
+
+    function svaCopiarItemUnico(id) {
+        const item = svaServicosCache.find(x => x.id === id);
+        if (!item) return;
+        const nomeAparelho = svaNomeParaMensagem();
+        const texto = `${item.servico} do ${nomeAparelho} fica R$ ${svaFormatarValor(item.valor)}`;
+        svaCopiarMensagem(texto);
+    }
+
+    function svaToggleResumo(id, marcado) {
+        const item = svaServicosCache.find(x => x.id === id);
+        if (!item) return;
+        if (marcado) {
+            if (!svaResumoItens.some(r => r.id === id)) {
+                svaResumoItens.push({
+                    id: item.id,
+                    servico: item.servico,
+                    valor: Number(item.valor || 0),
+                    nomeAparelho: svaNomeParaMensagem()
+                });
+            }
+        } else {
+            svaResumoItens = svaResumoItens.filter(r => r.id !== id);
+        }
+        svaAtualizarBarraResumo();
+    }
+
+    function svaAtualizarBarraResumo() {
+        const barra = document.getElementById('svaResumoBarra');
+        if (!svaResumoItens.length) { barra.classList.add('hidden'); return; }
+        barra.classList.remove('hidden');
+        const total = svaResumoItens.reduce((acc, r) => acc + r.valor, 0);
+        document.getElementById('svaResumoQtd').innerText = svaResumoItens.length;
+        document.getElementById('svaResumoTotal').innerText = svaFormatarValor(total);
+    }
+
+    function svaCopiarResumo() {
+        if (!svaResumoItens.length) return;
+        const linhas = svaResumoItens.map(r => `• ${r.servico} do ${r.nomeAparelho}: R$ ${svaFormatarValor(r.valor)}`);
+        const total = svaResumoItens.reduce((acc, r) => acc + r.valor, 0);
+        const texto = linhas.join('\n') + `\n\nTotal: R$ ${svaFormatarValor(total)}`;
+        svaCopiarMensagem(texto);
+    }
+
+    function svaLimparResumo() {
+        svaResumoItens = [];
+        svaAtualizarBarraResumo();
+        document.querySelectorAll('#svaServicosLinhas input[type="checkbox"]').forEach(chk => chk.checked = false);
     }
 
     async function svaSalvarServico(id, inputEl, campo) {
@@ -8386,6 +8554,7 @@ function osParaBanco(os) {
         mao_de_obra: os.maoDeObra ? parseFloat(os.maoDeObra) : 0,
         total: os.total ? parseFloat(os.total) : 0,
         vendedor: os.vendedor || null,
+        tecnico: os.tecnico || null,
         status: os.status || 'Orçando',
         loja_id: lojaIdParaGravar(),
         criado_em: os.criadoEm || new Date().toISOString()
@@ -8410,6 +8579,7 @@ function osDoBanco(row) {
         maoDeObra: row.mao_de_obra,
         total: row.total,
         vendedor: row.vendedor,
+        tecnico: row.tecnico,
         status: row.status,
         lojaId: row.loja_id,
         criadoEm: row.criado_em
@@ -8630,12 +8800,17 @@ function osCriarLinha(os) {
             <textarea class="osReparoInput" rows="2" oninput="this.closest('tr').dataset.reparo=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);">
-            <select class="osGarantiaSelect" onchange="this.closest('tr').dataset.garantiaDias=this.value;osMarcarPendente(this)" style="width:100%;font-size:10px;padding:2px 3px;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;box-sizing:border-box;">
-                <option value="365">1 ano</option>
-                <option value="180">180 dias</option>
-                <option value="90">90 dias</option>
-                <option value="30">30 dias</option>
-            </select>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <select class="osGarantiaSelect" onchange="this.closest('tr').dataset.garantiaDias=this.value;osMarcarPendente(this)" style="width:100%;font-size:10px;padding:2px 3px;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;box-sizing:border-box;">
+                    <option value="365">1 ano</option>
+                    <option value="180">180 dias</option>
+                    <option value="90">90 dias</option>
+                    <option value="30">30 dias</option>
+                </select>
+                <select class="osTecnicoSelect" title="Quem terminou o reparo" onchange="osAtualizarTecnico(this)" style="width:100%;font-size:10px;padding:2px 3px;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;box-sizing:border-box;">
+                    ${_osTecnicosOpcoesHTML}
+                </select>
+            </div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);">
             <div style="display:flex;flex-direction:column;gap:2px;">
@@ -8684,6 +8859,7 @@ function osPreencherDatasetLinha(tr, os) {
     tr.dataset.reparo = os.reparo || '';
     tr.dataset.garantiaDias = os.garantiaDias || '90';
     tr.dataset.vendedor = os.vendedor || '';
+    tr.dataset.tecnico = os.tecnico || '';
     tr.dataset.data = os.data || '';
     tr.dataset.criadoEm = os.criadoEm || '';
     tr.dataset.total = parseFloat(os.total||0).toFixed(2);
@@ -8755,6 +8931,11 @@ function osAtualizarLinha(tr, os, forcarTudo) {
     if (statusSel && (forcarTudo || document.activeElement !== statusSel)) {
         statusSel.value = os.status || '';
         osCorStatus(statusSel);
+    }
+
+    const tecnicoSel = tr.querySelector('.osTecnicoSelect');
+    if (tecnicoSel && (forcarTudo || document.activeElement !== tecnicoSel)) {
+        tecnicoSel.value = os.tecnico || '';
     }
 
     // Campos editáveis (reparo, peça, mão de obra, total): só sobrescreve se a linha não
@@ -8927,7 +9108,7 @@ function osFiltrarTabela() {
 
     if (termo) {
         resultado = resultado.filter(os => {
-            const alvo = osNormalizarTexto([os.codigo, os.cliente, os.telefone, os.modelo, os.descricao, os.reparo, os.vendedor, os.origem, os.estadoAparelho].join(' '));
+            const alvo = osNormalizarTexto([os.codigo, os.cliente, os.telefone, os.modelo, os.descricao, os.reparo, os.vendedor, os.tecnico, os.origem, os.estadoAparelho].join(' '));
             return alvo.includes(termo);
         });
     }
@@ -9014,6 +9195,13 @@ function osApiPost(dados) {
         if (acao === 'ATUALIZAR_STATUS') {
             const { error } = await supabaseDB.from('ordens_servico')
                 .update({ status: dados.status }).eq('codigo', dados.codigo);
+            if (error) throw new Error(error.message);
+            return { ok: true };
+        }
+
+        if (acao === 'ATUALIZAR_TECNICO') {
+            const { error } = await supabaseDB.from('ordens_servico')
+                .update({ tecnico: dados.tecnico || null }).eq('codigo', dados.codigo);
             if (error) throw new Error(error.message);
             return { ok: true };
         }
@@ -9209,6 +9397,25 @@ function osAtualizarStatus(sel) {
     osApiPost({acao:'ATUALIZAR_STATUS',codigo:tr.dataset.codigo,cliente:tr.dataset.cliente,modelo:tr.dataset.modelo,status:sel.value})
         .then(() => osAutoRefreshSilencioso())
         .catch(err => mostrarToast('❌ Status não salvou: ' + err.message, true));
+}
+
+// Técnico que efetivamente terminou o reparo — de propósito NÃO fica no formulário de
+// abertura da O.S. (esse é o vendedor que atendeu o cliente). Fica só na linha da tabela,
+// dentro da célula de Garantia, pra ser preenchido quando o reparo é finalizado.
+// Lista fixa (não vem da tabela de vendedores — são pessoas diferentes).
+const OS_TECNICOS_FIXOS = ['Hugo', 'Felipe'];
+const _osTecnicosOpcoesHTML = '<option value="">Selecione...</option>' +
+    OS_TECNICOS_FIXOS.map(nome => `<option value="${nome}">${nome}</option>`).join('');
+
+function osAtualizarTecnico(sel) {
+    sel.blur();
+    const tr = sel.closest('tr');
+    osProtegerLinhaPosSalvar(tr.dataset.chave, 14000);
+    const item = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    if (item) item.tecnico = sel.value;
+    osApiPost({acao:'ATUALIZAR_TECNICO',codigo:tr.dataset.codigo,cliente:tr.dataset.cliente,modelo:tr.dataset.modelo,tecnico:sel.value})
+        .then(() => osAutoRefreshSilencioso())
+        .catch(err => mostrarToast('❌ Técnico não salvou: ' + err.message, true));
 }
 
 // Destaca o botão de salvar quando algo na linha foi editado e ainda não foi salvo
