@@ -2834,6 +2834,7 @@ body.modo-claro .main-content {
                     <div class="ep-tabs">
                         <button type="button" id="epBtnSubviewIphone" class="ep-tab active" onclick="epMudarSubview('iphone')">📱 iPhone · por modelo</button>
                         <button type="button" id="epBtnSubviewAndroid" class="ep-tab" onclick="epMudarSubview('android')">🤖 Android · peças avulsas</button>
+                        <button type="button" id="epBtnSubviewLaptop" class="ep-tab" onclick="epMudarSubview('laptop')">💻 Laptop · peças avulsas</button>
                     </div>
 
                     <!-- ================= VIEW: IPHONE (POR MODELO) ================= -->
@@ -2996,6 +2997,82 @@ body.modo-claro .main-content {
                                     </tr>
                                 </thead>
                                 <tbody id="epHistoricoAndroidLinhas">
+                                    <tr><td colspan="5" class="ep-empty">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="epViewLaptop" class="hidden">
+
+                        <!-- DASHBOARD -->
+                        <div class="ep-stats">
+                            <div class="ep-stat">
+                                <div class="ep-stat-label">Peças Laptop em estoque</div>
+                                <div class="ep-stat-value" id="epDashTotalLaptop">—</div>
+                            </div>
+                            <div class="ep-stat valor-restrito">
+                                <div class="ep-stat-label">Valor total (Laptop)</div>
+                                <div class="ep-stat-value" id="epDashValorLaptop">—</div>
+                            </div>
+                        </div>
+
+                        <!-- CADASTRO DE PEÇA AVULSA -->
+                        <div class="ep-panel">
+                            <div class="ep-panel-title">Cadastrar peça avulsa</div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end;">
+                                <div class="ep-field">
+                                    <label>Item</label>
+                                    <input type="text" id="epLaptopItemInput" placeholder="Ex: Teclado Dell Inspiron">
+                                </div>
+                                <div class="ep-field">
+                                    <label>Quantidade</label>
+                                    <input type="number" id="epLaptopQuantidadeInput" min="0" step="1" placeholder="0">
+                                </div>
+                                <div class="ep-field">
+                                    <label>Custo Unit. (R$)</label>
+                                    <input type="number" id="epLaptopCustoInput" min="0" step="0.01" placeholder="0,00">
+                                </div>
+                                <div>
+                                    <button id="epBtnCadastrarLaptop" onclick="epCadastrarItemLaptop()" class="ep-btn" style="width:100%;height:38px;">Cadastrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BUSCA -->
+                        <input type="text" id="epLaptopBuscaInput" oninput="epBuscarLaptop()" placeholder="🔍 Pesquisar peça..." class="ep-search">
+
+                        <!-- TABELA DE PEÇAS LAPTOP -->
+                        <div class="ep-table-wrap">
+                            <table class="ep-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Quantidade</th>
+                                        <th>Custo Unit. (R$)</th>
+                                        <th class="valor-restrito">Total (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="epLaptopLinhas">
+                                    <tr><td colspan="4" class="ep-empty">Digite algo na busca acima pra ver as peças cadastradas.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- HISTÓRICO DE MOVIMENTAÇÕES (Laptop) -->
+                        <div class="ep-table-wrap" style="margin-top:14px;">
+                            <div class="ep-panel-title" style="padding:14px 16px 12px;margin:0;border-bottom:1px solid var(--border-color);">📜 Histórico de movimentações</div>
+                            <table class="ep-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Item</th>
+                                        <th>Tipo</th>
+                                        <th>Qtd.</th>
+                                        <th class="valor-restrito">Valor (R$)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="epHistoricoLaptopLinhas">
                                     <tr><td colspan="5" class="ep-empty">Carregando...</td></tr>
                                 </tbody>
                             </table>
@@ -5655,7 +5732,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
 
         // Registra uma movimentação no histórico (não trava a ação principal se falhar)
-        async function epRegistrarMovimentacao(modeloNome, categoriaNome, tipo, quantidade, custoUnitario){
+        async function epRegistrarMovimentacao(modeloNome, categoriaNome, tipo, quantidade, custoUnitario, origemAvulso){
             const custo = Number(custoUnitario) || 0;
             try {
                 await medirPromise('Estoque Peças', () => supabaseDB.from('estoque_movimentacoes').insert({
@@ -5665,7 +5742,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     quantidade: quantidade,
                     custo_unitario: custo,
                     valor_total: custo * quantidade,
-                    loja_id: lojaIdParaGravar()
+                    loja_id: lojaIdParaGravar(),
+                    origem_avulso: origemAvulso || null
                 }));
             } catch(e) { console.error('Falha ao registrar movimentação:', e); }
         }
@@ -5941,7 +6019,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             }
             tbody.innerHTML = lista.map(mov => {
                 const isEntrada = mov.tipo === 'Entrada';
-                const itemLabel = contexto === 'android' ? mov.categoria_nome : ((mov.modelo_nome||'') + ' · ' + mov.categoria_nome);
+                const itemLabel = (contexto === 'android' || contexto === 'laptop') ? mov.categoria_nome : ((mov.modelo_nome||'') + ' · ' + mov.categoria_nome);
                 return `<tr>
                     <td class="ep-mono" style="color:var(--text-muted);font-size:11px;white-space:nowrap;font-weight:500;">${epFormatarDataHistorico(mov.criado_em)}</td>
                     <td>${itemLabel}</td>
@@ -5953,11 +6031,16 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
 
         async function epCarregarHistorico(contexto){
-            const tbody = document.getElementById(contexto === 'android' ? 'epHistoricoAndroidLinhas' : 'epHistoricoIphoneLinhas');
+            const tbodyId = contexto === 'android' ? 'epHistoricoAndroidLinhas' : contexto === 'laptop' ? 'epHistoricoLaptopLinhas' : 'epHistoricoIphoneLinhas';
+            const tbody = document.getElementById(tbodyId);
             if (!tbody) return;
             try {
                 let query = supabaseDB.from('estoque_movimentacoes').select('*').order('criado_em', { ascending: false }).limit(20);
-                query = contexto === 'android' ? query.is('modelo_nome', null) : query.not('modelo_nome', 'is', null);
+                if (contexto === 'android' || contexto === 'laptop') {
+                    query = query.is('modelo_nome', null).eq('origem_avulso', contexto);
+                } else {
+                    query = query.not('modelo_nome', 'is', null);
+                }
                 const filtroLoja = lojaIdParaFiltro();
                 if (filtroLoja) query = query.eq('loja_id', filtroLoja);
                 const { data, error } = await medirPromise('Estoque Peças', () => query);
@@ -6151,7 +6234,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 estado.quantidade = novaQuantidade;
                 estado.custo = novoCusto;
                 const diff = novaQuantidade - quantidadeAnterior;
-                if (diff !== 0) epRegistrarMovimentacao(null, itemNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto);
+                if (diff !== 0) epRegistrarMovimentacao(null, itemNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto, 'android');
                 epCarregarDashboardAndroid();
             } catch(e){
                 epMostrarToast(e.message || 'Erro ao salvar peça', true);
@@ -6178,10 +6261,181 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 if (error) throw new Error(error.message);
                 itemInput.value = ''; qtdInput.value = ''; custoInput.value = '';
                 epMostrarToast('Peça "' + item + '" cadastrada.');
-                if (quantidade > 0) epRegistrarMovimentacao(null, item, 'Entrada', quantidade, custo);
+                if (quantidade > 0) epRegistrarMovimentacao(null, item, 'Entrada', quantidade, custo, 'android');
                 document.getElementById('epAndroidBuscaInput').value = item;
                 await epCarregarItensAndroid();
                 epCarregarDashboardAndroid();
+            } catch(e){
+                epMostrarToast(e.message || 'Erro ao cadastrar peça (nome já deve existir?)', true);
+            } finally {
+                btn.disabled = false; btn.textContent = 'Cadastrar';
+            }
+        };
+
+        // ------------------------------------------------------------------
+        // LAPTOP (PEÇAS AVULSAS) — mesma lógica do Android, tabela própria
+        // ------------------------------------------------------------------
+        let laptopBuscaTimer = null;
+
+        async function epCarregarDashboardLaptop(){
+            try {
+                let query = supabaseDB.from('estoque_laptop').select('quantidade, custo_unitario');
+                const filtroLoja = lojaIdParaFiltro();
+                if (filtroLoja) query = query.eq('loja_id', filtroLoja);
+                const { data, error } = await medirPromise('Estoque Peças', () => query);
+                if (error) throw new Error(error.message);
+                const totalItens = (data||[]).reduce((s, it) => s + (it.quantidade||0), 0);
+                const valorTotal = (data||[]).reduce((s, it) => s + (it.quantidade||0) * (it.custo_unitario||0), 0);
+                document.getElementById('epDashTotalLaptop').innerHTML = totalItens + ' <small>em ' + (data||[]).length + ' peça(s)</small>';
+                document.getElementById('epDashValorLaptop').textContent = epFormatarMoeda(valorTotal);
+            } catch(e){ /* silencioso */ }
+            epCarregarHistorico('laptop');
+        }
+
+        window.epBuscarLaptop = function(){
+            clearTimeout(laptopBuscaTimer);
+            laptopBuscaTimer = setTimeout(epCarregarItensLaptop, 250);
+        };
+
+        async function epCarregarItensLaptop(){
+            const busca = document.getElementById('epLaptopBuscaInput').value.trim();
+            const tbody = document.getElementById('epLaptopLinhas');
+            const filtroLoja = lojaIdParaFiltro();
+            if (!filtroLoja){
+                tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Escolha uma loja no seletor à esquerda pra ver/editar o estoque.</td></tr>';
+                return;
+            }
+            if (!busca){
+                tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Digite algo na busca acima pra ver as peças cadastradas.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Carregando...</td></tr>';
+            try {
+                const { data, error } = await medirPromise('Estoque Peças', () =>
+                    supabaseDB.from('estoque_laptop').select('*').eq('loja_id', filtroLoja).ilike('item', '%' + busca + '%').order('item', { ascending: true }));
+                if (error) throw new Error(error.message);
+                epRenderizarItensLaptop(data || []);
+            } catch(e){
+                tbody.innerHTML = '<tr><td colspan="4" class="ep-empty" style="color:#f87171;">Erro ao carregar peças.</td></tr>';
+            }
+        }
+
+        function epRenderizarItensLaptop(itens){
+            const tbody = document.getElementById('epLaptopLinhas');
+            if (!itens.length){
+                tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Nenhuma peça encontrada.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            itens.forEach(it => {
+                const estado = { quantidade: it.quantidade, custo: it.custo_unitario, salvando: false, timerSalvar: null };
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="ep-nivel ${epNivelClasse(it.quantidade)}"></span>${it.item}</td>
+                    <td>
+                        <div class="ep-qtd-wrap">
+                            <button class="epBtnMenos ep-step-btn minus">–</button>
+                            <input type="number" class="epQtdInput ep-qtd-input" min="0" step="1" value="${it.quantidade}">
+                            <button class="epBtnMais ep-step-btn plus">+</button>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" class="epCustoInput ep-custo-input" min="0" step="0.01" value="${Number(it.custo_unitario).toFixed(2)}">
+                    </td>
+                    <td class="epTotalCell ep-mono valor-restrito">${epFormatarMoeda(it.quantidade * it.custo_unitario)}</td>
+                `;
+                const qtdInput = tr.querySelector('.epQtdInput');
+                const custoInput = tr.querySelector('.epCustoInput');
+                const totalCell = tr.querySelector('.epTotalCell');
+                const nivelDot = tr.querySelector('.ep-nivel');
+
+                function recalcularTotalVisual(){
+                    const q = parseFloat(qtdInput.value) || 0;
+                    const c = parseFloat(custoInput.value) || 0;
+                    totalCell.textContent = epFormatarMoeda(q * c);
+                    nivelDot.className = 'ep-nivel ' + epNivelClasse(q);
+                }
+                qtdInput.addEventListener('input', recalcularTotalVisual);
+                custoInput.addEventListener('input', recalcularTotalVisual);
+
+                function salvarAgora(){
+                    clearTimeout(estado.timerSalvar);
+                    estado.timerSalvar = setTimeout(() => {
+                        if (estado.salvando) return;
+                        estado.salvando = true;
+                        epSalvarItemLaptop(it.id, it.item, qtdInput, custoInput, estado).finally(() => { estado.salvando = false; });
+                    }, 400);
+                }
+
+                const evitarBlur = e => e.preventDefault();
+                tr.querySelector('.epBtnMais').addEventListener('mousedown', evitarBlur);
+                tr.querySelector('.epBtnMenos').addEventListener('mousedown', evitarBlur);
+
+                tr.querySelector('.epBtnMais').addEventListener('click', () => {
+                    qtdInput.value = (parseInt(qtdInput.value)||0) + 1;
+                    recalcularTotalVisual();
+                    salvarAgora();
+                });
+                tr.querySelector('.epBtnMenos').addEventListener('click', () => {
+                    const nova = Math.max(0, (parseInt(qtdInput.value)||0) - 1);
+                    qtdInput.value = nova;
+                    recalcularTotalVisual();
+                    salvarAgora();
+                });
+                qtdInput.addEventListener('change', salvarAgora);
+                custoInput.addEventListener('change', salvarAgora);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function epSalvarItemLaptop(itemId, itemNome, qtdInput, custoInput, estado){
+            const novaQuantidade = Math.max(0, parseInt(qtdInput.value) || 0);
+            const novoCusto = Math.max(0, parseFloat(custoInput.value) || 0);
+            const quantidadeAnterior = estado.quantidade;
+            try {
+                const { error } = await medirPromise('Estoque Peças', () =>
+                    supabaseDB.from('estoque_laptop').update({
+                        quantidade: novaQuantidade,
+                        custo_unitario: novoCusto,
+                        atualizado_em: new Date().toISOString()
+                    }).eq('id', itemId));
+                if (error) throw new Error(error.message);
+                estado.quantidade = novaQuantidade;
+                estado.custo = novoCusto;
+                const diff = novaQuantidade - quantidadeAnterior;
+                if (diff !== 0) epRegistrarMovimentacao(null, itemNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto, 'laptop');
+                epCarregarDashboardLaptop();
+            } catch(e){
+                epMostrarToast(e.message || 'Erro ao salvar peça', true);
+            }
+        }
+
+        window.epCadastrarItemLaptop = async function(){
+            const itemInput = document.getElementById('epLaptopItemInput');
+            const qtdInput = document.getElementById('epLaptopQuantidadeInput');
+            const custoInput = document.getElementById('epLaptopCustoInput');
+            const item = itemInput.value.trim();
+            const quantidade = qtdInput.value === '' ? 0 : Number(qtdInput.value);
+            const custo = custoInput.value === '' ? 0 : Number(custoInput.value);
+            if (!item){ epMostrarToast('Digite o nome da peça.', true); return; }
+            if (isNaN(quantidade) || quantidade < 0){ epMostrarToast('Quantidade inválida.', true); return; }
+            if (isNaN(custo) || custo < 0){ epMostrarToast('Informe um custo válido.', true); return; }
+            const filtroLoja = lojaIdParaFiltro();
+            if (!filtroLoja){ epMostrarToast('Escolha uma loja no seletor à esquerda antes de cadastrar.', true); return; }
+
+            const btn = document.getElementById('epBtnCadastrarLaptop');
+            btn.disabled = true; btn.textContent = 'Cadastrando…';
+            try {
+                const { error } = await supabaseDB.from('estoque_laptop').insert({ item, quantidade, custo_unitario: custo, loja_id: filtroLoja });
+                if (error) throw new Error(error.message);
+                itemInput.value = ''; qtdInput.value = ''; custoInput.value = '';
+                epMostrarToast('Peça "' + item + '" cadastrada.');
+                if (quantidade > 0) epRegistrarMovimentacao(null, item, 'Entrada', quantidade, custo, 'laptop');
+                document.getElementById('epLaptopBuscaInput').value = item;
+                await epCarregarItensLaptop();
+                epCarregarDashboardLaptop();
             } catch(e){
                 epMostrarToast(e.message || 'Erro ao cadastrar peça (nome já deve existir?)', true);
             } finally {
@@ -6195,19 +6449,30 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         window.epMudarSubview = function(subview){
             const viewIphone = document.getElementById('epViewIphone');
             const viewAndroid = document.getElementById('epViewAndroid');
+            const viewLaptop = document.getElementById('epViewLaptop');
             const btnIphone = document.getElementById('epBtnSubviewIphone');
             const btnAndroid = document.getElementById('epBtnSubviewAndroid');
+            const btnLaptop = document.getElementById('epBtnSubviewLaptop');
+
+            viewIphone.classList.add('hidden');
+            viewAndroid.classList.add('hidden');
+            viewLaptop.classList.add('hidden');
+            btnIphone.classList.remove('active');
+            btnAndroid.classList.remove('active');
+            btnLaptop.classList.remove('active');
+
             if (subview === 'android'){
-                viewIphone.classList.add('hidden');
                 viewAndroid.classList.remove('hidden');
-                btnIphone.classList.remove('active');
                 btnAndroid.classList.add('active');
                 epCarregarDashboardAndroid();
                 epCarregarItensAndroid();
+            } else if (subview === 'laptop'){
+                viewLaptop.classList.remove('hidden');
+                btnLaptop.classList.add('active');
+                epCarregarDashboardLaptop();
+                epCarregarItensLaptop();
             } else {
-                viewAndroid.classList.add('hidden');
                 viewIphone.classList.remove('hidden');
-                btnAndroid.classList.remove('active');
                 btnIphone.classList.add('active');
             }
         };
@@ -6261,9 +6526,13 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             if (modeloAtualId) epCarregarItensDoModelo();
             const buscaAndroid = document.getElementById('epAndroidBuscaInput');
             if (buscaAndroid && buscaAndroid.value.trim()) epCarregarItensAndroid();
+            const buscaLaptop = document.getElementById('epLaptopBuscaInput');
+            if (buscaLaptop && buscaLaptop.value.trim()) epCarregarItensLaptop();
             epCarregarDashboardAndroid();
+            epCarregarDashboardLaptop();
             epCarregarHistorico('iphone');
             epCarregarHistorico('android');
+            epCarregarHistorico('laptop');
         };
     })();
 
