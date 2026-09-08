@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260908180618">
+    <meta name="app-build" content="20260908182436">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -9152,6 +9152,12 @@ function osCriarLinha(os) {
 }
 
 // Guarda no dataset do <tr> os dados originais (evita problemas com aspas/acentos nos onclick)
+// Converte garantiaDias pra string corretamente — 0 (Sem garantia) É um valor válido e
+// não pode cair no padrão de 90 só por ser "falso" no JavaScript (bug clássico do `0 || x`).
+function osGarantiaDiasStr(valor) {
+    return (valor === undefined || valor === null || valor === '') ? '90' : String(valor);
+}
+
 function osPreencherDatasetLinha(tr, os) {
     tr.dataset.codigo = os.codigo || '';
     tr.dataset.chave = _osChaveOS(os);
@@ -9162,7 +9168,7 @@ function osPreencherDatasetLinha(tr, os) {
     tr.dataset.estadoAparelho = os.estadoAparelho || '';
     tr.dataset.descricao = os.descricao || '';
     tr.dataset.reparo = os.reparo || '';
-    tr.dataset.garantiaDias = os.garantiaDias || '90';
+    tr.dataset.garantiaDias = osGarantiaDiasStr(os.garantiaDias);
     tr.dataset.vendedor = os.vendedor || '';
     tr.dataset.tecnico = os.tecnico || '';
     tr.dataset.data = os.data || '';
@@ -9195,7 +9201,7 @@ function osAtualizarLinha(tr, os, forcarTudo) {
     const dadosMudaram = tr.dataset.total !== parseFloat(os.total||0).toFixed(2)
         || tr.dataset.reparo !== (os.reparo||'')
         || tr.dataset.descricao !== (os.descricao||'')
-        || tr.dataset.garantiaDias !== (os.garantiaDias||'90')
+        || tr.dataset.garantiaDias !== osGarantiaDiasStr(os.garantiaDias)
         || tr.dataset.cliente !== (os.cliente||'')
         || tr.dataset.telefone !== (os.telefone||'')
         || tr.dataset.modelo !== (os.modelo||'')
@@ -9251,7 +9257,7 @@ function osAtualizarLinha(tr, os, forcarTudo) {
         const reparoEl = tr.querySelector('.osReparoInput');
         if (reparoEl && document.activeElement !== reparoEl) reparoEl.value = os.reparo || '';
         const garantiaEl = tr.querySelector('.osGarantiaSelect');
-        if (garantiaEl && document.activeElement !== garantiaEl) garantiaEl.value = os.garantiaDias || '90';
+        if (garantiaEl && document.activeElement !== garantiaEl) garantiaEl.value = osGarantiaDiasStr(os.garantiaDias);
         const pecaEl = tr.querySelector('.osInputPeca');
         if (pecaEl && document.activeElement !== pecaEl) pecaEl.value = parseFloat(os.custoPeca||0).toFixed(2);
         const maoEl = tr.querySelector('.osInputMao');
