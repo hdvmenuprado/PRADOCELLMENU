@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
+    <meta name="app-build" content="20260908180618">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -8690,9 +8691,16 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     async function verificarNovaVersaoApp() {
         try {
-            const resp = await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
-            const versao = resp.headers.get('etag') || resp.headers.get('last-modified');
-            if (!versao) return; // hospedagem não expôs nenhum dos dois; não dá pra checar por aqui
+            // Antes comparava ETag/Last-Modified do servidor — mas o GitHub Pages às vezes
+            // devolve um cabeçalho levemente diferente pro MESMO arquivo (CDN deles, não é
+            // bug nosso), o que gerava aviso de "atualização" falso. Agora comparamos uma
+            // marca de versão que fica dentro do próprio HTML, que só muda quando eu de fato
+            // publico uma alteração — muito mais confiável.
+            const resp = await fetch(window.location.href, { method: 'GET', cache: 'no-store' });
+            const texto = await resp.text();
+            const match = texto.match(/<meta name="app-build" content="([^"]+)">/);
+            const versao = match ? match[1] : null;
+            if (!versao) return; // não achou a marca; não dá pra checar por aqui
             if (_versaoAppCarregada === null) {
                 _versaoAppCarregada = versao; // primeira checagem: só grava a versão atual como referência
                 return;
