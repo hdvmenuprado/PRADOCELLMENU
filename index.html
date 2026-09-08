@@ -18,6 +18,11 @@
             --border-highlight: rgba(212, 175, 55, 0.2);
             --text-main: #f5f5f5;
             --text-muted: #888888;
+            /* Superfícies translúcidas usadas em inputs, chips e caixas internas.
+               Ficam pretas no escuro e claras no modo claro — qualquer lugar que usar
+               essas variáveis (em vez do rgba preto direto) se ajusta sozinho. */
+            --surface-1: rgba(0, 0, 0, 0.15);
+            --surface-2: rgba(0, 0, 0, 0.35);
         }
 
         body.modo-claro {
@@ -28,6 +33,8 @@
             --border-highlight: rgba(212, 175, 55, 0.35);
             --text-main: #1a1a1a;
             --text-muted: #666666;
+            --surface-1: rgba(0, 0, 0, 0.045);
+            --surface-2: rgba(0, 0, 0, 0.06);
         }
         body.modo-claro { background-color: var(--bg-base); color: var(--text-main); }
 
@@ -53,7 +60,7 @@
         body.modo-claro textarea {
             background: rgba(255,255,255,0.8);
             color: #1a1a1a;
-            border-color: rgba(0,0,0,0.15);
+            border-color: var(--surface-1);
         }
         body.modo-claro select:focus,
         body.modo-claro input:focus,
@@ -95,7 +102,7 @@
             flex-direction: column;
             padding: 30px 20px;
             box-sizing: border-box;
-            box-shadow: 5px 0 20px rgba(0,0,0,0.3);
+            box-shadow: 5px 0 20px var(--surface-2);
             z-index: 10;
         }
 
@@ -368,7 +375,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            box-shadow: 0 4px 16px var(--surface-2);
             z-index: 1200;
             transition: transform .15s ease;
         }
@@ -442,7 +449,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            box-shadow: 0 4px 16px var(--surface-2);
             z-index: 1200;
             transition: transform .15s ease;
         }
@@ -463,7 +470,7 @@
         }
         .calc-painel.aberto { display: flex; }
         .calc-tela {
-            background: rgba(0,0,0,0.35);
+            background: var(--surface-2);
             border: 1px solid var(--border-color, #333);
             border-radius: 8px;
             padding: 12px;
@@ -512,7 +519,7 @@
             margin-top: 10px;
             padding: 5px 10px;
             border-radius: 999px;
-            background: rgba(0,0,0,0.2);
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
             font-size: 10.5px;
             font-weight: 700;
@@ -693,7 +700,7 @@
             padding: 10px 12px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
-            background: rgba(0,0,0,0.35);
+            background: var(--surface-2);
             color: var(--text-main);
             font-size: 14px;
         }
@@ -1159,7 +1166,7 @@ body.modo-claro .main-content {
             border-radius: 20px;
             padding: 40px;
             backdrop-filter: blur(20px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 40px var(--surface-2);
         }
 
         h2, h3 { 
@@ -1174,7 +1181,7 @@ body.modo-claro .main-content {
             padding-bottom: 15px;
         }
 
-        h3.sub-title { font-size: 1.1rem; border-bottom: none; margin-bottom: 20px; color: #fff; padding-bottom: 0; }
+        h3.sub-title { font-size: 1.1rem; border-bottom: none; margin-bottom: 20px; color: var(--text-main); padding-bottom: 0; }
 
         /* --- COMPONENTES DE FORMULÁRIO --- */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -1388,7 +1395,7 @@ body.modo-claro .main-content {
         .price-badge strong { font-size: 14px; color: var(--primary); }
 
         .admin-section {
-            background: rgba(0,0,0,0.2);
+            background: var(--surface-1);
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 30px;
@@ -1416,11 +1423,11 @@ body.modo-claro .main-content {
             border-radius: 12px;
             border: 2px solid var(--border-highlight);
             overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 30px var(--surface-2);
         }
         .pdf-preview-tabs {
             display: flex;
-            background: rgba(0,0,0,0.3);
+            background: var(--surface-2);
             border-bottom: 1px solid var(--border-color);
         }
         .pdf-preview-tab {
@@ -1452,7 +1459,7 @@ body.modo-claro .main-content {
             color: #000;
             line-height: 1.5;
             border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px var(--surface-1);
         }
         .mini-pdf-header { text-align: center; padding-bottom: 10px; margin-bottom: 12px; }
         .mini-pdf-title { font-size: 15px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
@@ -1471,7 +1478,7 @@ body.modo-claro .main-content {
         .mini-cupom {
             background:#fff; color:#000; width: 220px; padding: 14px 12px;
             font-family: 'Courier New', monospace; font-size: 9px; line-height: 1.45;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px var(--surface-1);
         }
         .mini-cupom img.mini-cupom-logo { display:block; max-width:34px; max-height:34px; object-fit:contain; flex-shrink:0; }
         .mini-cupom .mc-cabecalho { display:flex; align-items:center; justify-content:center; gap:6px; }
@@ -1630,7 +1637,7 @@ body.modo-claro .main-content {
             border-radius: 12px;
             font-size: 14px;
             font-weight: 600;
-            box-shadow: 0 16px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 16px 30px var(--surface-2);
             z-index: 99999;
             opacity: 0;
             transform: translateY(20px);
@@ -1693,7 +1700,7 @@ body.modo-claro .main-content {
                 justify-content: space-between;
                 align-items: center;
                 z-index: 100;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                box-shadow: 0 4px 10px var(--surface-2);
                 gap: 6px;
                 flex-shrink: 0;
             }
@@ -2064,7 +2071,7 @@ body.modo-claro .main-content {
         .ep-field label { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; }
         .ep-field input, .ep-field select {
             width:100%; padding:9px 12px; border-radius:6px; border:1px solid var(--border-color);
-            background: rgba(0,0,0,0.35); color: var(--text-main); font-size:13px; font-family:'Inter',sans-serif;
+            background: var(--surface-2); color: var(--text-main); font-size:13px; font-family:'Inter',sans-serif;
         }
         .ep-field input:focus, .ep-field select:focus { outline:none; border-color: var(--primary); }
         .ep-field input::placeholder { color:#555; }
@@ -2109,11 +2116,11 @@ body.modo-claro .main-content {
         .ep-step-btn:hover { border-color: var(--border-highlight); background: rgba(212,175,55,0.08); }
         .ep-qtd-input {
             width:48px; padding:4px 2px; font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:700;
-            text-align:center; border:1px solid var(--border-color); border-radius:5px; background:rgba(0,0,0,0.35); color:var(--text-main);
+            text-align:center; border:1px solid var(--border-color); border-radius:5px; background:var(--surface-2); color:var(--text-main);
         }
         .ep-custo-input {
             width:74px; padding:4px 6px; font-family:'JetBrains Mono',monospace; font-size:12px;
-            border:1px solid var(--border-color); border-radius:5px; background:rgba(0,0,0,0.35); color:var(--text-main);
+            border:1px solid var(--border-color); border-radius:5px; background:var(--surface-2); color:var(--text-main);
         }
         .ep-mono { font-family:'JetBrains Mono',monospace; font-weight:700; }
 
@@ -2352,6 +2359,7 @@ body.modo-claro .main-content {
         }
         body.modo-claro .workspace-card {
             background: rgba(255, 255, 255, 0.65);
+            border-color: rgba(0, 0, 0, 0.08);
         }
 
         /* Modais como "sheets" iOS: fundo mais desfocado atrás, cartão translúcido */
@@ -2384,7 +2392,7 @@ body.modo-claro .main-content {
         /* Switches: já eram parecidos com iOS, só refina a mola e a sombra do "botãozinho" */
         .toggle-slider { transition: background 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .toggle-slider:before {
-            box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+            box-shadow: 0 2px 5px var(--surface-2);
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
@@ -2410,11 +2418,11 @@ body.modo-claro .main-content {
             .sidebar {
                 order: 2;
                 flex-direction: row;
-                border-top: 1px solid rgba(255,255,255,0.08);
+                border-top: 1px solid var(--border-color);
                 border-bottom: none;
                 border-radius: 22px 22px 0 0;
                 padding-bottom: calc(8px + env(safe-area-inset-bottom));
-                box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+                box-shadow: 0 -8px 24px var(--surface-2);
             }
             .main-content { order: 1; }
             .brand-box { display: none; }
@@ -2434,6 +2442,9 @@ body.modo-claro .main-content {
     // Aplica o Modo Leve (menos gráficos) o quanto antes, pra não piscar
     // as animações por uma fração de segundo antes de desativar.
     try { if (localStorage.getItem('modoLevePrado') === '1') document.body.classList.add('modo-leve'); } catch(e){}
+    // Mesma lógica pro Modo Claro — aplica antes da página desenhar, pra não
+    // piscar o tema escuro por uma fração de segundo antes de trocar pro claro.
+    try { if (localStorage.getItem('modoClaroPrado') === '1') document.body.classList.add('modo-claro'); } catch(e){}
 </script>
 
 <div id="feixesGlobais" aria-hidden="true">
@@ -2507,6 +2518,10 @@ body.modo-claro .main-content {
                         <input type="checkbox" id="chkModoLeve" onchange="alternarModoLeve()" style="cursor:pointer;">
                         Modo leve (menos gráficos)
                     </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); cursor:pointer; user-select:none; margin-top:8px;">
+                        <input type="checkbox" id="chkModoClaro" onchange="alternarModoClaro()" style="cursor:pointer;">
+                        ☀️ Modo claro
+                    </label>
                 </div>
             </div>
         </div>
@@ -2529,7 +2544,7 @@ body.modo-claro .main-content {
         <div class="sidebar-bottom">
             <div class="seletor-loja-gestao-wrap" style="display:none; padding:0 8px 8px;">
                 <label style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px;">Visualizando</label>
-                <select class="seletor-loja-gestao" onchange="gestaoTrocarLoja(this)" style="width:100%;padding:6px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.4);color:var(--text-main);cursor:pointer;">
+                <select class="seletor-loja-gestao" onchange="gestaoTrocarLoja(this)" style="width:100%;padding:6px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);cursor:pointer;">
                     <option value="">Todas as lojas</option>
                 </select>
             </div>
@@ -2548,7 +2563,7 @@ body.modo-claro .main-content {
                 </div>
                 <style>@keyframes girar { to { transform: rotate(360deg); } }</style>
 
-                <div id="avalHistoricoBox" style="display:none; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 18px; margin-bottom: 24px;">
+                <div id="avalHistoricoBox" style="display:none; background: var(--surface-1); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 18px; margin-bottom: 24px;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                         <h3 class="sub-title" style="margin:0;font-size:0.95rem;color:var(--primary);">🕐 Avaliações de Hoje</h3>
                         <button onclick="avalHistoricoLimpar()" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;">limpar</button>
@@ -2652,7 +2667,7 @@ body.modo-claro .main-content {
                     <div id="infoAparelho" style="color:var(--text-main); margin-bottom:20px; font-size: 1.5em; text-transform: uppercase; letter-spacing: 2px;">iPhone 15 Pro (128GB)</div>
                     
                     <div class="form-grid" style="margin-bottom: 20px;">
-                        <div style="background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="background: var(--surface-2); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                             <span style="font-size:12px; color:var(--text-muted); font-weight:600; letter-spacing:1px;">Valor de troca</span>
                             <div id="resTroca" class="val-destaque" style="color: #e74c3c;">R$ 2600,00</div>
                         </div>
@@ -2764,7 +2779,7 @@ body.modo-claro .main-content {
                     <!-- BUSCA RÁPIDA -->
                     <div style="position:relative; max-width:1300px; margin-bottom:16px;">
                         <input type="text" id="svBuscaRapida" class="ep-search" style="margin-bottom:0;" placeholder="🔍 Busca rápida — digite o modelo (ex: iPhone 13, Galaxy S23...)" autocomplete="off" oninput="svBuscaRapidaMostrarSugestoes()" onfocus="svBuscaRapidaMostrarSugestoes()" onblur="setTimeout(svBuscaRapidaEsconder, 150)">
-                        <div id="svBuscaRapidaSugestoes" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:30; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; margin-top:4px; max-height:280px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,0.35);"></div>
+                        <div id="svBuscaRapidaSugestoes" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:30; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; margin-top:4px; max-height:280px; overflow-y:auto; box-shadow:0 8px 20px var(--surface-2);"></div>
                     </div>
 
                     <!-- PASSO 1: TIPO DE APARELHO -->
@@ -2775,7 +2790,7 @@ body.modo-claro .main-content {
 
                     <!-- PASSO 3: MODELO -->
                     <div id="svModelosWrap" class="hidden" style="max-width:1300px; margin: 12px 0;">
-                        <select id="svModeloSelect" onchange="svSelecionarModeloConsulta(this.value)" style="width:100%; max-width:340px; padding:9px 12px; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.35); color:var(--text-main); font-size:13px; font-weight:700; font-family:'Space Grotesk',sans-serif; cursor:pointer;">
+                        <select id="svModeloSelect" onchange="svSelecionarModeloConsulta(this.value)" style="width:100%; max-width:340px; padding:9px 12px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px; font-weight:700; font-family:'Space Grotesk',sans-serif; cursor:pointer;">
                             <option value="">Selecione um modelo…</option>
                         </select>
                     </div>
@@ -2799,7 +2814,7 @@ body.modo-claro .main-content {
                             <div style="font-size:17px; font-weight:700; color:var(--primary); font-family:'JetBrains Mono',monospace;">R$ <span id="svResumoTotal">0,00</span></div>
                         </div>
                         <button class="ep-btn" onclick="svCopiarResumo()" style="background:linear-gradient(135deg, var(--primary), #a6841e); color:#000; font-weight:700;">📋 Copiar Resumo</button>
-                        <button class="ep-btn" onclick="svLimparResumo()" style="background:rgba(255,255,255,0.08);">🗑️ Limpar</button>
+                        <button class="ep-btn" onclick="svLimparResumo()" style="background:var(--surface-1);">🗑️ Limpar</button>
                     </div>
                 </div>
             </div>
@@ -2868,7 +2883,7 @@ body.modo-claro .main-content {
 
                         <!-- SELEÇÃO DE MODELO -->
                         <div class="ep-panel" style="padding:10px 16px;">
-                            <select id="epModeloSelect" onchange="epSelecionarModelo()" style="width:100%;max-width:340px;padding:9px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-weight:700;font-family:'Space Grotesk',sans-serif;cursor:pointer;">
+                            <select id="epModeloSelect" onchange="epSelecionarModelo()" style="width:100%;max-width:340px;padding:9px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-weight:700;font-family:'Space Grotesk',sans-serif;cursor:pointer;">
                                 <option value="">Selecione um modelo…</option>
                             </select>
                         </div>
@@ -3029,12 +3044,12 @@ body.modo-claro .main-content {
 
                     <div class="ep-panel">
                         <div class="ep-panel-title">Diagnóstico técnico</div>
-                        <textarea id="ltDiagnostico" rows="6" placeholder="Descreva o problema encontrado, os testes realizados e o diagnóstico técnico..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
+                        <textarea id="ltDiagnostico" rows="6" placeholder="Descreva o problema encontrado, os testes realizados e o diagnóstico técnico..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
                     </div>
 
                     <div class="ep-panel">
                         <div class="ep-panel-title">Observações / Conclusão</div>
-                        <textarea id="ltObservacoes" rows="4" placeholder="Recomendações, conclusão do laudo, observações finais..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
+                        <textarea id="ltObservacoes" rows="4" placeholder="Recomendações, conclusão do laudo, observações finais..." style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
                     </div>
 
                     <div class="ep-panel">
@@ -3115,10 +3130,10 @@ body.modo-claro .main-content {
 
                     <!-- FILTRO -->
                     <div style="display:flex; align-items:center; gap:10px; max-width:1300px; margin-bottom:12px; flex-wrap:wrap;">
-                        <select id="pgFiltroMes" onchange="pgCarregar()" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.35); color:var(--text-main); font-size:13px; cursor:pointer;">
+                        <select id="pgFiltroMes" onchange="pgCarregar()" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px; cursor:pointer;">
                             <option value="">Mês atual</option>
                         </select>
-                        <select id="pgFiltroTipo" onchange="pgCarregar()" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.35); color:var(--text-main); font-size:13px; cursor:pointer;">
+                        <select id="pgFiltroTipo" onchange="pgCarregar()" style="padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px; cursor:pointer;">
                             <option value="">Todos os tipos</option>
                             <option value="Assistência">🔧 Assistência</option>
                             <option value="Venda">📱 Venda de iPhones</option>
@@ -3227,7 +3242,7 @@ body.modo-claro .main-content {
                     <!-- NÍVEL 2: MARCAS -->
                     <div id="svaNivelMarcas" class="hidden" style="margin-top:16px;">
                         <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-                            <input type="text" id="svaNovaMarcaInput" placeholder="Nome da marca (ex: Apple, Samsung...)" style="flex:1; min-width:200px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.35); color:var(--text-main); font-size:13px;">
+                            <input type="text" id="svaNovaMarcaInput" placeholder="Nome da marca (ex: Apple, Samsung...)" style="flex:1; min-width:200px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px;">
                             <button class="ep-btn" onclick="svaCadastrarMarca()">+ Cadastrar Marca</button>
                         </div>
                         <div class="ep-table-wrap" style="max-width:none;">
@@ -3241,7 +3256,7 @@ body.modo-claro .main-content {
                     <!-- NÍVEL 3: MODELOS -->
                     <div id="svaNivelModelos" class="hidden" style="margin-top:16px;">
                         <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-                            <input type="text" id="svaNovoModeloInput" placeholder="Nome do modelo (ex: iPhone 13, Galaxy S23...)" style="flex:1; min-width:200px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.35); color:var(--text-main); font-size:13px;">
+                            <input type="text" id="svaNovoModeloInput" placeholder="Nome do modelo (ex: iPhone 13, Galaxy S23...)" style="flex:1; min-width:200px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px;">
                             <button class="ep-btn" onclick="svaCadastrarModelo()">+ Cadastrar Modelo</button>
                         </div>
                         <div class="ep-table-wrap" style="max-width:none;">
@@ -3255,8 +3270,8 @@ body.modo-claro .main-content {
                     <!-- NÍVEL 4: SERVIÇOS -->
                     <div id="svaNivelServicos" class="hidden" style="margin-top:16px;">
                         <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-                            <input type="text" id="svaNovoServicoNome" placeholder="Nome do serviço (ex: Troca de Tela)" style="flex:2; min-width:180px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.35); color:var(--text-main); font-size:13px;">
-                            <input type="number" id="svaNovoServicoValor" min="0" step="0.01" placeholder="Valor (R$)" style="flex:1; min-width:100px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:rgba(0,0,0,0.35); color:var(--text-main); font-size:13px;">
+                            <input type="text" id="svaNovoServicoNome" placeholder="Nome do serviço (ex: Troca de Tela)" style="flex:2; min-width:180px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px;">
+                            <input type="number" id="svaNovoServicoValor" min="0" step="0.01" placeholder="Valor (R$)" style="flex:1; min-width:100px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px;">
                             <button class="ep-btn" onclick="svaCadastrarServico()">+ Cadastrar Serviço</button>
                         </div>
                         <div class="ep-table-wrap" style="max-width:none;">
@@ -3275,7 +3290,7 @@ body.modo-claro .main-content {
                         <div style="font-size:17px; font-weight:700; color:var(--primary); font-family:'JetBrains Mono',monospace;">R$ <span id="svaResumoTotal">0,00</span></div>
                     </div>
                     <button class="ep-btn" onclick="svaCopiarResumo()" style="background:linear-gradient(135deg, var(--primary), #a6841e); color:#000; font-weight:700;">📋 Copiar Resumo</button>
-                    <button class="ep-btn" onclick="svaLimparResumo()" style="background:rgba(255,255,255,0.08);">🗑️ Limpar</button>
+                    <button class="ep-btn" onclick="svaLimparResumo()" style="background:var(--surface-1);">🗑️ Limpar</button>
                 </div>
 
 
@@ -3288,7 +3303,7 @@ body.modo-claro .main-content {
                         <select id="adminModelo" onchange="carregarDadosAdminAvaliacao()" style="font-size: 16px; padding: 16px;"><option value="iPhone 11">iPhone 11</option><option value="iPhone 11 Pro">iPhone 11 Pro</option><option value="iPhone 11 Pro Max">iPhone 11 Pro Max</option><option value="iPhone 12">iPhone 12</option><option value="iPhone 12 Pro">iPhone 12 Pro</option><option value="iPhone 12 Pro Max">iPhone 12 Pro Max</option><option value="iPhone 13">iPhone 13</option><option value="iPhone 13 Pro">iPhone 13 Pro</option><option value="iPhone 13 Pro Max">iPhone 13 Pro Max</option><option value="iPhone 14">iPhone 14</option><option value="iPhone 14 Pro">iPhone 14 Pro</option><option value="iPhone 14 Pro Max">iPhone 14 Pro Max</option><option value="iPhone 15">iPhone 15</option><option value="iPhone 15 Pro">iPhone 15 Pro</option><option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option><option value="iPhone 16">iPhone 16</option><option value="iPhone 16 Pro">iPhone 16 Pro</option><option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option><option value="iPhone 17">iPhone 17</option><option value="iPhone 17 Pro">iPhone 17 Pro</option><option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option></select>
                     </div>
                     
-                    <div class="form-grid" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                    <div class="form-grid" style="background: var(--surface-2); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
                         <div class="form-group"><label>Preço Base p/ Compra (Troca) R$</label><input type="number" id="baseTroca"></div>
                         <div class="form-group"><label>Preço Base p/ Venda R$</label><input type="number" id="baseVenda"></div>
                     </div>
@@ -3338,7 +3353,7 @@ body.modo-claro .main-content {
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Personalize cada documento separadamente. O preview atualiza em tempo real.</p>
 
                     <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px; margin-bottom: 20px;">
-                        <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">🏢 Dados da Empresa (Ambos os Documentos)</h3>
+                        <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">🏢 Dados da Empresa (Ambos os Documentos)</h3>
                         <div class="form-grid-3" style="gap: 15px;">
                             <div class="form-group">
                                 <label>Nome da Empresa</label>
@@ -3382,7 +3397,7 @@ body.modo-claro .main-content {
                     <div id="editorPainelOrc" class="pdf-editor-layout" style="display: grid;">
                         <div class="pdf-controls-panel">
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">🎨 Cores</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">🎨 Cores</h3>
                                 <div class="form-group" style="margin-bottom:14px;">
                                     <label>Cor de Destaque (cabeçalho, linha)</label>
                                     <div class="color-picker-row">
@@ -3399,7 +3414,7 @@ body.modo-claro .main-content {
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">📝 Textos</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">📝 Textos</h3>
                                 <div class="form-group" style="margin-bottom:12px;">
                                     <label>Subtítulo do documento</label>
                                     <input type="text" id="orcSubtitulo" value="Orçamento de Manutenção Técnica" oninput="atualizarPreviewPDF()">
@@ -3414,7 +3429,7 @@ body.modo-claro .main-content {
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">👁️ Visibilidade</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">👁️ Visibilidade</h3>
                                 <div class="toggle-row">
                                     <span>Texto de introdução</span>
                                     <label class="toggle-switch"><input type="checkbox" id="orcMostrarIntro" checked="" onchange="atualizarPreviewPDF()"><span class="toggle-slider"></span></label>
@@ -3428,7 +3443,7 @@ body.modo-claro .main-content {
                         </div>
                         <div class="pdf-preview-panel">
                             <div class="pdf-preview-frame">
-                                <div style="background:rgba(0,0,0,0.3); padding:10px; text-align:center; font-size:11px; font-weight:700; color:var(--primary); letter-spacing:1px; text-transform:uppercase;">📋 Preview — Orçamento</div>
+                                <div style="background:var(--surface-2); padding:10px; text-align:center; font-size:11px; font-weight:700; color:var(--primary); letter-spacing:1px; text-transform:uppercase;">📋 Preview — Orçamento</div>
                                 <div class="pdf-preview-inner" id="pdfPreviewOrc"><div class="mini-pdf">
                 
             <div class="mini-pdf-header" style="border-bottom:2px solid #d4af37; margin-bottom:10px; padding-bottom:8px;">
@@ -3466,7 +3481,7 @@ body.modo-claro .main-content {
                     <div id="editorPainelGar" class="pdf-editor-layout" style="display: none;">
                         <div class="pdf-controls-panel">
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">🎨 Cores</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">🎨 Cores</h3>
                                 <div class="form-group" style="margin-bottom:14px;">
                                     <label>Cor de Destaque (cabeçalho)</label>
                                     <div class="color-picker-row">
@@ -3483,14 +3498,14 @@ body.modo-claro .main-content {
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">📝 Subtítulo</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">📝 Subtítulo</h3>
                                 <div class="form-group">
                                     <label>Subtítulo do documento</label>
                                     <input type="text" id="garSubtitulo" value="Termo de Garantia e Entrega de Equipamento" oninput="atualizarPreviewPDF()">
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">📋 Cláusulas da Garantia</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">📋 Cláusulas da Garantia</h3>
                                 <p style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">Edite o título e o texto de cada cláusula. Deixe o texto vazio para ocultar a cláusula no documento.</p>
                                 <div id="clausulasEditor">
                                     <div style="margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid var(--border-color);">
@@ -3539,7 +3554,7 @@ body.modo-claro .main-content {
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">👁️ Visibilidade</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">👁️ Visibilidade</h3>
                                 <div class="toggle-row" style="border:none;">
                                     <span>Linha de assinaturas</span>
                                     <label class="toggle-switch"><input type="checkbox" id="garMostrarAssinaturas" checked="" onchange="atualizarPreviewPDF()"><span class="toggle-slider"></span></label>
@@ -3549,7 +3564,7 @@ body.modo-claro .main-content {
                         </div>
                         <div class="pdf-preview-panel">
                             <div class="pdf-preview-frame">
-                                <div style="background:rgba(0,0,0,0.3); padding:10px; text-align:center; font-size:11px; font-weight:700; color:var(--primary); letter-spacing:1px; text-transform:uppercase;">📄 Preview — Garantia</div>
+                                <div style="background:var(--surface-2); padding:10px; text-align:center; font-size:11px; font-weight:700; color:var(--primary); letter-spacing:1px; text-transform:uppercase;">📄 Preview — Garantia</div>
                                 <div class="pdf-preview-inner" id="pdfPreviewGar"><div class="mini-pdf">
                 
             <div class="mini-pdf-header" style="border-bottom:2px solid #d4af37; margin-bottom:10px; padding-bottom:8px;">
@@ -3576,7 +3591,7 @@ body.modo-claro .main-content {
                     <div id="editorPainelCupom" class="pdf-editor-layout" style="display: none;">
                         <div class="pdf-controls-panel">
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">🖼️ Logo do Cupom</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">🖼️ Logo do Cupom</h3>
                                 <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Envie a logo da loja para aparecer no topo do cupom impresso (recomendado: PNG com fundo transparente).</p>
                                 <input type="file" id="cupomLogoFile" accept="image/*" onchange="cupomCarregarLogo(this)">
                                 <input type="hidden" id="cupomLogoBase64" value="">
@@ -3590,7 +3605,7 @@ body.modo-claro .main-content {
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">🖨️ Papel</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">🖨️ Papel</h3>
                                 <div class="form-group">
                                     <label>Largura da bobina térmica</label>
                                     <select id="cupomLargura" onchange="atualizarPreviewPDF()">
@@ -3600,7 +3615,7 @@ body.modo-claro .main-content {
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">📝 Textos</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">📝 Textos</h3>
                                 <div class="form-group" style="margin-bottom:14px;">
                                     <label>Título do cupom</label>
                                     <input type="text" id="cupomTitulo" value="CUPOM DE ORDEM DE SERVIÇO" oninput="atualizarPreviewPDF()">
@@ -3626,7 +3641,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                 </div>
                             </div>
                             <div class="admin-section" style="border-color: rgba(155,89,182,0.3); padding: 20px;">
-                                <h3 class="sub-title" style="color: #fff; font-size: 0.95rem;">👁️ Visibilidade</h3>
+                                <h3 class="sub-title" style="color: var(--text-main); font-size: 0.95rem;">👁️ Visibilidade</h3>
                                 <div class="toggle-row">
                                     <span>Mostrar telefone do cliente</span>
                                     <label class="toggle-switch"><input type="checkbox" id="cupomMostrarTelefoneCliente" checked="" onchange="atualizarPreviewPDF()"><span class="toggle-slider"></span></label>
@@ -3640,7 +3655,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         </div>
                         <div class="pdf-preview-panel">
                             <div class="pdf-preview-frame">
-                                <div style="background:rgba(0,0,0,0.3); padding:10px; text-align:center; font-size:11px; font-weight:700; color:var(--primary); letter-spacing:1px; text-transform:uppercase;">🧾 Preview — Cupom O.S.</div>
+                                <div style="background:var(--surface-2); padding:10px; text-align:center; font-size:11px; font-weight:700; color:var(--primary); letter-spacing:1px; text-transform:uppercase;">🧾 Preview — Cupom O.S.</div>
                                 <div class="pdf-preview-inner" id="pdfPreviewCupom"><div class="mini-cupom-wrap"><div class="mini-cupom">Carregando preview...</div></div></div>
                             </div>
                             <p style="font-size:10px; color:var(--text-muted); text-align:center; margin-top:8px;">Preview aproximado — a impressora térmica real corta o papel automaticamente</p>
@@ -3697,11 +3712,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             </div>
                             <div class="ep-field" style="grid-column:span 2;">
                                 <label>Descrição (Defeito Relatado)</label>
-                                <textarea id="osDescricao" placeholder="Descreva o defeito relatado pelo cliente" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:none;height:38px;box-sizing:border-box;"></textarea>
+                                <textarea id="osDescricao" placeholder="Descreva o defeito relatado pelo cliente" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:none;height:38px;box-sizing:border-box;"></textarea>
                             </div>
                             <div class="ep-field" style="grid-column:span 2;">
                                 <label>Reparo (Feito ou Para Fazer)</label>
-                                <textarea id="osReparo" placeholder="Descreva o defeito ou o serviço" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:none;height:38px;box-sizing:border-box;"></textarea>
+                                <textarea id="osReparo" placeholder="Descreva o defeito ou o serviço" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:none;height:38px;box-sizing:border-box;"></textarea>
                             </div>
                             <div class="ep-field">
                                 <label>Garantia (Dias)</label>
@@ -3750,12 +3765,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
                     <!-- FILTROS -->
                     <div class="ep-panel" style="padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <input type="text" id="osPesquisa" placeholder="🔍 Pesquisar..." oninput="osFiltrarTabela()" style="flex:1 1 140px;min-width:100px;padding:8px 10px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:12px;box-sizing:border-box;">
+                        <input type="text" id="osPesquisa" placeholder="🔍 Pesquisar..." oninput="osFiltrarTabela()" style="flex:1 1 140px;min-width:100px;padding:8px 10px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:12px;box-sizing:border-box;">
                         <button id="osBtnEscopo" onclick="osToggleEscopo()" class="ep-btn" style="flex:0 0 auto;padding:8px 10px;font-size:11px;" title="Clique para alternar entre pesquisar no mês atual ou em todos os meses">📅 Mês Atual</button>
-                        <select id="osFiltroMesEspecifico" onchange="osAplicarFiltroOuRecarregar()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por um mês específico (sobrepõe o filtro de Mês Atual / Todos os Meses)">
+                        <select id="osFiltroMesEspecifico" onchange="osAplicarFiltroOuRecarregar()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por um mês específico (sobrepõe o filtro de Mês Atual / Todos os Meses)">
                             <option value="">📆 Mês...</option>
                         </select>
-                        <select id="osFiltroStatus" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por status">
+                        <select id="osFiltroStatus" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por status">
                             <option value="">🏷️ Status</option>
                             <option>Orçando</option>
                             <option>Aguardando aprov</option>
@@ -3765,7 +3780,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             <option>Aparelho retirado</option>
                             <option>Em Custódia</option>
                         </select>
-                        <select id="osFiltroOrigem" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:rgba(0,0,0,0.35);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por origem do cliente">
+                        <select id="osFiltroOrigem" onchange="osFiltrarTabela()" style="flex:0 0 auto;width:100px;padding:8px 6px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:11px;font-weight:600;cursor:pointer;box-sizing:border-box;" title="Filtrar por origem do cliente">
                             <option value="">📍 Origem</option>
                             <option value="Cliente de Porta">🚪 Porta</option>
                             <option value="Cliente Google">🔎 Google</option>
@@ -5008,7 +5023,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             });
             grid.innerHTML = LOJAS_CACHE.map(loja => `
                 <div class="admin-section" style="border-color: rgba(46,204,113,0.3); padding:16px;">
-                    <h4 style="margin:0 0 10px;color:#fff;font-size:0.9rem;">${loja.nome}</h4>
+                    <h4 style="margin:0 0 10px;color:var(--text-main);font-size:0.9rem;">${loja.nome}</h4>
                     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;" id="vendedoresLista_${loja.id}">
                         ${vendedoresAdminRenderizarLista(loja.id)}
                     </div>
@@ -8258,8 +8273,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!svaServicosCache.length) { tbody.innerHTML = '<tr><td colspan="5" class="ep-empty">Nenhum serviço cadastrado ainda.</td></tr>'; return; }
         tbody.innerHTML = svaServicosCache.map(s => `
             <tr>
-                <td><input type="text" value="${(s.servico||'').replace(/"/g,'&quot;')}" onchange="svaSalvarServico('${s.id}', this, 'nome')" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);color:var(--text-main);font-size:13px;padding:5px 7px;border-radius:5px;"></td>
-                <td><input type="number" min="0" step="0.01" value="${Number(s.valor||0).toFixed(2)}" onchange="svaSalvarServico('${s.id}', this, 'valor')" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);color:var(--text-main);font-size:13px;padding:5px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;"></td>
+                <td><input type="text" value="${(s.servico||'').replace(/"/g,'&quot;')}" onchange="svaSalvarServico('${s.id}', this, 'nome')" style="width:100%;background:var(--surface-2);border:1px solid var(--border-color);color:var(--text-main);font-size:13px;padding:5px 7px;border-radius:5px;"></td>
+                <td><input type="number" min="0" step="0.01" value="${Number(s.valor||0).toFixed(2)}" onchange="svaSalvarServico('${s.id}', this, 'valor')" style="width:100%;background:var(--surface-2);border:1px solid var(--border-color);color:var(--text-main);font-size:13px;padding:5px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;"></td>
                 <td style="text-align:center;"><input type="checkbox" title="Adicionar ao orçamento" onchange="svaToggleResumo('${s.id}', this.checked)" ${svaResumoItens.some(r => r.id === s.id) ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer;"></td>
                 <td style="text-align:center;"><button onclick="svaCopiarItemUnico('${s.id}')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:15px;" title="Copiar mensagem desse serviço">📋</button></td>
                 <td style="text-align:center;"><button onclick="svaExcluirServico('${s.id}')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px;" title="Excluir">🗑️</button></td>
@@ -8522,6 +8537,7 @@ function toggleMenuGrafico(event) {
     const vaiAbrir = menu.style.display !== 'block';
     if (vaiAbrir) {
         document.getElementById('chkModoLeve').checked = document.body.classList.contains('modo-leve');
+        document.getElementById('chkModoClaro').checked = document.body.classList.contains('modo-claro');
     }
     menu.style.display = vaiAbrir ? 'block' : 'none';
 }
@@ -8536,6 +8552,16 @@ function alternarModoLeve() {
     const ativo = document.getElementById('chkModoLeve').checked;
     document.body.classList.toggle('modo-leve', ativo);
     try { localStorage.setItem('modoLevePrado', ativo ? '1' : '0'); } catch(e) {}
+}
+
+// ==========================================
+// MODO CLARO — troca o tema escuro (padrão) por um tema claro.
+// Fica salvo no navegador da pessoa, igual o Modo Leve.
+// ==========================================
+function alternarModoClaro() {
+    const ativo = document.getElementById('chkModoClaro').checked;
+    document.body.classList.toggle('modo-claro', ativo);
+    try { localStorage.setItem('modoClaroPrado', ativo ? '1' : '0'); } catch(e) {}
 }
 
 // Converte o objeto usado no front (camelCase) pro formato de colunas do banco (snake_case)
@@ -8777,7 +8803,7 @@ function osCriarLinha(os) {
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
             <input type="text" class="osClienteNomeInput" placeholder="Nome do cliente"
                 oninput="this.closest('tr').dataset.cliente=this.value;osMarcarPendente(this)"
-                style="width:100%;font-weight:600;color:var(--text-main);font-size:12px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);box-sizing:border-box;">
+                style="width:100%;font-weight:600;color:var(--text-main);font-size:12px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:var(--surface-2);box-sizing:border-box;">
             <div class="osClienteTelefone" style="color:var(--text-muted);font-size:10px;margin-top:2px;">${os.telefone || '-'}</div>
             <select class="osOrigemSelect" onchange="osCorOrigem(this);osAtualizarOrigem(this)" style="margin-top:3px;width:100%;font-size:9px;padding:1px 2px;border-radius:4px;border:1px solid var(--border-color);cursor:pointer;box-sizing:border-box;">
                 <option value="">Origem...</option>
@@ -8791,14 +8817,14 @@ function osCriarLinha(os) {
         <td class="osModeloCell" style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:100px;">
             <input type="text" class="osModeloInput" placeholder="Modelo"
                 oninput="this.closest('tr').dataset.modelo=this.value;osMarcarPendente(this)"
-                style="width:100%;font-size:12px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);box-sizing:border-box;">
+                style="width:100%;font-size:12px;padding:2px 4px;border:1px solid var(--border-color);border-radius:4px;background:var(--surface-2);color:var(--text-main);box-sizing:border-box;">
             <div class="osEstadoIndicator" style="margin-top:2px;font-size:9px;font-weight:600;white-space:nowrap;"></div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:160px;">
-            <textarea class="osDescricaoInput" rows="2" oninput="this.closest('tr').dataset.descricao=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
+            <textarea class="osDescricaoInput" rows="2" oninput="this.closest('tr').dataset.descricao=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid var(--border-color);border-radius:4px;background:var(--surface-2);color:var(--text-main);resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:160px;">
-            <textarea class="osReparoInput" rows="2" oninput="this.closest('tr').dataset.reparo=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
+            <textarea class="osReparoInput" rows="2" oninput="this.closest('tr').dataset.reparo=this.value;osMarcarPendente(this)" style="width:100%;min-width:120px;font-size:11px;padding:3px 5px;border:1px solid var(--border-color);border-radius:4px;background:var(--surface-2);color:var(--text-main);resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.3;min-height:unset;height:46px;"></textarea>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);">
             <div style="display:flex;flex-direction:column;gap:4px;">
@@ -8819,13 +8845,13 @@ function osCriarLinha(os) {
                 <div style="display:flex;align-items:center;gap:3px;">
                     <span style="font-size:9px;color:var(--text-muted);width:14px;">P</span>
                     <input type="number" class="osInputPeca" step="0.01" min="0"
-                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);"
+                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid var(--border-color);border-radius:4px;background:var(--surface-2);color:var(--text-main);"
                         oninput="osRecalcTotal(this)">
                 </div>
                 <div style="display:flex;align-items:center;gap:3px;">
                     <span style="font-size:9px;color:var(--text-muted);width:14px;">M</span>
                     <input type="number" class="osInputMao" step="0.01" min="0"
-                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid var(--border-color);border-radius:4px;background:rgba(0,0,0,0.35);color:var(--text-main);"
+                        style="width:58px;padding:2px 4px;font-size:11px;border:1px solid var(--border-color);border-radius:4px;background:var(--surface-2);color:var(--text-main);"
                         oninput="osRecalcTotal(this)">
                 </div>
             </div>
