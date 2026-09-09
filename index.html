@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909143314">
+    <meta name="app-build" content="20260909144658">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -9984,6 +9984,13 @@ let _osMenuTrAtual = null;
 function osAbrirMenuPontinhos(btn) {
     _osMenuTrAtual = btn.closest('tr');
     const menu = document.getElementById('osMenuPontinhos');
+    // Importante: move o menu pra ser filho direto do <body>. O card que envolve a
+    // tabela usa "backdrop-filter" (efeito de vidro fosco) — isso, sem a gente pedir,
+    // faz o navegador tratar esse card como referência pro "position:fixed" de tudo
+    // que está dentro dele, em vez da tela inteira. Resultado: o menu calculava a
+    // posição certa pra tela, mas era desenhado relativo ao card errado e vazava.
+    // Tirando o menu de dentro do card, position:fixed volta a valer pra tela toda.
+    document.body.appendChild(menu);
     const r = btn.getBoundingClientRect();
 
     // Mede o menu de verdade (invisível, mas já no layout) antes de posicionar,
