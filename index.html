@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909162645">
+    <meta name="app-build" content="20260909163050">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -4303,6 +4303,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             <button id="crmBtnEmitirGarantia" class="action-btn pdf-btn" style="margin-top:0;flex:1;min-width:220px;" onclick="gerarPDFGarantia()">🖨 Salvar e Emitir Termo de Garantia</button>
             <button class="action-btn secondary-btn" style="margin-top:0;flex:0 0 auto;" onclick="crmFecharModalCadastro()">✖️ Cancelar</button>
         </div>
+        <button type="button" onclick="crmCopiarRelatorio()" style="margin-top:10px;width:100%;background:none;border:1px dashed var(--border-highlight);color:var(--primary);border-radius:8px;padding:9px;font-size:12.5px;cursor:pointer;">📋 Copiar relatório da venda</button>
     </div>
 </div>
 
@@ -8143,6 +8144,43 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmBtnSalvar').innerText = '🔄 Atualizar Cliente';
         document.getElementById('crmBtnEmitirGarantia').innerText = '🖨 Salvar e Emitir Termo de Garantia';
         document.getElementById('modalCrmCadastro').classList.add('ativo');
+    }
+
+    // Monta o relatório de venda no formato pronto pra colar no WhatsApp (com *negrito*)
+    // e copia pra área de transferência — usa os valores que estão preenchidos no
+    // formulário no momento (não precisa ter salvo o cliente antes).
+    function crmMontarTextoRelatorio() {
+        const nome = document.getElementById('crmNome').value.trim() || '-';
+        const valorNum = parseFloat(document.getElementById('crmValorAparelho').value);
+        const valor = !isNaN(valorNum) ? valorNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00';
+        const modelo = document.getElementById('crmProduto').value.trim() || '-';
+        const origemRaw = document.getElementById('crmOrigem').value || '-';
+        const origem = origemRaw.replace(/^Cliente\s*/i, '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim() || '-';
+        const forma1 = document.getElementById('crmFormaPagamento').value;
+        const forma2 = document.getElementById('crmFormaPagamento2').value;
+        const formaPagamento = [forma1, forma2].filter(Boolean).join(' / ') || '-';
+        const troca = document.getElementById('crmAparelhoTroca').value.trim() || 'Nenhum';
+        const vendedor = document.getElementById('crmVendedor').value || '-';
+
+        return `*nome Cliente* : ${nome}\n` +
+               `*Valor*: R$${valor}\n` +
+               `*Modelo ou numeração* : ${modelo}\n` +
+               `*Por Onde Veio*: ${origem}\n` +
+               `*Forma de Pagamento*: ${formaPagamento}\n` +
+               `*Qual celular deu na troca*: ${troca}\n` +
+               `*Vendedor* ${vendedor}`;
+    }
+
+    async function crmCopiarRelatorio() {
+        const nome = document.getElementById('crmNome').value.trim();
+        if (!nome) { mostrarToast('Preencha ao menos o nome do cliente antes de copiar.', 'erro'); return; }
+        const texto = crmMontarTextoRelatorio();
+        try {
+            await navigator.clipboard.writeText(texto);
+            mostrarToast('📋 Relatório copiado! Já pode colar no WhatsApp.');
+        } catch (e) {
+            mostrarToast('❌ Não consegui copiar. Copie manualmente.', 'erro');
+        }
     }
 
     async function crmSalvar() {
