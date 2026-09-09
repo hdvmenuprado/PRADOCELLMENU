@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909133625">
+    <meta name="app-build" content="20260909143314">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -9985,13 +9985,25 @@ function osAbrirMenuPontinhos(btn) {
     _osMenuTrAtual = btn.closest('tr');
     const menu = document.getElementById('osMenuPontinhos');
     const r = btn.getBoundingClientRect();
-    menu.style.top = (r.bottom + 4) + 'px';
-    // Evita o menu vazar pra fora da tela à direita
-    const larguraMenu = 175;
+
+    // Mede o menu de verdade (invisível, mas já no layout) antes de posicionar,
+    // pra não estourar a tela em notebooks com resolução menor.
+    menu.style.visibility = 'hidden';
+    menu.classList.remove('hidden');
+    const larguraMenu = menu.offsetWidth || 175;
+    const alturaMenu = menu.offsetHeight || 90;
+
     let left = r.right - larguraMenu;
     if (left < 8) left = 8;
+    if (left + larguraMenu > window.innerWidth - 8) left = window.innerWidth - larguraMenu - 8;
+
+    let top = r.bottom + 4;
+    if (top + alturaMenu > window.innerHeight - 8) top = r.top - alturaMenu - 4; // abre pra cima se não couber embaixo
+    if (top < 8) top = 8;
+
     menu.style.left = left + 'px';
-    menu.classList.remove('hidden');
+    menu.style.top = top + 'px';
+    menu.style.visibility = 'visible';
 }
 
 function osFecharMenuPontinhos() {
