@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260908182436">
+    <meta name="app-build" content="20260909131413">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -3282,7 +3282,7 @@ body.modo-claro .main-content {
                             </label>
                             <div class="ep-field">
                                 <label>Senha</label>
-                                <input type="text" id="segLojaNorteSenha" placeholder="Defina a senha">
+                                <input type="text" id="segLojaNorteSenha" placeholder="Deixe em branco pra manter a atual">
                             </div>
                         </div>
                         <div class="ep-panel" style="margin-bottom:0;">
@@ -3292,7 +3292,7 @@ body.modo-claro .main-content {
                             </label>
                             <div class="ep-field">
                                 <label>Senha</label>
-                                <input type="text" id="segLojaSulSenha" placeholder="Defina a senha">
+                                <input type="text" id="segLojaSulSenha" placeholder="Deixe em branco pra manter a atual">
                             </div>
                         </div>
                         <div class="ep-panel" style="margin-bottom:0;">
@@ -3300,7 +3300,7 @@ body.modo-claro .main-content {
                             <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Sempre pede senha (não dá pra desativar).</p>
                             <div class="ep-field">
                                 <label>Senha</label>
-                                <input type="text" id="segGestaoSenha" placeholder="0000">
+                                <input type="text" id="segGestaoSenha" placeholder="Deixe em branco pra manter a atual">
                             </div>
                         </div>
                     </div>
@@ -4139,7 +4139,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             <button type="button" class="pin-tecla" onclick="pinDigitar('9')">9</button>
             <button type="button" class="pin-tecla pin-tecla-apagar" onclick="pinApagar()">⌫</button>
             <button type="button" class="pin-tecla" onclick="pinDigitar('0')">0</button>
-            <button type="button" class="pin-tecla pin-tecla-ok" onclick="confirmarSenha()">✓</button>
+            <button type="button" id="btnConfirmarSenha" class="pin-tecla pin-tecla-ok" onclick="confirmarSenha()">✓</button>
         </div>
         <p id="senhaErro" style="color:#e74c3c; font-size:12px; min-height:18px; margin:10px 0 0;text-align:center;"></p>
         <div class="modal-btn-row">
@@ -6745,42 +6745,51 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // ==========================================
     // SEGURANÇA DE ACESSO (senha por painel — Loja Norte/Sul opcional, Gestão sempre)
     // ==========================================
-    let CONFIG_SEGURANCA = { lojaNorte: { ativo: false, senha: '' }, lojaSul: { ativo: false, senha: '' }, gestao: { senha: '0000' } };
+    // A partir daqui, CONFIG_SEGURANCA NUNCA guarda o PIN real no navegador —
+    // só se a proteção de cada loja está ativa ou não. A conferência do PIN em si
+    // acontece toda dentro da Edge Function 'config-seguranca' (servidor).
+    let CONFIG_SEGURANCA = { lojaNorte: { ativo: false }, lojaSul: { ativo: false } };
+
+    async function chamarConfigSeguranca(payload) {
+        const { data, error } = await supabaseDB.functions.invoke('config-seguranca', { body: payload });
+        if (error) throw new Error(error.message);
+        return data;
+    }
 
     async function carregarConfigSeguranca() {
         try {
-            const { data, error } = await supabaseDB.from('config_seguranca').select('dados').eq('chave', 'padrao').single();
-            if (!error && data && data.dados && Object.keys(data.dados).length) {
-                CONFIG_SEGURANCA = Object.assign(
-                    { lojaNorte: { ativo: false, senha: '' }, lojaSul: { ativo: false, senha: '' }, gestao: { senha: '0000' } },
-                    data.dados
-                );
+            const data = await chamarConfigSeguranca({ acao: 'status' });
+            if (data && data.ok) {
+                CONFIG_SEGURANCA = { lojaNorte: { ativo: !!data.lojaNorteAtivo }, lojaSul: { ativo: !!data.lojaSulAtivo } };
             }
         } catch (e) { console.error('Erro ao carregar config de segurança:', e); }
-        // Reflete no formulário do Admin, se ele já estiver na tela
+        // Reflete no formulário do Admin, se ele já estiver na tela.
+        // Os campos de senha ficam sempre em branco — não tem como (nem deveria dar
+        // pra) trazer de volta o PIN atual pra tela; só dá pra DEFINIR um novo.
         const chkNorte = document.getElementById('segLojaNorteAtiva');
         if (chkNorte) {
             chkNorte.checked = !!CONFIG_SEGURANCA.lojaNorte.ativo;
-            document.getElementById('segLojaNorteSenha').value = CONFIG_SEGURANCA.lojaNorte.senha || '';
+            document.getElementById('segLojaNorteSenha').value = '';
             document.getElementById('segLojaSulAtiva').checked = !!CONFIG_SEGURANCA.lojaSul.ativo;
-            document.getElementById('segLojaSulSenha').value = CONFIG_SEGURANCA.lojaSul.senha || '';
-            document.getElementById('segGestaoSenha').value = CONFIG_SEGURANCA.gestao.senha || '';
+            document.getElementById('segLojaSulSenha').value = '';
+            document.getElementById('segGestaoSenha').value = '';
         }
     }
 
     async function salvarConfigSeguranca() {
-        const novaConfig = {
+        const payload = {
+            acao: 'atualizar',
             lojaNorte: { ativo: document.getElementById('segLojaNorteAtiva').checked, senha: document.getElementById('segLojaNorteSenha').value.trim() },
             lojaSul: { ativo: document.getElementById('segLojaSulAtiva').checked, senha: document.getElementById('segLojaSulSenha').value.trim() },
-            gestao: { senha: document.getElementById('segGestaoSenha').value.trim() || '0000' }
+            gestao: { senha: document.getElementById('segGestaoSenha').value.trim() }
         };
-        if (novaConfig.lojaNorte.ativo && !novaConfig.lojaNorte.senha) { mostrarToast('Defina uma senha pra Loja Norte antes de ativar.', 'erro'); return; }
-        if (novaConfig.lojaSul.ativo && !novaConfig.lojaSul.senha) { mostrarToast('Defina uma senha pra Loja Sul antes de ativar.', 'erro'); return; }
-
         try {
-            const { error } = await supabaseDB.from('config_seguranca').upsert({ chave: 'padrao', dados: novaConfig, atualizado_em: new Date().toISOString() });
-            if (error) throw new Error(error.message);
-            CONFIG_SEGURANCA = novaConfig;
+            const data = await chamarConfigSeguranca(payload);
+            if (!data || !data.ok) throw new Error((data && data.mensagem) || 'Falha ao salvar');
+            CONFIG_SEGURANCA = { lojaNorte: { ativo: payload.lojaNorte.ativo }, lojaSul: { ativo: payload.lojaSul.ativo } };
+            document.getElementById('segLojaNorteSenha').value = '';
+            document.getElementById('segLojaSulSenha').value = '';
+            document.getElementById('segGestaoSenha').value = '';
             mostrarToast('✅ Configuração de segurança salva!');
         } catch (e) {
             mostrarToast('❌ Erro ao salvar: ' + e.message, 'erro');
@@ -6792,7 +6801,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     function entrarComoLoja(perfil) {
         const chave = perfil === 'loja_norte' ? 'lojaNorte' : 'lojaSul';
         const cfg = CONFIG_SEGURANCA[chave];
-        if (cfg && cfg.ativo && cfg.senha) {
+        if (cfg && cfg.ativo) {
             _modoModalSenha = perfil;
             document.getElementById("modalSenhaTitulo").textContent = "⚙️ ACESSO RESTRITO";
             document.getElementById("modalSenhaSubtitulo").textContent = "Digite a senha de acesso (" + (perfil === 'loja_norte' ? 'Loja Norte' : 'Loja Sul') + ")";
@@ -6859,31 +6868,41 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         _btnAdmin = null;
     }
 
-    function confirmarSenha() {
+    async function confirmarSenha() {
         const senha = document.getElementById("campoSenha").value;
-        if (_modoModalSenha === 'gestao') {
-            if (senha === (CONFIG_SEGURANCA.gestao.senha || '0000')) {
-                fecharModal();
-                selecionarPerfil('gestao');
-            } else {
-                document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
-                pinLimparCampo();
+        const btnConfirmar = document.getElementById('btnConfirmarSenha');
+        if (btnConfirmar) btnConfirmar.disabled = true;
+        try {
+            if (_modoModalSenha === 'gestao') {
+                const data = await chamarConfigSeguranca({ acao: 'verificar', tipo: 'gestao', senha });
+                if (data && data.ok) {
+                    fecharModal();
+                    selecionarPerfil('gestao');
+                } else {
+                    document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
+                    pinLimparCampo();
+                }
+                return;
             }
-            return;
-        }
-        if (_modoModalSenha === 'loja_norte' || _modoModalSenha === 'loja_sul') {
-            const chave = _modoModalSenha === 'loja_norte' ? 'lojaNorte' : 'lojaSul';
-            if (senha === CONFIG_SEGURANCA[chave].senha) {
-                fecharModal();
-                selecionarPerfil(_modoModalSenha);
-            } else {
-                document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
-                pinLimparCampo();
+            if (_modoModalSenha === 'loja_norte' || _modoModalSenha === 'loja_sul') {
+                const tipo = _modoModalSenha === 'loja_norte' ? 'lojaNorte' : 'lojaSul';
+                const data = await chamarConfigSeguranca({ acao: 'verificar', tipo, senha });
+                if (data && data.ok) {
+                    fecharModal();
+                    selecionarPerfil(_modoModalSenha);
+                } else {
+                    document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
+                    pinLimparCampo();
+                }
+                return;
             }
-            return;
+            document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
+            pinLimparCampo();
+        } catch (e) {
+            document.getElementById("senhaErro").innerText = "❌ Erro ao verificar. Tente de novo.";
+        } finally {
+            if (btnConfirmar) btnConfirmar.disabled = false;
         }
-        document.getElementById("senhaErro").innerText = "❌ Senha incorreta! Tente novamente.";
-        pinLimparCampo();
     }
 
     // -> Módulo Avaliação (banco original)
@@ -9954,6 +9973,21 @@ function osFormatarHoraEntrada(criadoEm) {
     return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
+// Escapa texto antes de jogar dentro de innerHTML/document.write — sem isso, um campo
+// de texto livre (nome do cliente, descrição do defeito, reparo, etc.) com algo tipo
+// "<img src=x onerror=...>" rodaria como código de verdade na tela de quem visualizar
+// ou imprimir aquela O.S. Sempre que for interpolar texto vindo de formulário dentro
+// de HTML, passe por aqui primeiro.
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function montarHtmlCupom(os, paraPreview) {
     const c = getPDFConfig();
     const cu = c.cupom || {};
@@ -9965,8 +9999,8 @@ function montarHtmlCupom(os, paraPreview) {
     const logoSrc = 'logocupom.png';
     const mostrarLogo = cu.mostrarLogo !== false;
     const sep = '<div class="mc-sep">— — — — — — — — — — — —</div>';
-    const titulo = cu.titulo || 'CUPOM DE ORDEM DE SERVIÇO';
-    const termos = (cu.textoTermos || '').replace(/\n/g, '<br>');
+    const titulo = escapeHTML(cu.titulo) || 'CUPOM DE ORDEM DE SERVIÇO';
+    const termos = escapeHTML(cu.textoTermos || '').replace(/\n/g, '<br>');
     const mostrarTelCliente = cu.mostrarTelefoneCliente !== false;
     const mostrarAss = cu.mostrarAssinatura !== false;
 
@@ -9976,25 +10010,25 @@ function montarHtmlCupom(os, paraPreview) {
         <div class="mc-cabecalho">
             ${mostrarLogo ? `<img src="${logoSrc}" class="mini-cupom-logo">` : ''}
             <div class="mc-cabecalho-txt">
-                <div class="mc-empresa">${c.nome || 'PRADO CELULARES'}</div>
-                ${c.mostrarEndereco ? `<div class="mc-fina">${c.endereco||''}</div>` : ''}
-                ${c.mostrarTelefone && c.telefone ? `<div class="mc-fina">${c.telefone}</div>` : ''}
+                <div class="mc-empresa">${escapeHTML(c.nome) || 'PRADO CELULARES'}</div>
+                ${c.mostrarEndereco ? `<div class="mc-fina">${escapeHTML(c.endereco)}</div>` : ''}
+                ${c.mostrarTelefone && c.telefone ? `<div class="mc-fina">${escapeHTML(c.telefone)}</div>` : ''}
             </div>
         </div>
         ${sep}
         <div class="mc-titulo">${titulo}</div>
         ${sep}
-        <div class="mc-campo"><b>Código:</b> ${os.codigo||'OS260617-A1B2'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}${horaFmt ? ' às ' + horaFmt : ''}</div>
-        <div class="mc-campo"><b>Cliente:</b> ${os.cliente||'João da Silva'}${mostrarTelCliente ? ` — ${os.telefone||'(45) 99999-9999'}` : ''}</div>
-        <div class="mc-campo"><b>Aparelho:</b> ${os.modelo||'iPhone 14 Pro Max'}${os.estadoAparelho ? ` (${os.estadoAparelho})` : ''}</div>
-        <div class="mc-campo"><b>Status:</b> ${os.status||'Orçando'}</div>
+        <div class="mc-campo"><b>Código:</b> ${escapeHTML(os.codigo) || 'OS260617-A1B2'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}${horaFmt ? ' às ' + horaFmt : ''}</div>
+        <div class="mc-campo"><b>Cliente:</b> ${escapeHTML(os.cliente) || 'João da Silva'}${mostrarTelCliente ? ` — ${escapeHTML(os.telefone) || '(45) 99999-9999'}` : ''}</div>
+        <div class="mc-campo"><b>Aparelho:</b> ${escapeHTML(os.modelo) || 'iPhone 14 Pro Max'}${os.estadoAparelho ? ` (${escapeHTML(os.estadoAparelho)})` : ''}</div>
+        <div class="mc-campo"><b>Status:</b> ${escapeHTML(os.status) || 'Orçando'}</div>
         <div class="mc-garantia">${diasGarantia > 0 ? `GARANTIA ATÉ ${dataGarantia} (${osFormatarGarantiaTexto(diasGarantia)})` : 'SEM GARANTIA'}<br><span class="mc-garantia-obs">Não cobre tela com riscos ou trincos</span></div>
         ${sep}
         <div class="mc-label">DESCRIÇÃO DO DEFEITO</div>
-        <div class="mc-texto">${os.descricao||'-'}</div>
+        <div class="mc-texto">${escapeHTML(os.descricao) || '-'}</div>
         ${sep}
         <div class="mc-label">REPARO / SERVIÇO</div>
-        <div class="mc-texto">${os.reparo||'Tela com manchas e bateria viciada.'}</div>
+        <div class="mc-texto">${escapeHTML(os.reparo) || 'Tela com manchas e bateria viciada.'}</div>
         ${sep}
         <div class="mc-label">ORÇAMENTO</div>
         <div class="mc-valor mc-total"><span>TOTAL</span><span>R$ ${total||'0,00'}</span></div>
@@ -10007,7 +10041,7 @@ function montarHtmlCupom(os, paraPreview) {
         ${sep}
         <div class="mc-avaliacao"><img src="qrcodeava.jpeg" class="mc-qrcode-img" alt="QR Code Google"><span>Avalie-nos no Google</span></div>
         ${sep}
-        <div class="mc-rodape">${cu.rodape||''}</div>
+        <div class="mc-rodape">${escapeHTML(cu.rodape)}</div>
     </div></div>`;
 }
 
@@ -10026,8 +10060,8 @@ function montarViaCupom(os, via) {
     const logoSrc = 'logocupom.png';
     const mostrarLogo = cu.mostrarLogo !== false;
     const sep = '<div class="cupom-sep"></div>';
-    const titulo = cu.titulo || 'CUPOM DE ORDEM DE SERVIÇO';
-    const termos = (cu.textoTermos || '').replace(/\n/g, '<br>');
+    const titulo = escapeHTML(cu.titulo) || 'CUPOM DE ORDEM DE SERVIÇO';
+    const termos = escapeHTML(cu.textoTermos || '').replace(/\n/g, '<br>');
     const mostrarTelCliente = cu.mostrarTelefoneCliente !== false;
     const mostrarAss = cu.mostrarAssinatura !== false;
 
@@ -10036,25 +10070,25 @@ function montarViaCupom(os, via) {
         <div class="cupom-cabecalho">
             ${mostrarLogo ? `<img src="${logoSrc}" class="cupom-logo-mini">` : ''}
             <div class="cupom-cabecalho-txt">
-                <div class="cupom-empresa">${c.nome || 'PRADO CELULARES'}</div>
-                ${c.mostrarEndereco ? `<div class="cupom-linha-fina">${c.endereco||''}</div>` : ''}
-                ${c.mostrarTelefone && c.telefone ? `<div class="cupom-linha-fina">${c.telefone}</div>` : ''}
+                <div class="cupom-empresa">${escapeHTML(c.nome) || 'PRADO CELULARES'}</div>
+                ${c.mostrarEndereco ? `<div class="cupom-linha-fina">${escapeHTML(c.endereco)}</div>` : ''}
+                ${c.mostrarTelefone && c.telefone ? `<div class="cupom-linha-fina">${escapeHTML(c.telefone)}</div>` : ''}
             </div>
         </div>
         ${sep}
         <div class="cupom-titulo">${titulo}</div>
         ${sep}
-        <div class="cupom-campo"><b>Código:</b> ${os.codigo||'-'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}${horaFmt ? ' às ' + horaFmt : ''}</div>
-        <div class="cupom-campo"><b>Cliente:</b> ${os.cliente||'-'}${mostrarTelCliente && os.telefone ? ` — ${os.telefone}` : ''}</div>
-        <div class="cupom-campo"><b>Aparelho:</b> ${os.modelo||'-'}${os.estadoAparelho ? ` (${os.estadoAparelho})` : ''}</div>
-        <div class="cupom-campo"><b>Status:</b> ${os.status||'-'}</div>
+        <div class="cupom-campo"><b>Código:</b> ${escapeHTML(os.codigo) || '-'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}${horaFmt ? ' às ' + horaFmt : ''}</div>
+        <div class="cupom-campo"><b>Cliente:</b> ${escapeHTML(os.cliente) || '-'}${mostrarTelCliente && os.telefone ? ` — ${escapeHTML(os.telefone)}` : ''}</div>
+        <div class="cupom-campo"><b>Aparelho:</b> ${escapeHTML(os.modelo) || '-'}${os.estadoAparelho ? ` (${escapeHTML(os.estadoAparelho)})` : ''}</div>
+        <div class="cupom-campo"><b>Status:</b> ${escapeHTML(os.status) || '-'}</div>
         <div class="cupom-garantia">${diasGarantia > 0 ? `GARANTIA ATÉ ${dataGarantia} (${osFormatarGarantiaTexto(diasGarantia)})` : 'SEM GARANTIA'}<br><span class="cupom-garantia-obs">Não cobre tela com riscos, arranhões ou trincos</span></div>
         ${sep}
         <div class="cupom-label">DESCRIÇÃO DO DEFEITO</div>
-        <div class="cupom-texto">${os.descricao||'-'}</div>
+        <div class="cupom-texto">${escapeHTML(os.descricao) || '-'}</div>
         ${sep}
         <div class="cupom-label">REPARO / SERVIÇO</div>
-        <div class="cupom-texto">${os.reparo||'-'}</div>
+        <div class="cupom-texto">${escapeHTML(os.reparo) || '-'}</div>
         ${sep}
         <div class="cupom-linha-valor cupom-total"><span>TOTAL</span><span>R$ ${total}</span></div>
         ${!ehLoja ? `${sep}<div class="cupom-label">TERMOS</div><div class="cupom-termos">${termos}</div>` : ''}
@@ -10062,7 +10096,7 @@ function montarViaCupom(os, via) {
         ${via === 'CLIENTE' ? `${sep}<div class="cupom-acompanhar"><img src="qrcode-status.png" class="cupom-qrcode-img" alt="QR Code para acompanhar o reparo"><span>Acompanhe o status<br>do seu reparo aqui</span></div>` : ''}
         ${via === 'CLIENTE' ? `${sep}<div class="cupom-avaliacao"><img src="qrcodeava.jpeg" class="cupom-qrcode-img" alt="QR Code Google"><span>Avalie-nos<br>no Google</span></div>` : ''}
         ${sep}
-        <div class="cupom-rodape">${cu.rodape||''}${os.vendedor ? ` • Vend: ${os.vendedor}` : ''}</div>
+        <div class="cupom-rodape">${escapeHTML(cu.rodape)}${os.vendedor ? ` • Vend: ${escapeHTML(os.vendedor)}` : ''}</div>
     </div>`;
 }
 
@@ -10078,7 +10112,7 @@ function abrirCupomImpressao(os) {
     const html = viaLoja + corte + viaCliente;
     const win = window.open('', '_blank', 'width=420,height=650');
     if(!win){ alert('Seu navegador bloqueou a janela do cupom. Permita pop-ups para este site e tente novamente.'); return; }
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cupom O.S. ${os.codigo||''}</title>
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cupom O.S. ${escapeHTML(os.codigo)}</title>
     <style>
         @page { size: ${largura} auto; margin: 0; }
         * { box-sizing: border-box; }
@@ -10375,23 +10409,23 @@ function sorteioImprimirCupom(cliente, telefone, lote, data, cupons) {
     const win = window.open('', '_blank', 'width=420,height=650');
     if (!win) { alert('Seu navegador bloqueou a janela do cupom. Permita pop-ups para este site e tente novamente.'); return; }
     const c = (typeof getPDFConfig === 'function') ? (getPDFConfig() || {}) : {};
-    const nomeEmpresa = c.nome || 'PRADO CELULARES';
+    const nomeEmpresa = escapeHTML(c.nome) || 'PRADO CELULARES';
 
     const paginasHtml = cupons.map(cp => `
         <div class="sorteio-pagina">
             <div class="sorteio-cupom">
                 <div class="sorteio-empresa">${nomeEmpresa}</div>
                 <div class="sorteio-titulo">CUPOM DE SORTEIO</div>
-                <div class="sorteio-lote">Lote ${lote}</div>
-                ${cp.numeroCupom ? `<div class="sorteio-numero">Nº ${cp.numeroCupom}</div>` : ''}
-                <div class="sorteio-campo"><b>Cliente:</b> ${cp.cliente || cliente}</div>
-                <div class="sorteio-campo"><b>Tel:</b> ${(cp.telefone || telefone) || '-'}</div>
-                <div class="sorteio-campo"><b>Data:</b> ${cp.data || data}</div>
+                <div class="sorteio-lote">Lote ${escapeHTML(lote)}</div>
+                ${cp.numeroCupom ? `<div class="sorteio-numero">Nº ${escapeHTML(cp.numeroCupom)}</div>` : ''}
+                <div class="sorteio-campo"><b>Cliente:</b> ${escapeHTML(cp.cliente || cliente)}</div>
+                <div class="sorteio-campo"><b>Tel:</b> ${escapeHTML(cp.telefone || telefone) || '-'}</div>
+                <div class="sorteio-campo"><b>Data:</b> ${escapeHTML(cp.data || data)}</div>
             </div>
         </div>
     `).join('');
 
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cupons de Sorteio - ${cliente}</title>
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cupons de Sorteio - ${escapeHTML(cliente)}</title>
     <style>
         @page { size: 80mm auto; margin: 0; }
         * { box-sizing: border-box; }
