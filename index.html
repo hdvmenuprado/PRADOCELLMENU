@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909131413">
+    <meta name="app-build" content="20260909132914">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -4145,6 +4145,39 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         <div class="modal-btn-row">
             <button class="action-btn secondary-btn" onclick="fecharModal()" style="margin-top:0;">Cancelar</button>
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalSenhaAparelho">
+    <div class="modal-box" style="max-width:340px;">
+        <h3>🔒 Senha do aparelho</h3>
+        <p style="color:var(--text-muted);font-size:12px;margin-bottom:14px;">Fica escondida por padrão — só quem abrir esse menu vê.</p>
+
+        <div style="display:flex;gap:6px;margin-bottom:16px;">
+            <button type="button" id="senhaApTipoBtnPin" class="ep-tab active" style="flex:1;font-size:12px;padding:8px 6px;" onclick="senhaApMudarTipo('pin')">🔢 PIN / Senha</button>
+            <button type="button" id="senhaApTipoBtnPadrao" class="ep-tab" style="flex:1;font-size:12px;padding:8px 6px;" onclick="senhaApMudarTipo('padrao')">▦ Padrão Android</button>
+        </div>
+
+        <div id="senhaApModoPin">
+            <input type="text" id="senhaApCampoPin" placeholder="Ex: 1234, senha123..." autocomplete="off"
+                style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:15px;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:1px;">
+        </div>
+
+        <div id="senhaApModoPadrao" class="hidden" style="display:flex;flex-direction:column;align-items:center;">
+            <div style="position:relative;width:180px;height:180px;margin:6px 0 12px;">
+                <svg id="senhaApSvgLinhas" width="180" height="180" style="position:absolute;top:0;left:0;pointer-events:none;">
+                    <line id="senhaApLinhaViva" x1="0" y1="0" x2="0" y2="0" stroke="var(--primary)" stroke-width="3" style="display:none;"/>
+                </svg>
+                <div id="senhaApGrade" style="position:relative;width:180px;height:180px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);"></div>
+            </div>
+            <button type="button" class="action-btn secondary-btn" style="margin-top:0;padding:7px 16px;font-size:12px;" onclick="senhaApLimparPadrao()">🗑️ Limpar padrão</button>
+        </div>
+
+        <div class="modal-btn-row" style="margin-top:18px;">
+            <button class="action-btn secondary-btn" onclick="senhaApFechar()" style="margin-top:0;">Cancelar</button>
+            <button class="action-btn" onclick="senhaApSalvar()" style="margin-top:0;">💾 Salvar</button>
+        </div>
+        <button type="button" onclick="senhaApRemover()" style="margin-top:10px;width:100%;background:none;border:none;color:#f87171;font-size:12px;cursor:pointer;">🗑️ Remover senha salva</button>
     </div>
 </div>
 
@@ -8878,6 +8911,7 @@ function osParaBanco(os) {
         total: os.total ? parseFloat(os.total) : 0,
         vendedor: os.vendedor || null,
         tecnico: os.tecnico || null,
+        senha_aparelho: os.senhaAparelho || null,
         status: os.status || 'Orçando',
         loja_id: lojaIdParaGravar(),
         criado_em: os.criadoEm || new Date().toISOString()
@@ -8903,6 +8937,7 @@ function osDoBanco(row) {
         total: row.total,
         vendedor: row.vendedor,
         tecnico: row.tecnico,
+        senhaAparelho: row.senha_aparelho,
         status: row.status,
         lojaId: row.loja_id,
         criadoEm: row.criado_em
@@ -9163,6 +9198,10 @@ function osCriarLinha(os) {
             <button onclick="osGerarCupom(this)" title="Gerar cupom de O.S." style="background:none;border:none;color:#a78bfa;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
             <button onclick="osAbrirFotos(this)" title="Fotos do aparelho" style="background:none;border:none;color:#38bdf8;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
             <button class="osSalvarBtn" onclick="osAtualizarValores(this)" title="Salvar alterações (reparo, peça, mão de obra)" style="background:none;border:none;color:#4ade80;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+            <button class="osBtnMaisOpcoes" onclick="osAbrirSenhaAparelho(this)" title="Senha do aparelho" style="position:relative;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                <span class="osSenhaIndicador" style="display:none;position:absolute;top:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--primary);"></span>
+            </button>
             <button onclick="osExcluir(this)" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;" title="Excluir"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </td>
     `;
@@ -9190,6 +9229,7 @@ function osPreencherDatasetLinha(tr, os) {
     tr.dataset.garantiaDias = osGarantiaDiasStr(os.garantiaDias);
     tr.dataset.vendedor = os.vendedor || '';
     tr.dataset.tecnico = os.tecnico || '';
+    tr.dataset.senhaAparelho = os.senhaAparelho ? JSON.stringify(os.senhaAparelho) : '';
     tr.dataset.data = os.data || '';
     tr.dataset.criadoEm = os.criadoEm || '';
     tr.dataset.total = parseFloat(os.total||0).toFixed(2);
@@ -9228,6 +9268,7 @@ function osAtualizarLinha(tr, os, forcarTudo) {
         || tr.dataset.origem !== (os.origem||'')
         || tr.dataset.data !== (os.data||'');
     osPreencherDatasetLinha(tr, os);
+    senhaApAtualizarIndicador(tr, !!os.senhaAparelho);
 
     const data = osFormatarData(os.data||'');
     const badge = tr.querySelector('.os-codigo-badge');
@@ -9536,6 +9577,13 @@ function osApiPost(dados) {
             return { ok: true };
         }
 
+        if (acao === 'ATUALIZAR_SENHA_APARELHO') {
+            const { error } = await supabaseDB.from('ordens_servico')
+                .update({ senha_aparelho: dados.senhaAparelho || null }).eq('codigo', dados.codigo);
+            if (error) throw new Error(error.message);
+            return { ok: true };
+        }
+
         if (acao === 'ATUALIZAR_VALORES') {
             const { error } = await supabaseDB.from('ordens_servico').update({
                 custo_peca: parseFloat(dados.custoPeca) || 0,
@@ -9746,6 +9794,137 @@ function osAtualizarTecnico(sel) {
     osApiPost({acao:'ATUALIZAR_TECNICO',codigo:tr.dataset.codigo,cliente:tr.dataset.cliente,modelo:tr.dataset.modelo,tecnico:sel.value})
         .then(() => osAutoRefreshSilencioso())
         .catch(err => mostrarToast('❌ Técnico não salvou: ' + err.message, true));
+}
+
+// ==========================================
+// SENHA DO APARELHO (PIN ou padrão Android)
+// Fica escondida atrás do menu "⋮" de propósito — não fica visível na tela o tempo
+// todo (é uma informação sensível: com ela + o aparelho em mãos, dá acesso total).
+// Guardada em ordens_servico.senha_aparelho como {tipo:'pin'|'padrao', valor:'...'}.
+// Nunca aparece no cupom nem na consulta pública de status.
+// ==========================================
+const SENHA_AP_PONTOS = [
+    {x:30,y:30}, {x:90,y:30}, {x:150,y:30},
+    {x:30,y:90}, {x:90,y:90}, {x:150,y:90},
+    {x:30,y:150}, {x:90,y:150}, {x:150,y:150}
+];
+let _senhaApTr = null;
+let _senhaApTipo = 'pin';
+let _senhaApSequencia = [];
+let _senhaApGradeMontada = false;
+
+function senhaApMontarGradeSeNecessario() {
+    if (_senhaApGradeMontada) return;
+    const grade = document.getElementById('senhaApGrade');
+    SENHA_AP_PONTOS.forEach((p, i) => {
+        const n = i + 1;
+        const dot = document.createElement('div');
+        dot.className = 'senha-ap-dot';
+        dot.dataset.n = n;
+        dot.style.cssText = `position:absolute;width:20px;height:20px;left:${p.x-10}px;top:${p.y-10}px;border-radius:50%;border:2px solid var(--border-color);background:var(--surface-2);cursor:pointer;transition:background 0.15s,border-color 0.15s;`;
+        dot.addEventListener('click', () => senhaApClicarPonto(n));
+        document.getElementById('senhaApGrade').appendChild(dot);
+    });
+    _senhaApGradeMontada = true;
+}
+
+function senhaApClicarPonto(n) {
+    if (_senhaApSequencia.includes(n)) return;
+    if (_senhaApSequencia.length > 0) {
+        const anterior = SENHA_AP_PONTOS[_senhaApSequencia[_senhaApSequencia.length - 1] - 1];
+        const atual = SENHA_AP_PONTOS[n - 1];
+        const svg = document.getElementById('senhaApSvgLinhas');
+        const linha = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        linha.setAttribute('x1', anterior.x); linha.setAttribute('y1', anterior.y);
+        linha.setAttribute('x2', atual.x); linha.setAttribute('y2', atual.y);
+        linha.setAttribute('stroke', 'var(--primary)'); linha.setAttribute('stroke-width', '3');
+        linha.classList.add('senha-ap-linha-tracada');
+        svg.appendChild(linha);
+    }
+    _senhaApSequencia.push(n);
+    const dot = document.querySelector(`#senhaApGrade .senha-ap-dot[data-n="${n}"]`);
+    if (dot) { dot.style.background = 'var(--primary)'; dot.style.borderColor = 'var(--primary)'; }
+}
+
+function senhaApLimparPadrao() {
+    _senhaApSequencia = [];
+    document.querySelectorAll('#senhaApGrade .senha-ap-dot').forEach(d => { d.style.background = 'var(--surface-2)'; d.style.borderColor = 'var(--border-color)'; });
+    document.querySelectorAll('#senhaApSvgLinhas .senha-ap-linha-tracada').forEach(l => l.remove());
+}
+
+function senhaApMudarTipo(tipo) {
+    _senhaApTipo = tipo;
+    document.getElementById('senhaApTipoBtnPin').classList.toggle('active', tipo === 'pin');
+    document.getElementById('senhaApTipoBtnPadrao').classList.toggle('active', tipo === 'padrao');
+    document.getElementById('senhaApModoPin').classList.toggle('hidden', tipo !== 'pin');
+    document.getElementById('senhaApModoPadrao').classList.toggle('hidden', tipo !== 'padrao');
+}
+
+function osAbrirSenhaAparelho(btn) {
+    _senhaApTr = btn.closest('tr');
+    senhaApMontarGradeSeNecessario();
+    senhaApLimparPadrao();
+    document.getElementById('senhaApCampoPin').value = '';
+
+    let salvo = null;
+    try { salvo = _senhaApTr.dataset.senhaAparelho ? JSON.parse(_senhaApTr.dataset.senhaAparelho) : null; } catch(e) {}
+
+    if (salvo && salvo.tipo === 'padrao' && salvo.valor) {
+        senhaApMudarTipo('padrao');
+        String(salvo.valor).split(',').map(Number).filter(Boolean).forEach(n => senhaApClicarPonto(n));
+    } else if (salvo && salvo.tipo === 'pin') {
+        senhaApMudarTipo('pin');
+        document.getElementById('senhaApCampoPin').value = salvo.valor || '';
+    } else {
+        senhaApMudarTipo('pin');
+    }
+
+    document.getElementById('modalSenhaAparelho').classList.add('ativo');
+}
+
+function senhaApFechar() {
+    document.getElementById('modalSenhaAparelho').classList.remove('ativo');
+    _senhaApTr = null;
+}
+
+function senhaApAtualizarIndicador(tr, temSenha) {
+    const ind = tr.querySelector('.osSenhaIndicador');
+    if (ind) ind.style.display = temSenha ? 'block' : 'none';
+}
+
+async function senhaApGravar(payloadOuNull) {
+    if (!_senhaApTr) return;
+    const tr = _senhaApTr;
+    const item = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    try {
+        await osApiPost({
+            acao: 'ATUALIZAR_SENHA_APARELHO',
+            codigo: tr.dataset.codigo, cliente: tr.dataset.cliente, modelo: tr.dataset.modelo,
+            senhaAparelho: payloadOuNull
+        });
+        tr.dataset.senhaAparelho = payloadOuNull ? JSON.stringify(payloadOuNull) : '';
+        if (item) item.senhaAparelho = payloadOuNull;
+        senhaApAtualizarIndicador(tr, !!payloadOuNull);
+        mostrarToast(payloadOuNull ? '🔒 Senha do aparelho salva.' : '🗑️ Senha removida.');
+        senhaApFechar();
+    } catch (e) {
+        mostrarToast('❌ Não deu pra salvar: ' + e.message, 'erro');
+    }
+}
+
+function senhaApSalvar() {
+    if (_senhaApTipo === 'pin') {
+        const valor = document.getElementById('senhaApCampoPin').value.trim();
+        if (!valor) { mostrarToast('Digite uma senha antes de salvar (ou use Remover).', 'erro'); return; }
+        senhaApGravar({ tipo: 'pin', valor });
+    } else {
+        if (_senhaApSequencia.length < 4) { mostrarToast('Desenhe um padrão com pelo menos 4 pontos.', 'erro'); return; }
+        senhaApGravar({ tipo: 'padrao', valor: _senhaApSequencia.join(',') });
+    }
+}
+
+function senhaApRemover() {
+    senhaApGravar(null);
 }
 
 // Destaca o botão de salvar quando algo na linha foi editado e ainda não foi salvo
