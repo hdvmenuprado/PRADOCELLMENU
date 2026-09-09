@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909163050">
+    <meta name="app-build" content="20260909163947">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -4303,8 +4303,17 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             <button id="crmBtnEmitirGarantia" class="action-btn pdf-btn" style="margin-top:0;flex:1;min-width:220px;" onclick="gerarPDFGarantia()">🖨 Salvar e Emitir Termo de Garantia</button>
             <button class="action-btn secondary-btn" style="margin-top:0;flex:0 0 auto;" onclick="crmFecharModalCadastro()">✖️ Cancelar</button>
         </div>
-        <button type="button" onclick="crmCopiarRelatorio()" style="margin-top:10px;width:100%;background:none;border:1px dashed var(--border-highlight);color:var(--primary);border-radius:8px;padding:9px;font-size:12.5px;cursor:pointer;">📋 Copiar relatório da venda</button>
     </div>
+</div>
+
+<!-- Menu flutuante do "⋮" de cada cliente na listagem -->
+<div id="crmMenuPontinhos" class="hidden" style="position:fixed;z-index:200;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);overflow:hidden;min-width:210px;backdrop-filter:blur(20px);">
+    <button onclick="crmMenuAcao('ver')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;">👁️ Ver detalhes completos</button>
+    <button onclick="crmMenuAcao('whatsapp')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#4ade80;font-size:13px;cursor:pointer;text-align:left;">💬 Mandar WhatsApp</button>
+    <button onclick="crmMenuAcao('reimprimir')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#60a5fa;font-size:13px;cursor:pointer;text-align:left;">🖨️ Reimprimir Termo de Garantia</button>
+    <button onclick="crmMenuAcao('editar')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--primary);font-size:13px;cursor:pointer;text-align:left;">✏️ Editar</button>
+    <button onclick="crmMenuAcao('relatorio')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;">📋 Copiar relatório da venda</button>
+    <button onclick="crmMenuAcao('excluir')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#f87171;font-size:13px;cursor:pointer;text-align:left;">🗑️ Excluir</button>
 </div>
 
 <div class="modal-overlay" id="modalCrmDetalhes">
@@ -8010,11 +8019,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <td style="font-size:12px;font-weight:${vencida ? '700' : '400'};color:${vencida ? '#f87171' : 'var(--text-muted)'};">${crmFormatarDataBR(fimGarantia)}</td>
                 <td style="color:var(--text-muted);font-size:12px;">${c.vendedor || '-'}</td>
                 <td style="text-align:center;white-space:nowrap;">
-                    <button onclick="crmVerDetalhes('${c.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;" title="Ver detalhes completos">👁️</button>
-                    <button onclick="crmAbrirWhatsapp('${c.id}','geral')" style="background:none;border:none;color:#4ade80;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;" title="Mandar mensagem no WhatsApp">💬</button>
-                    <button onclick="crmReimprimirGarantia('${c.id}')" style="background:none;border:none;color:#60a5fa;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;" title="Reimprimir Termo de Garantia">🖨️</button>
-                    <button onclick="crmEditar('${c.id}')" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;" title="Editar">✏️</button>
-                    <button onclick="crmExcluir('${c.id}')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:15px;padding:1px 4px;border-radius:4px;" title="Excluir">🗑️</button>
+                    <button class="crmBtnMaisOpcoes" onclick="crmAbrirMenuPontinhos(this, '${c.id}')" title="Mais opções" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;border-radius:4px;display:inline-flex;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                    </button>
                 </td>
             </tr>`;
         }).join('');
@@ -8146,21 +8153,16 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('modalCrmCadastro').classList.add('ativo');
     }
 
-    // Monta o relatório de venda no formato pronto pra colar no WhatsApp (com *negrito*)
-    // e copia pra área de transferência — usa os valores que estão preenchidos no
-    // formulário no momento (não precisa ter salvo o cliente antes).
-    function crmMontarTextoRelatorio() {
-        const nome = document.getElementById('crmNome').value.trim() || '-';
-        const valorNum = parseFloat(document.getElementById('crmValorAparelho').value);
-        const valor = !isNaN(valorNum) ? valorNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00';
-        const modelo = document.getElementById('crmProduto').value.trim() || '-';
-        const origemRaw = document.getElementById('crmOrigem').value || '-';
-        const origem = origemRaw.replace(/^Cliente\s*/i, '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim() || '-';
-        const forma1 = document.getElementById('crmFormaPagamento').value;
-        const forma2 = document.getElementById('crmFormaPagamento2').value;
-        const formaPagamento = [forma1, forma2].filter(Boolean).join(' / ') || '-';
-        const troca = document.getElementById('crmAparelhoTroca').value.trim() || 'Nenhum';
-        const vendedor = document.getElementById('crmVendedor').value || '-';
+    // Monta o relatório de venda no formato pronto pra colar no WhatsApp (com *negrito*),
+    // a partir de um cliente já cadastrado (usado pelo menu "⋮" da listagem).
+    function crmMontarTextoRelatorioDeCliente(c) {
+        const nome = c.nome || '-';
+        const valor = c.valorAparelho ? Number(c.valorAparelho).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00';
+        const modelo = c.produto || '-';
+        const origem = (c.origem || '-').replace(/^Cliente\s*/i, '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim() || '-';
+        const formaPagamento = [c.formaPagamento, c.formaPagamento2].filter(Boolean).join(' / ') || '-';
+        const troca = c.aparelhoTroca || 'Nenhum';
+        const vendedor = c.vendedor || '-';
 
         return `*nome Cliente* : ${nome}\n` +
                `*Valor*: R$${valor}\n` +
@@ -8171,16 +8173,73 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                `*Vendedor* ${vendedor}`;
     }
 
-    async function crmCopiarRelatorio() {
-        const nome = document.getElementById('crmNome').value.trim();
-        if (!nome) { mostrarToast('Preencha ao menos o nome do cliente antes de copiar.', 'erro'); return; }
-        const texto = crmMontarTextoRelatorio();
+    async function crmCopiarRelatorioDoCliente(id) {
+        const c = _crmListaCompleta.find(x => String(x.id) === String(id));
+        if (!c) { mostrarToast('Cliente não encontrado.', 'erro'); return; }
+        const texto = crmMontarTextoRelatorioDeCliente(c);
         try {
             await navigator.clipboard.writeText(texto);
             mostrarToast('📋 Relatório copiado! Já pode colar no WhatsApp.');
         } catch (e) {
             mostrarToast('❌ Não consegui copiar. Copie manualmente.', 'erro');
         }
+    }
+
+    // ==========================================
+    // MENU "⋮" DE CADA CLIENTE NA LISTAGEM
+    // Junta tudo que antes eram 5 ícones separados na linha (ver, whatsapp, reimprimir,
+    // editar, excluir) + a opção nova de copiar relatório, num menu só.
+    // ==========================================
+    let _crmMenuIdAtual = null;
+
+    function crmAbrirMenuPontinhos(btn, id) {
+        _crmMenuIdAtual = id;
+        const menu = document.getElementById('crmMenuPontinhos');
+        // Mesma correção aplicada no menu da O.S.: tira o menu de dentro de qualquer
+        // cartão com "vidro fosco" (backdrop-filter), senão o position:fixed calcula
+        // a posição certa pra tela mas desenha relativo ao cartão errado.
+        document.body.appendChild(menu);
+        const r = btn.getBoundingClientRect();
+
+        menu.style.visibility = 'hidden';
+        menu.classList.remove('hidden');
+        const larguraMenu = menu.offsetWidth || 210;
+        const alturaMenu = menu.offsetHeight || 260;
+
+        let left = r.right - larguraMenu;
+        if (left < 8) left = 8;
+        if (left + larguraMenu > window.innerWidth - 8) left = window.innerWidth - larguraMenu - 8;
+
+        let top = r.bottom + 4;
+        if (top + alturaMenu > window.innerHeight - 8) top = r.top - alturaMenu - 4;
+        if (top < 8) top = 8;
+
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        menu.style.visibility = 'visible';
+    }
+
+    function crmFecharMenuPontinhos() {
+        document.getElementById('crmMenuPontinhos').classList.add('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('crmMenuPontinhos');
+        if (!menu || menu.classList.contains('hidden')) return;
+        if (menu.contains(e.target) || e.target.closest('.crmBtnMaisOpcoes')) return;
+        crmFecharMenuPontinhos();
+    });
+
+    function crmMenuAcao(tipo) {
+        const id = _crmMenuIdAtual;
+        crmFecharMenuPontinhos();
+        if (!id) return;
+        if (tipo === 'ver') crmVerDetalhes(id);
+        else if (tipo === 'whatsapp') crmAbrirWhatsapp(id, 'geral');
+        else if (tipo === 'reimprimir') crmReimprimirGarantia(id);
+        else if (tipo === 'editar') crmEditar(id);
+        else if (tipo === 'relatorio') crmCopiarRelatorioDoCliente(id);
+        else if (tipo === 'excluir') crmExcluir(id);
     }
 
     async function crmSalvar() {
