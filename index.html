@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909144658">
+    <meta name="app-build" content="20260909162645">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -4234,6 +4234,21 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <input type="text" id="crmProduto" placeholder="Ex: iPhone 13 Pro Max 128GB">
             </div>
             <div class="form-group">
+                <label>Origem do Cliente</label>
+                <select id="crmOrigem">
+                    <option value="">Selecione...</option>
+                    <option value="Cliente de Porta">🚪 Cliente de Porta</option>
+                    <option value="Cliente Google">🔎 Cliente Google</option>
+                    <option value="Cliente Meta">📱 Cliente Meta</option>
+                    <option value="Cliente Indicação">🤝 Cliente Indicação</option>
+                    <option value="Cliente Antigo">♻️ Cliente Antigo</option>
+                </select>
+            </div>
+            <div class="form-group full-width">
+                <label>Aparelho dado na troca (se houve)</label>
+                <input type="text" id="crmAparelhoTroca" placeholder="Ex: iPhone 11 128GB — deixe em branco se não houve troca">
+            </div>
+            <div class="form-group">
                 <label>Valor do Aparelho (R$)</label>
                 <input type="number" id="crmValorAparelho" min="0" step="0.01" placeholder="0,00">
             </div>
@@ -7364,6 +7379,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmNascimento').value = c.dataNascimento ? String(c.dataNascimento).split('T')[0] : '';
         document.getElementById('crmDataCompra').value = c.dataCompra ? String(c.dataCompra).split('T')[0] : '';
         document.getElementById('crmProduto').value = c.produto || '';
+        document.getElementById('crmOrigem').value = c.origem || '';
+        document.getElementById('crmAparelhoTroca').value = c.aparelhoTroca || '';
         document.getElementById('crmImei').value = c.imei || '';
         document.getElementById('crmDiasGarantia').value = c.diasGarantia || 90;
         document.getElementById('crmObservacoes').value = c.observacoes || '';
@@ -7700,6 +7717,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             data_nascimento: c.dataNascimento || null,
             data_compra: c.dataCompra || null,
             produto: c.produto || null,
+            origem: c.origem || null,
+            aparelho_troca: c.aparelhoTroca || null,
             imei: c.imei || null,
             vendedor: c.vendedor || null,
             dias_garantia: c.diasGarantia ? parseInt(c.diasGarantia) : 90,
@@ -7724,6 +7743,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             dataNascimento: row.data_nascimento,
             dataCompra: row.data_compra,
             produto: row.produto,
+            origem: row.origem,
+            aparelhoTroca: row.aparelho_troca,
             imei: row.imei,
             vendedor: row.vendedor,
             diasGarantia: row.dias_garantia,
@@ -8080,7 +8101,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     function crmResetarFormulario() {
         document.getElementById('crmId').value = '';
-        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmImei', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho', 'crmValorPagamento1', 'crmValorPagamento2'].forEach(id => {
+        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmOrigem', 'crmAparelhoTroca', 'crmImei', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho', 'crmValorPagamento1', 'crmValorPagamento2'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         document.getElementById('crmFormaPagamento').value = '';
@@ -8104,6 +8125,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmNascimento').value = c.dataNascimento ? String(c.dataNascimento).split('T')[0] : '';
         document.getElementById('crmDataCompra').value = c.dataCompra ? String(c.dataCompra).split('T')[0] : '';
         document.getElementById('crmProduto').value = c.produto || '';
+        document.getElementById('crmOrigem').value = c.origem || '';
+        document.getElementById('crmAparelhoTroca').value = c.aparelhoTroca || '';
         document.getElementById('crmImei').value = c.imei || '';
         vendedoresPopularSelect('crmVendedor', c.vendedor);
         document.getElementById('crmDiasGarantia').value = c.diasGarantia || 90;
@@ -8134,6 +8157,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             dataNascimento: document.getElementById('crmNascimento').value,
             dataCompra: document.getElementById('crmDataCompra').value,
             produto: document.getElementById('crmProduto').value.trim(),
+            origem: document.getElementById('crmOrigem').value,
+            aparelhoTroca: document.getElementById('crmAparelhoTroca').value.trim(),
             imei: document.getElementById('crmImei').value.trim(),
             vendedor: document.getElementById('crmVendedor').value.trim(),
             diasGarantia: document.getElementById('crmDiasGarantia').value || '90',
