@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909132914">
+    <meta name="app-build" content="20260909133625">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -3823,6 +3823,13 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                 <select id="osVendedor"><option value="">Selecione...</option></select>
                             </div>
                             <div class="ep-field">
+                                <label>Senha do aparelho</label>
+                                <button type="button" id="osBtnSenhaCadastro" onclick="osAbrirSenhaAparelhoCadastro()" style="position:relative;width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:12.5px;cursor:pointer;text-align:left;">
+                                    <span id="osSenhaCadastroTexto">🔒 Não informada</span>
+                                    <span id="osSenhaCadastroIndicador" style="display:none;position:absolute;top:6px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--primary);"></span>
+                                </button>
+                            </div>
+                            <div class="ep-field">
                                 <label>Status</label>
                                 <select id="osStatus">
                                     <option>Orçando</option>
@@ -3902,6 +3909,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+
+                    <!-- Menu flutuante compartilhado do botão "⋮" de cada linha -->
+                    <div id="osMenuPontinhos" class="hidden" style="position:fixed;z-index:200;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);overflow:hidden;min-width:170px;backdrop-filter:blur(20px);">
+                        <button onclick="osMenuAcaoSenha()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;">🔒 Senha do aparelho</button>
+                        <button onclick="osMenuAcaoExcluir()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#f87171;font-size:13px;cursor:pointer;text-align:left;">🗑️ Excluir O.S.</button>
                     </div>
                 </div>
             </div>
@@ -9198,11 +9211,10 @@ function osCriarLinha(os) {
             <button onclick="osGerarCupom(this)" title="Gerar cupom de O.S." style="background:none;border:none;color:#a78bfa;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
             <button onclick="osAbrirFotos(this)" title="Fotos do aparelho" style="background:none;border:none;color:#38bdf8;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
             <button class="osSalvarBtn" onclick="osAtualizarValores(this)" title="Salvar alterações (reparo, peça, mão de obra)" style="background:none;border:none;color:#4ade80;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
-            <button class="osBtnMaisOpcoes" onclick="osAbrirSenhaAparelho(this)" title="Senha do aparelho" style="position:relative;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;">
+            <button class="osBtnMaisOpcoes" onclick="osAbrirMenuPontinhos(this)" title="Mais opções" style="position:relative;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                 <span class="osSenhaIndicador" style="display:none;position:absolute;top:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--primary);"></span>
             </button>
-            <button onclick="osExcluir(this)" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;" title="Excluir"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </td>
     `;
     osAtualizarLinha(tr, os, true);
@@ -9723,6 +9735,7 @@ function osSalvar(imprimirCupom) {
         total: document.getElementById('osTotal').value,
         vendedor: document.getElementById('osVendedor').value,
         status: document.getElementById('osStatus').value,
+        senhaAparelho: _senhaApPendenteCadastro,
         // Horário exato do cadastro, gerado aqui mesmo (não espera o banco responder),
         // pra já sair certo no cupom mesmo ao clicar em "Salvar + Cupom" na hora.
         criadoEm: new Date().toISOString()
@@ -9745,6 +9758,8 @@ function osSalvar(imprimirCupom) {
     document.getElementById('osCustoPeca').value='0.00';
     document.getElementById('osMaoObra').value='0.00';
     document.getElementById('osTotal').value='0.00';
+    _senhaApPendenteCadastro = null;
+    senhaApAtualizarIndicadorCadastro();
 
     osApiPost({acao:'CADASTRAR', ...dados})
         .then(() => {
@@ -9808,20 +9823,21 @@ const SENHA_AP_PONTOS = [
     {x:30,y:90}, {x:90,y:90}, {x:150,y:90},
     {x:30,y:150}, {x:90,y:150}, {x:150,y:150}
 ];
-let _senhaApTr = null;
+let _senhaApTr = null;          // linha sendo editada (modo edição de uma O.S. já existente)
+let _senhaApModoCadastro = false; // true = preenchendo no formulário de nova O.S. (ainda sem linha)
+let _senhaApPendenteCadastro = null; // {tipo,valor} guardado até o "Salvar O.S." de fato gravar
 let _senhaApTipo = 'pin';
 let _senhaApSequencia = [];
 let _senhaApGradeMontada = false;
 
 function senhaApMontarGradeSeNecessario() {
     if (_senhaApGradeMontada) return;
-    const grade = document.getElementById('senhaApGrade');
     SENHA_AP_PONTOS.forEach((p, i) => {
         const n = i + 1;
         const dot = document.createElement('div');
         dot.className = 'senha-ap-dot';
         dot.dataset.n = n;
-        dot.style.cssText = `position:absolute;width:20px;height:20px;left:${p.x-10}px;top:${p.y-10}px;border-radius:50%;border:2px solid var(--border-color);background:var(--surface-2);cursor:pointer;transition:background 0.15s,border-color 0.15s;`;
+        dot.style.cssText = `position:absolute;width:22px;height:22px;left:${p.x-11}px;top:${p.y-11}px;border-radius:50%;border:2px solid var(--border-color);background:var(--surface-2);cursor:pointer;transition:background 0.15s,border-color 0.15s;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;user-select:none;`;
         dot.addEventListener('click', () => senhaApClicarPonto(n));
         document.getElementById('senhaApGrade').appendChild(dot);
     });
@@ -9842,13 +9858,15 @@ function senhaApClicarPonto(n) {
         svg.appendChild(linha);
     }
     _senhaApSequencia.push(n);
+    // Numera a bolinha com a ordem em que foi tocada (1º, 2º, 3º...) — assim dá pra
+    // conferir visualmente a sequência certa depois, sem precisar decorar.
     const dot = document.querySelector(`#senhaApGrade .senha-ap-dot[data-n="${n}"]`);
-    if (dot) { dot.style.background = 'var(--primary)'; dot.style.borderColor = 'var(--primary)'; }
+    if (dot) { dot.style.background = 'var(--primary)'; dot.style.borderColor = 'var(--primary)'; dot.textContent = _senhaApSequencia.length; }
 }
 
 function senhaApLimparPadrao() {
     _senhaApSequencia = [];
-    document.querySelectorAll('#senhaApGrade .senha-ap-dot').forEach(d => { d.style.background = 'var(--surface-2)'; d.style.borderColor = 'var(--border-color)'; });
+    document.querySelectorAll('#senhaApGrade .senha-ap-dot').forEach(d => { d.style.background = 'var(--surface-2)'; d.style.borderColor = 'var(--border-color)'; d.textContent = ''; });
     document.querySelectorAll('#senhaApSvgLinhas .senha-ap-linha-tracada').forEach(l => l.remove());
 }
 
@@ -9860,15 +9878,10 @@ function senhaApMudarTipo(tipo) {
     document.getElementById('senhaApModoPadrao').classList.toggle('hidden', tipo !== 'padrao');
 }
 
-function osAbrirSenhaAparelho(btn) {
-    _senhaApTr = btn.closest('tr');
+function senhaApCarregarNoModal(salvo) {
     senhaApMontarGradeSeNecessario();
     senhaApLimparPadrao();
     document.getElementById('senhaApCampoPin').value = '';
-
-    let salvo = null;
-    try { salvo = _senhaApTr.dataset.senhaAparelho ? JSON.parse(_senhaApTr.dataset.senhaAparelho) : null; } catch(e) {}
-
     if (salvo && salvo.tipo === 'padrao' && salvo.valor) {
         senhaApMudarTipo('padrao');
         String(salvo.valor).split(',').map(Number).filter(Boolean).forEach(n => senhaApClicarPonto(n));
@@ -9878,13 +9891,29 @@ function osAbrirSenhaAparelho(btn) {
     } else {
         senhaApMudarTipo('pin');
     }
-
     document.getElementById('modalSenhaAparelho').classList.add('ativo');
+}
+
+// Abre o modal a partir da linha de uma O.S. já cadastrada (chamado pelo menu "⋮")
+function osAbrirSenhaAparelho(tr) {
+    _senhaApTr = tr;
+    _senhaApModoCadastro = false;
+    let salvo = null;
+    try { salvo = tr.dataset.senhaAparelho ? JSON.parse(tr.dataset.senhaAparelho) : null; } catch(e) {}
+    senhaApCarregarNoModal(salvo);
+}
+
+// Abre o modal a partir do formulário de cadastro de uma O.S. nova (ainda sem linha/código)
+function osAbrirSenhaAparelhoCadastro() {
+    _senhaApTr = null;
+    _senhaApModoCadastro = true;
+    senhaApCarregarNoModal(_senhaApPendenteCadastro);
 }
 
 function senhaApFechar() {
     document.getElementById('modalSenhaAparelho').classList.remove('ativo');
     _senhaApTr = null;
+    _senhaApModoCadastro = false;
 }
 
 function senhaApAtualizarIndicador(tr, temSenha) {
@@ -9892,7 +9921,25 @@ function senhaApAtualizarIndicador(tr, temSenha) {
     if (ind) ind.style.display = temSenha ? 'block' : 'none';
 }
 
+function senhaApAtualizarIndicadorCadastro() {
+    const btn = document.getElementById('osBtnSenhaCadastro');
+    const texto = document.getElementById('osSenhaCadastroTexto');
+    const ind = document.getElementById('osSenhaCadastroIndicador');
+    if (!btn) return;
+    const tem = !!_senhaApPendenteCadastro;
+    if (texto) texto.textContent = tem ? '🔒 Senha informada' : '🔒 Não informada';
+    if (ind) ind.style.display = tem ? 'block' : 'none';
+}
+
 async function senhaApGravar(payloadOuNull) {
+    // Modo cadastro: ainda não existe O.S. no banco, só guarda em memória até o "Salvar O.S."
+    if (_senhaApModoCadastro) {
+        _senhaApPendenteCadastro = payloadOuNull;
+        senhaApAtualizarIndicadorCadastro();
+        mostrarToast(payloadOuNull ? '🔒 Senha guardada — será salva junto com a O.S.' : '🗑️ Senha removida.');
+        senhaApFechar();
+        return;
+    }
     if (!_senhaApTr) return;
     const tr = _senhaApTr;
     const item = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
@@ -9925,6 +9972,50 @@ function senhaApSalvar() {
 
 function senhaApRemover() {
     senhaApGravar(null);
+}
+
+// ==========================================
+// MENU "⋮" DE CADA LINHA DA O.S. (Senha do aparelho / Excluir)
+// Um único menu flutuante compartilhado, reposicionado perto do botão clicado —
+// mais leve do que criar um menu escondido por linha.
+// ==========================================
+let _osMenuTrAtual = null;
+
+function osAbrirMenuPontinhos(btn) {
+    _osMenuTrAtual = btn.closest('tr');
+    const menu = document.getElementById('osMenuPontinhos');
+    const r = btn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    // Evita o menu vazar pra fora da tela à direita
+    const larguraMenu = 175;
+    let left = r.right - larguraMenu;
+    if (left < 8) left = 8;
+    menu.style.left = left + 'px';
+    menu.classList.remove('hidden');
+}
+
+function osFecharMenuPontinhos() {
+    document.getElementById('osMenuPontinhos').classList.add('hidden');
+}
+
+// Fecha o menu ao clicar fora dele
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('osMenuPontinhos');
+    if (!menu || menu.classList.contains('hidden')) return;
+    if (menu.contains(e.target) || e.target.closest('.osBtnMaisOpcoes')) return;
+    osFecharMenuPontinhos();
+});
+
+function osMenuAcaoSenha() {
+    const tr = _osMenuTrAtual;
+    osFecharMenuPontinhos();
+    if (tr) osAbrirSenhaAparelho(tr);
+}
+
+function osMenuAcaoExcluir() {
+    const tr = _osMenuTrAtual;
+    osFecharMenuPontinhos();
+    if (tr) osExcluir({ closest: () => tr });
 }
 
 // Destaca o botão de salvar quando algo na linha foi editado e ainda não foi salvo
