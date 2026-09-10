@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260910161709">
+    <meta name="app-build" content="20260910162328">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -8950,9 +8950,13 @@ async function verificarSessaoEIniciar() {
     const logado = !error && data && data.session;
 
     if (logado) {
+        const permitido = await registrarAcessoEChecar(data.session.user?.email);
+        if (!permitido) {
+            await bloquearAcessoDispositivo();
+            return false;
+        }
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaSelecaoPerfil').style.display = 'flex';
-        registrarAcessoDispositivo(data.session.user?.email);
     } else {
         document.getElementById('telaSelecaoPerfil').style.display = 'none';
         document.getElementById('telaLogin').style.display = 'flex';
@@ -8961,13 +8965,26 @@ async function verificarSessaoEIniciar() {
     return logado;
 }
 
-// Registra o acesso (IP, dispositivo, cidade estimada) via Edge Function — nunca trava o
-// login por causa disso: dispara e esquece, sem esperar resposta.
-function registrarAcessoDispositivo(usuarioEmail) {
+// Registra o acesso (IP, dispositivo, cidade estimada) via Edge Function e devolve se esse
+// dispositivo pode acessar ou não. Se a checagem falhar por qualquer motivo (rede, function
+// fora do ar), a gente deixa passar (fail-open) — melhor um bloqueio não funcionar por 1
+// minuto do que travar a loja inteira fora do sistema por causa de uma instabilidade.
+async function registrarAcessoEChecar(usuarioEmail) {
     try {
-        supabaseDB.functions.invoke('registrar-acesso', { body: { usuarioEmail: usuarioEmail || null } })
-            .catch(() => {}); // falha aqui nunca deve incomodar o usuário
-    } catch (e) {}
+        const { data, error } = await supabaseDB.functions.invoke('registrar-acesso', { body: { usuarioEmail: usuarioEmail || null } });
+        if (error || !data) return true;
+        return data.podeAcessar !== false;
+    } catch (e) {
+        return true;
+    }
+}
+
+async function bloquearAcessoDispositivo() {
+    await supabaseDB.auth.signOut();
+    document.getElementById('telaSelecaoPerfil').style.display = 'none';
+    document.getElementById('telaLogin').style.display = 'flex';
+    const erroEl = document.getElementById('loginErro');
+    if (erroEl) erroEl.textContent = '🚫 Acesso bloqueado neste dispositivo/IP. Fale com a gestão.';
 }
 
 async function fazerLogin(event) {
@@ -8983,10 +9000,14 @@ async function fazerLogin(event) {
     try {
         const { error } = await supabaseDB.auth.signInWithPassword({ email, password: senha });
         if (error) throw error;
+        const permitido = await registrarAcessoEChecar(email);
+        if (!permitido) {
+            await bloquearAcessoDispositivo();
+            return;
+        }
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaSelecaoPerfil').style.display = 'flex';
         document.getElementById('loginSenha').value = '';
-        registrarAcessoDispositivo(email);
     } catch (e) {
         erroEl.textContent = '❌ E-mail ou senha inválidos.';
     } finally {
