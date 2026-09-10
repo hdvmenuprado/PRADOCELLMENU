@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260909163947">
+    <meta name="app-build" content="20260910161709">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -8952,12 +8952,22 @@ async function verificarSessaoEIniciar() {
     if (logado) {
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaSelecaoPerfil').style.display = 'flex';
+        registrarAcessoDispositivo(data.session.user?.email);
     } else {
         document.getElementById('telaSelecaoPerfil').style.display = 'none';
         document.getElementById('telaLogin').style.display = 'flex';
         setTimeout(() => { const el = document.getElementById('loginEmail'); if (el) el.focus(); }, 100);
     }
     return logado;
+}
+
+// Registra o acesso (IP, dispositivo, cidade estimada) via Edge Function — nunca trava o
+// login por causa disso: dispara e esquece, sem esperar resposta.
+function registrarAcessoDispositivo(usuarioEmail) {
+    try {
+        supabaseDB.functions.invoke('registrar-acesso', { body: { usuarioEmail: usuarioEmail || null } })
+            .catch(() => {}); // falha aqui nunca deve incomodar o usuário
+    } catch (e) {}
 }
 
 async function fazerLogin(event) {
@@ -8976,6 +8986,7 @@ async function fazerLogin(event) {
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaSelecaoPerfil').style.display = 'flex';
         document.getElementById('loginSenha').value = '';
+        registrarAcessoDispositivo(email);
     } catch (e) {
         erroEl.textContent = '❌ E-mail ou senha inválidos.';
     } finally {
