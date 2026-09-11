@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260911212701">
+    <meta name="app-build" content="20260911213314">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1349,7 +1349,7 @@ body.modo-claro .main-content {
         .aval-diag-grid { display:grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: start; width: 100%; }
 
         .aval-painel-vivo {
-            position: sticky; top: 12px; z-index: 3; width: 100%;
+            position: static; z-index: 3; width: 100%;
             background: #17171b; border: 1px solid var(--border-highlight); border-radius: 16px;
             padding: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.35); text-align: left;
         }
@@ -1369,16 +1369,16 @@ body.modo-claro .main-content {
             border-radius: 16px; padding: 6px 18px;
         }
         body.modo-claro .aval-perguntas-lista { background: #ffffff; }
-        .aval-pergunta-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:15px 0; border-bottom:1px solid var(--border-color); }
+        .aval-pergunta-row { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:15px 0; border-bottom:1px solid var(--border-color); }
         .aval-pergunta-row:last-child { border-bottom:none; }
         .aval-pergunta-row .txt { font-size:13.5px; line-height:1.4; flex:1; color:var(--text-main); }
         .aval-pergunta-row .txt .deducao { display:block; font-size:11px; color:var(--text-muted); margin-top:2px; font-family:'JetBrains Mono',monospace; }
-        .toggle-par { display:flex; gap:6px; flex-shrink:0; }
+        .toggle-par { display:flex; gap:6px; flex-shrink:0; margin-top: 1px; }
         .toggle-btn {
             border:1px solid var(--border-color); background: var(--surface-2); color: var(--text-muted);
             border-radius:9px; padding:9px 0; font-size:12px; font-weight:600; cursor:pointer;
             font-family:'Inter',sans-serif; transition:all 0.15s ease; white-space:nowrap;
-            width: 76px; text-align:center;
+            width: 76px; text-align:center; margin: 0;
         }
         .toggle-btn.ok.ativo { background: rgba(46,204,113,0.15); border-color:#2ecc71; color:#2ecc71; }
         .toggle-btn.defeito.ativo { background: rgba(239,68,68,0.15); border-color:#ef4444; color:#ef4444; }
@@ -2708,7 +2708,7 @@ body.modo-claro .main-content {
                     <select id="placa" style="display:none"><option value="Não">Não</option><option value="Sim">Sim</option></select>
 
                     <div style="display:flex; gap:12px; width:100%; margin-top:18px;">
-                        <button class="action-btn secondary-btn" style="flex:0 0 auto; margin-top:0; padding:14px 18px;" onclick="avalVoltarConfig()">◀</button>
+                        <button class="action-btn secondary-btn" style="flex:0 0 auto; width:auto; margin-top:0; padding:14px 18px;" onclick="avalVoltarConfig()">◀</button>
                         <button class="action-btn" style="flex:1; margin-top:0;" onclick="calcular()">Finalizar Avaliação</button>
                     </div>
                 </div>
