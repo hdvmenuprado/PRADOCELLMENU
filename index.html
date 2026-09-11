@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260911211812">
+    <meta name="app-build" content="20260911212701">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1342,41 +1342,57 @@ body.modo-claro .main-content {
         }
         .btn-resposta-defeito:hover { background: rgba(239, 68, 68, 0.12); border-color: #ef4444; transform: translateY(-2px); }
 
-        /* --- AVALIAÇÃO: painel de valores ao vivo + perguntas em lista (tudo numa tela só) --- */
+        /* --- AVALIAÇÃO: painel de valores ao vivo + perguntas em lista (tudo numa tela só) ---
+           Em telas largas fica em 2 colunas (valor à esquerda, perguntas à direita);
+           em telas estreitas empilha (valor em cima, perguntas embaixo). */
+        #stepDiagnostico { max-width: 900px; }
+        .aval-diag-grid { display:grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: start; width: 100%; }
+
         .aval-painel-vivo {
             position: sticky; top: 12px; z-index: 3; width: 100%;
-            background: var(--bg-card); border: 1px solid var(--border-highlight); border-radius: 16px;
-            padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.35); text-align: left;
+            background: #17171b; border: 1px solid var(--border-highlight); border-radius: 16px;
+            padding: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.35); text-align: left;
         }
-        .aval-painel-topo { display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+        body.modo-claro .aval-painel-vivo { background: #ffffff; }
+        .aval-painel-topo { display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:14px; }
         .aval-painel-topo button { background:none; border:none; color:var(--text-muted); font-size:11px; cursor:pointer; text-decoration:underline; font-family:'Inter',sans-serif; padding:0; text-transform:none; letter-spacing:normal; }
-        .aval-painel-valores { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .aval-valor-bloco { text-align:center; }
-        .aval-valor-bloco .rotulo { display:block; font-size:11px; color:var(--text-muted); margin-bottom:3px; }
-        .aval-valor-bloco .numero { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.4rem; transition: transform 0.18s ease; }
+        .aval-painel-valores { display:flex; flex-direction:column; gap:16px; }
+        .aval-valor-bloco { text-align:center; padding: 10px 0; border-radius: 10px; background: rgba(255,255,255,0.03); }
+        .aval-valor-bloco .rotulo { display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px; }
+        .aval-valor-bloco .numero { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.5rem; transition: transform 0.18s ease; }
         .aval-valor-bloco .numero.pulso { transform: scale(1.08); }
         .aval-valor-bloco.troca .numero { color:#e05a4e; }
         .aval-valor-bloco.venda .numero { color: var(--primary); }
 
-        .aval-perguntas-lista { width:100%; text-align:left; }
-        .aval-pergunta-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:13px 0; border-bottom:1px solid var(--border-color); }
+        .aval-perguntas-lista {
+            width:100%; text-align:left; background: #17171b; border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 6px 18px;
+        }
+        body.modo-claro .aval-perguntas-lista { background: #ffffff; }
+        .aval-pergunta-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:15px 0; border-bottom:1px solid var(--border-color); }
         .aval-pergunta-row:last-child { border-bottom:none; }
         .aval-pergunta-row .txt { font-size:13.5px; line-height:1.4; flex:1; color:var(--text-main); }
         .aval-pergunta-row .txt .deducao { display:block; font-size:11px; color:var(--text-muted); margin-top:2px; font-family:'JetBrains Mono',monospace; }
         .toggle-par { display:flex; gap:6px; flex-shrink:0; }
         .toggle-btn {
             border:1px solid var(--border-color); background: var(--surface-2); color: var(--text-muted);
-            border-radius:9px; padding:9px 12px; font-size:12px; font-weight:600; cursor:pointer;
+            border-radius:9px; padding:9px 0; font-size:12px; font-weight:600; cursor:pointer;
             font-family:'Inter',sans-serif; transition:all 0.15s ease; white-space:nowrap;
+            width: 76px; text-align:center;
         }
         .toggle-btn.ok.ativo { background: rgba(46,204,113,0.15); border-color:#2ecc71; color:#2ecc71; }
         .toggle-btn.defeito.ativo { background: rgba(239,68,68,0.15); border-color:#ef4444; color:#ef4444; }
+        @media (max-width: 720px) {
+            .aval-diag-grid { grid-template-columns: 1fr; }
+            .aval-painel-vivo { position: static; }
+            .aval-painel-valores { flex-direction: row; }
+            .aval-painel-valores .aval-valor-bloco { flex: 1; }
+        }
         @media (max-width: 480px) {
             .aval-pergunta-row { flex-direction: column; align-items: flex-start; gap: 10px; }
             .toggle-par { width: 100%; }
-            .toggle-btn { flex: 1; }
-            .aval-painel-valores { gap: 8px; }
-            .aval-valor-bloco .numero { font-size: 1.2rem; }
+            .toggle-btn { flex: 1; width: auto; }
+            .aval-valor-bloco .numero { font-size: 1.25rem; }
         }
 
         /* --- UTILITÁRIOS --- */
@@ -2660,24 +2676,26 @@ body.modo-claro .main-content {
                 </div>
 
                 <div id="stepDiagnostico" class="step-container hidden">
-                    <div class="aval-painel-vivo">
-                        <div class="aval-painel-topo">
-                            <span id="avalVivoAparelho">—</span>
-                            <button type="button" onclick="avalVoltarConfig()">trocar aparelho</button>
-                        </div>
-                        <div class="aval-painel-valores">
-                            <div class="aval-valor-bloco troca">
-                                <span class="rotulo">Custo Troca</span>
-                                <div class="numero" id="avalVivoTroca">R$ 0,00</div>
+                    <div class="aval-diag-grid">
+                        <div class="aval-painel-vivo">
+                            <div class="aval-painel-topo">
+                                <span id="avalVivoAparelho">—</span>
+                                <button type="button" onclick="avalVoltarConfig()">trocar</button>
                             </div>
-                            <div class="aval-valor-bloco venda">
-                                <span class="rotulo">Valor Venda</span>
-                                <div class="numero" id="avalVivoVenda">R$ 0,00</div>
+                            <div class="aval-painel-valores">
+                                <div class="aval-valor-bloco troca">
+                                    <span class="rotulo">Custo Troca</span>
+                                    <div class="numero" id="avalVivoTroca">R$ 0,00</div>
+                                </div>
+                                <div class="aval-valor-bloco venda">
+                                    <span class="rotulo">Valor Venda</span>
+                                    <div class="numero" id="avalVivoVenda">R$ 0,00</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div id="avalPerguntasLista" class="aval-perguntas-lista"></div>
+                        <div id="avalPerguntasLista" class="aval-perguntas-lista"></div>
+                    </div>
 
                     <!-- selects escondidos: só guardam a resposta de cada pergunta pro cálculo, igual sempre foi -->
                     <select id="tela" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
@@ -6931,7 +6949,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <div class="aval-pergunta-row">
                     <div class="txt">${p.label}<span class="deducao">${custo > 0 ? '\u2212 R$ ' + custo.toFixed(2).replace('.', ',') + ' se tiver defeito' : 'sem impacto no valor'}</span></div>
                     <div class="toggle-par">
-                        <button type="button" class="toggle-btn ok" id="avalBtnOk-${p.campo}" onclick="avalResponder('${p.campo}', false)">${p.ok.split(',')[0]}</button>
+                        <button type="button" class="toggle-btn ok" id="avalBtnOk-${p.campo}" onclick="avalResponder('${p.campo}', false)">OK</button>
                         <button type="button" class="toggle-btn defeito" id="avalBtnDefeito-${p.campo}" onclick="avalResponder('${p.campo}', true)">Defeito</button>
                     </div>
                 </div>
