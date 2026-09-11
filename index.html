@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260911124951">
+    <meta name="app-build" content="20260911144216">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -3443,6 +3443,15 @@ body.modo-claro .main-content {
                     <button class="action-btn" onclick="salvarAvaliacao()" style="margin-top: 20px; padding: 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="save" style="width:13px;height:13px;vertical-align:-2px;"></i> Atualizar iPhone</button>
                 </div>
 
+                <div class="admin-section" style="border-color: #e67e22; margin-top: 30px;">
+                    <h3 class="sub-title" style="color: #e67e22;"><i data-lucide="shield-check" style="width:13px;height:13px;vertical-align:-2px;"></i> Backup e Restauração</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Protegido por uma chave separada — sem ela, ninguém baixa nem restaura dados, nem quem tem acesso normal ao Admin. A chave não fica visível em lugar nenhum do sistema; só quem a recebeu quando foi criada/trocada a tem.</p>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <button class="action-btn" onclick="backupAbrirModal('backup')" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 12px 20px; font-size: 12px; flex:1; min-width:200px; display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="download" style="width:13px;height:13px;vertical-align:-2px;"></i> Baixar Backup</button>
+                        <button class="action-btn secondary-btn" onclick="backupAbrirModal('restaurar')" style="padding: 12px 20px; font-size: 12px; flex:1; min-width:200px; display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="upload" style="width:13px;height:13px;vertical-align:-2px;"></i> Restaurar Backup</button>
+                    </div>
+                </div>
+
                 <div class="admin-section" style="border-color: #9b59b6; margin-top: 30px;">
                     <h3 class="sub-title" style="color: #9b59b6;"><i data-lucide="printer" style="width:13px;height:13px;vertical-align:-2px;"></i> Editor de Layout dos Documentos PDF</h3>
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Personalize cada documento separadamente. O preview atualiza em tempo real.</p>
@@ -3930,7 +3939,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
                     <!-- Menu flutuante compartilhado do botão "⋮" de cada linha -->
                     <div id="osMenuPontinhos" class="hidden" style="position:fixed;z-index:200;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);overflow:hidden;min-width:170px;backdrop-filter:blur(20px);">
-                        <button onclick="osMenuAcaoSenha()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="lock" style="width:14px;height:14px;"></i> Senha do aparelho</button>
+                        <button onclick="osMenuAcaoEditar()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar cadastro</button>
+                        <button onclick="osMenuAcaoSenha()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="lock" style="width:14px;height:14px;"></i> Senha do aparelho</button>
                         <button onclick="osMenuAcaoExcluir()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#f87171;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir O.S.</button>
                     </div>
                 </div>
@@ -4430,6 +4440,140 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
         <div id="osFotosStatus" style="font-size:12px;color:var(--primary);margin-bottom:10px;display:none;"></div>
         <div id="osFotosGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOsEditar">
+    <div class="modal-box modal-box-crm" style="width:900px; max-width:94vw; max-height:88vh; overflow-y:auto; text-align:left; padding:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h3 style="margin:0; color: var(--primary); font-size:1.05rem; letter-spacing:normal;display:flex;align-items:center;gap:8px;"><i data-lucide="pencil" style="width:16px;height:16px;vertical-align:-2px;"></i> Editar Cadastro da O.S.</h3>
+            <button onclick="osFecharModalEditar()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;vertical-align:-2px;"></i></button>
+        </div>
+        <input type="hidden" id="osEditCodigo" value="">
+        <div class="form-grid-3">
+            <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="osEditData">
+            </div>
+            <div class="form-group">
+                <label>Nome do Cliente</label>
+                <input type="text" id="osEditCliente" placeholder="Nome do Cliente">
+            </div>
+            <div class="form-group">
+                <label>Telefone / WhatsApp</label>
+                <input type="tel" id="osEditTelefone" placeholder="(45) 99999-9999">
+            </div>
+            <div class="form-group">
+                <label>Modelo do Aparelho</label>
+                <input type="text" id="osEditModelo" placeholder="Ex: iPhone 13">
+            </div>
+            <div class="form-group">
+                <label>Origem do Cliente</label>
+                <select id="osEditOrigem">
+                    <option value="">Selecione...</option>
+                    <option value="Cliente de Porta">Cliente de Porta</option>
+                    <option value="Cliente Google">Cliente Google</option>
+                    <option value="Cliente Meta">Cliente Meta</option>
+                    <option value="Cliente Indicação">Cliente Indicação</option>
+                    <option value="Cliente Antigo">Cliente Antigo</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Estado do Aparelho</label>
+                <select id="osEditEstadoAparelho">
+                    <option value="">Selecione...</option>
+                    <option value="Aparelho entrou ligado">Aparelho entrou ligado</option>
+                    <option value="Aparelho entrou desligado (sem condições de testes)">Aparelho entrou desligado (sem condições de testes)</option>
+                </select>
+            </div>
+            <div class="form-group full-width">
+                <label>Descrição (Defeito Relatado)</label>
+                <textarea id="osEditDescricao" placeholder="Descreva o defeito relatado pelo cliente" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:38px;box-sizing:border-box;"></textarea>
+            </div>
+            <div class="form-group full-width">
+                <label>Reparo (Feito ou Para Fazer)</label>
+                <textarea id="osEditReparo" placeholder="Descreva o defeito ou o serviço" style="width:100%;padding:9px 11px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:38px;box-sizing:border-box;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Garantia (Dias)</label>
+                <select id="osEditGarantiaDias">
+                    <option value="365">1 ano (365 dias)</option>
+                    <option value="180">180 dias</option>
+                    <option value="90">90 dias</option>
+                    <option value="30">30 dias</option>
+                    <option value="0">Sem garantia</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Custo da Peça (R$)</label>
+                <input type="number" id="osEditCustoPeca" step="0.01" oninput="osEditCalcTotal()">
+            </div>
+            <div class="form-group">
+                <label>Mão de Obra (R$)</label>
+                <input type="number" id="osEditMaoObra" step="0.01" oninput="osEditCalcTotal()">
+            </div>
+            <div class="form-group">
+                <label>Total Geral (R$)</label>
+                <input type="text" id="osEditTotal" readonly style="background:rgba(212,175,55,0.08);color:var(--primary);font-weight:700;">
+            </div>
+            <div class="form-group">
+                <label>Vendedor</label>
+                <select id="osEditVendedor"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="osEditStatus">
+                    <option>Orçando</option>
+                    <option>Aguardando aprov</option>
+                    <option>Orç aprovado</option>
+                    <option>Pronto</option>
+                    <option>Orçamento reprovado</option>
+                    <option>Aparelho retirado</option>
+                    <option>Em Custódia</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-btn-row" style="margin-top:20px;">
+            <button class="action-btn secondary-btn" onclick="osFecharModalEditar()" style="margin-top:0;">Cancelar</button>
+            <button class="action-btn" onclick="osSalvarEdicao()" style="margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="save" style="width:14px;height:14px;"></i> Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalBackup">
+    <div class="modal-box" style="width:480px; max-width:92vw; text-align:left; padding:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <h3 id="backupModalTitulo" style="margin:0; color: var(--primary); font-size:1.05rem; letter-spacing:normal;display:flex;align-items:center;gap:8px;"><i data-lucide="shield-check" style="width:16px;height:16px;vertical-align:-2px;"></i> <span id="backupModalTituloTexto">Baixar Backup</span></h3>
+            <button onclick="backupFecharModal()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;vertical-align:-2px;"></i></button>
+        </div>
+        <p id="backupModalAviso" style="font-size:12px;color:var(--text-muted);margin:0 0 16px;line-height:1.5;"></p>
+
+        <div class="form-group">
+            <label>Chave de Backup</label>
+            <input type="password" id="backupChave" placeholder="Digite a chave" autocomplete="off">
+        </div>
+
+        <div id="backupRestaurarExtra" style="display:none;">
+            <div class="form-group">
+                <label>Arquivo de backup (.json)</label>
+                <input type="file" id="backupArquivoInput" accept=".json">
+            </div>
+            <div style="background:rgba(231,76,60,0.1);border:1px dashed #e74c3c;border-radius:8px;padding:10px 12px;margin:6px 0 14px;font-size:11.5px;color:var(--text-main);line-height:1.5;">
+                Isso <strong>mescla</strong> os dados do arquivo com os dados atuais: linhas com o mesmo ID são sobrescritas pelo conteúdo do backup, e linhas ausentes no backup não são apagadas. Não tem como desfazer depois de confirmar.
+            </div>
+            <div class="form-group">
+                <label>Pra confirmar, digite RESTAURAR</label>
+                <input type="text" id="backupConfirmTexto" placeholder="RESTAURAR" autocomplete="off">
+            </div>
+        </div>
+
+        <div id="backupStatus" style="display:none;font-size:12px;color:var(--primary);margin:4px 0 10px;"></div>
+        <div id="backupResultado" style="display:none;max-height:220px;overflow-y:auto;font-size:11.5px;font-family:'JetBrains Mono',monospace;background:var(--surface-2);border-radius:8px;padding:10px 12px;margin:4px 0 10px;line-height:1.6;"></div>
+
+        <div class="modal-btn-row" style="margin-top:10px;">
+            <button class="action-btn secondary-btn" onclick="backupFecharModal()" style="margin-top:0;">Cancelar</button>
+            <button class="action-btn" id="backupBtnConfirmar" onclick="backupConfirmar()" style="margin-top:0;"><span id="backupBtnConfirmarTexto">Baixar</span></button>
+        </div>
     </div>
 </div>
 
@@ -7253,6 +7397,116 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         avalPararSincronia();
     }
 
+    // ==========================================
+    // BACKUP E RESTAURAÇÃO — protegido por chave própria (Edge Function
+    // 'backup-restaurar', que confere contra o hash guardado em config_backup).
+    // O navegador nunca vê a chave certa nem o hash, só ok:true/false.
+    // ==========================================
+    let _backupModo = 'backup';
+
+    function backupAbrirModal(modo) {
+        _backupModo = modo;
+        document.getElementById('backupChave').value = '';
+        document.getElementById('backupConfirmTexto').value = '';
+        document.getElementById('backupArquivoInput').value = '';
+        document.getElementById('backupStatus').style.display = 'none';
+        document.getElementById('backupStatus').textContent = '';
+        document.getElementById('backupResultado').style.display = 'none';
+        document.getElementById('backupResultado').innerHTML = '';
+        document.getElementById('backupRestaurarExtra').style.display = modo === 'restaurar' ? 'block' : 'none';
+        document.getElementById('backupModalTituloTexto').textContent = modo === 'restaurar' ? 'Restaurar Backup' : 'Baixar Backup';
+        document.getElementById('backupModalAviso').textContent = modo === 'restaurar'
+            ? 'Escolha o arquivo .json gerado por um backup anterior e digite a chave pra restaurar.'
+            : 'Gera e baixa um arquivo .json com todos os dados do sistema (não inclui as senhas de acesso). Guarde em local seguro — ele tem dados de clientes.';
+        document.getElementById('backupBtnConfirmarTexto').textContent = modo === 'restaurar' ? 'Restaurar' : 'Baixar';
+        document.getElementById('modalBackup').classList.add('ativo');
+    }
+
+    function backupFecharModal() {
+        document.getElementById('modalBackup').classList.remove('ativo');
+    }
+
+    function backupMostrarStatus(msg) {
+        const el = document.getElementById('backupStatus');
+        el.textContent = msg;
+        el.style.display = msg ? 'block' : 'none';
+    }
+
+    async function backupConfirmar() {
+        const chave = document.getElementById('backupChave').value || '';
+        if (!chave) { mostrarToast('Digite a chave de backup.', 'erro'); return; }
+
+        if (_backupModo === 'backup') {
+            await backupExecutarDownload(chave);
+        } else {
+            await backupExecutarRestauracao(chave);
+        }
+    }
+
+    async function backupExecutarDownload(chave) {
+        const btn = document.getElementById('backupBtnConfirmar');
+        btn.disabled = true;
+        backupMostrarStatus('Gerando backup, pode levar alguns segundos...');
+        try {
+            const { data, error } = await supabaseDB.functions.invoke('backup-restaurar', { body: { acao: 'backup', chave } });
+            if (error) throw new Error(error.message);
+            if (!data || !data.ok) throw new Error((data && data.mensagem) || 'Não foi possível gerar o backup.');
+
+            const nomeArquivo = 'backup_prado_' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.json';
+            const blob = new Blob([JSON.stringify({ geradoEm: data.geradoEm, dados: data.dados }, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = nomeArquivo;
+            document.body.appendChild(a); a.click(); a.remove();
+
+            backupMostrarStatus('');
+            mostrarToast('Backup baixado: ' + nomeArquivo);
+            backupFecharModal();
+        } catch (e) {
+            backupMostrarStatus('');
+            mostrarToast('Chave inválida ou erro ao gerar o backup: ' + e.message, 'erro');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function backupExecutarRestauracao(chave) {
+        const arquivoInput = document.getElementById('backupArquivoInput');
+        const confirmTexto = document.getElementById('backupConfirmTexto').value || '';
+        if (!arquivoInput.files.length) { mostrarToast('Escolha o arquivo de backup (.json).', 'erro'); return; }
+        if (confirmTexto.trim().toUpperCase() !== 'RESTAURAR') { mostrarToast('Digite RESTAURAR pra confirmar.', 'erro'); return; }
+
+        const btn = document.getElementById('backupBtnConfirmar');
+        btn.disabled = true;
+        backupMostrarStatus('Lendo arquivo...');
+        try {
+            const texto = await arquivoInput.files[0].text();
+            let conteudo;
+            try { conteudo = JSON.parse(texto); } catch (e) { throw new Error('Arquivo não é um JSON válido.'); }
+            const dados = conteudo.dados || conteudo; // aceita tanto {geradoEm,dados} quanto o objeto de tabelas direto
+
+            backupMostrarStatus('Restaurando (pode levar um tempo dependendo do tamanho)...');
+            const { data, error } = await supabaseDB.functions.invoke('backup-restaurar', { body: { acao: 'restaurar', chave, dados } });
+            if (error) throw new Error(error.message);
+            if (!data || !data.ok) throw new Error((data && data.mensagem) || 'Não foi possível restaurar.');
+
+            backupMostrarStatus('');
+            const resultadoEl = document.getElementById('backupResultado');
+            const linhas = Object.entries(data.resultado || {}).map(([tabela, r]) => {
+                if (r.ok) return `${tabela}: ${r.linhas} linha(s) ok`;
+                return `${tabela}: ERRO — ${r.erro}`;
+            });
+            resultadoEl.innerHTML = linhas.join('<br>');
+            resultadoEl.style.display = 'block';
+            mostrarToast('Restauração concluída — confira o resultado por tabela no modal.');
+        } catch (e) {
+            backupMostrarStatus('');
+            mostrarToast('Chave inválida ou erro ao restaurar: ' + e.message, 'erro');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
     function gerarPDFOrcamento() {
         const cliente = document.getElementById("oCliente").value; const modelo = document.getElementById("oModelo").value; const defeito = document.getElementById("oDefeito").value;
         if(!cliente.trim()) return alert("Nome do Cliente é obrigatório!"); if(!modelo.trim()) return alert("Modelo é obrigatório!");
@@ -8900,7 +9154,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -9815,6 +10069,29 @@ function osApiPost(dados) {
             return { ok: true };
         }
 
+        // Grava de uma vez todo o cadastro (usado pelo modal "Editar cadastro" do menu ⋮ —
+        // inclui campos que não têm edição inline na linha, como telefone/vendedor/data/origem)
+        if (acao === 'ATUALIZAR_CADASTRO') {
+            const { error } = await supabaseDB.from('ordens_servico').update({
+                data: dados.data || null,
+                cliente: dados.cliente,
+                telefone: dados.telefone || null,
+                modelo: dados.modelo,
+                origem: dados.origem || null,
+                estado_aparelho: dados.estadoAparelho || null,
+                descricao: dados.descricao || null,
+                reparo: dados.reparo || null,
+                garantia_dias: parseInt(dados.garantiaDias) || 0,
+                custo_peca: parseFloat(dados.custoPeca) || 0,
+                mao_de_obra: parseFloat(dados.maoDeObra) || 0,
+                total: parseFloat(dados.total) || 0,
+                vendedor: dados.vendedor || null,
+                status: dados.status || null
+            }).eq('codigo', dados.codigo);
+            if (error) throw new Error(error.message);
+            return { ok: true };
+        }
+
         if (acao === 'DELETAR_OS') {
             const { error } = await supabaseDB.from('ordens_servico').delete().eq('codigo', dados.codigo);
             if (error) throw new Error(error.message);
@@ -10236,6 +10513,85 @@ function osMenuAcaoSenha() {
     const tr = _osMenuTrAtual;
     osFecharMenuPontinhos();
     if (tr) osAbrirSenhaAparelho(tr);
+}
+
+function osMenuAcaoEditar() {
+    const tr = _osMenuTrAtual;
+    osFecharMenuPontinhos();
+    if (tr) osAbrirModalEditar(tr);
+}
+
+// Abre o modal de edição completa do cadastro (campos que não dá pra mudar direto na linha
+// da tabela, como telefone, vendedor, data e origem — os editáveis inline continuam
+// funcionando normalmente e ficam sincronizados por causa do osAtualizarLinha no salvar).
+let _osEditTrAtual = null;
+function osAbrirModalEditar(tr) {
+    const item = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    if (!item) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
+    _osEditTrAtual = tr;
+
+    document.getElementById('osEditCodigo').value = item.codigo || '';
+    document.getElementById('osEditData').value = (item.data || '').slice(0, 10);
+    document.getElementById('osEditCliente').value = item.cliente || '';
+    document.getElementById('osEditTelefone').value = item.telefone || '';
+    document.getElementById('osEditModelo').value = item.modelo || '';
+    document.getElementById('osEditOrigem').value = item.origem || '';
+    document.getElementById('osEditEstadoAparelho').value = item.estadoAparelho || '';
+    document.getElementById('osEditDescricao').value = item.descricao || '';
+    document.getElementById('osEditReparo').value = item.reparo || '';
+    document.getElementById('osEditGarantiaDias').value = osGarantiaDiasStr(item.garantiaDias);
+    document.getElementById('osEditCustoPeca').value = parseFloat(item.custoPeca || 0).toFixed(2);
+    document.getElementById('osEditMaoObra').value = parseFloat(item.maoDeObra || 0).toFixed(2);
+    document.getElementById('osEditStatus').value = item.status || 'Orçando';
+    osEditCalcTotal();
+    vendedoresPopularSelect('osEditVendedor', item.vendedor);
+
+    document.getElementById('modalOsEditar').classList.add('ativo');
+}
+
+function osFecharModalEditar() {
+    document.getElementById('modalOsEditar').classList.remove('ativo');
+}
+
+function osEditCalcTotal() {
+    const peca = parseFloat(document.getElementById('osEditCustoPeca').value) || 0;
+    const mao = parseFloat(document.getElementById('osEditMaoObra').value) || 0;
+    document.getElementById('osEditTotal').value = (peca + mao).toFixed(2);
+}
+
+// Grava todos os campos do cadastro de uma vez (ATUALIZAR_CADASTRO) e atualiza a linha na
+// tela sem precisar recarregar a tabela inteira.
+async function osSalvarEdicao() {
+    const codigo = document.getElementById('osEditCodigo').value;
+    const dados = {
+        codigo,
+        data: document.getElementById('osEditData').value,
+        cliente: (document.getElementById('osEditCliente').value || '').trim(),
+        telefone: document.getElementById('osEditTelefone').value,
+        modelo: (document.getElementById('osEditModelo').value || '').trim(),
+        origem: document.getElementById('osEditOrigem').value,
+        estadoAparelho: document.getElementById('osEditEstadoAparelho').value,
+        descricao: document.getElementById('osEditDescricao').value,
+        reparo: document.getElementById('osEditReparo').value,
+        garantiaDias: document.getElementById('osEditGarantiaDias').value,
+        custoPeca: document.getElementById('osEditCustoPeca').value,
+        maoDeObra: document.getElementById('osEditMaoObra').value,
+        total: document.getElementById('osEditTotal').value,
+        vendedor: document.getElementById('osEditVendedor').value,
+        status: document.getElementById('osEditStatus').value
+    };
+    if (!dados.cliente || !dados.modelo) { alert('Preencha o Nome do Cliente e o Modelo.'); return; }
+
+    try {
+        await osApiPost({ acao: 'ATUALIZAR_CADASTRO', ...dados });
+        const item = _osListaCompleta.find(o => o.codigo === codigo);
+        if (item) Object.assign(item, dados);
+        if (_osEditTrAtual && item) osAtualizarLinha(_osEditTrAtual, item, true);
+        mostrarToast('Cadastro da O.S. atualizado!');
+        osFecharModalEditar();
+    } catch (e) {
+        mostrarToast('Não deu pra salvar: ' + e.message, 'erro');
+    }
 }
 
 function osMenuAcaoExcluir() {
