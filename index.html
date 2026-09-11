@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260911121819">
+    <meta name="app-build" content="20260911124951">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2292,6 +2292,12 @@ body.modo-claro .main-content {
             font-weight: 700; padding: 5px 10px;
         }
         #modalSorteioSugestoes .st-btn-usar:hover { filter: brightness(1.1); }
+        #modalSorteioSugestoes .st-origem-badge {
+            font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 5px; margin-right: 3px; display:inline-block;
+            background: rgba(148,163,184,0.15); color: var(--text-muted); border: 1px solid var(--border-color);
+        }
+        #modalSorteioSugestoes .st-origem-badge.crm { background: rgba(52,152,219,0.15); color: #3498db; border-color: rgba(52,152,219,0.3); }
+        #modalSorteioSugestoes .st-origem-badge.os { background: rgba(155,89,182,0.15); color: #9b59b6; border-color: rgba(155,89,182,0.3); }
 
         /* ==========================================
            ABA CLIENTES — ícones SVG próprios (sem emoji), dash de totais
@@ -4026,13 +4032,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         <h3 style="margin:0; color: var(--primary); font-size:1.1rem; letter-spacing:normal; display:flex;align-items:center;gap:8px;"><i data-lucide="sparkles" style="width:17px;height:17px;"></i> Sugestão de Clientes para o Sorteio</h3>
                         <button onclick="sorteioFecharModalSugestoes()" style="display:inline-flex;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
                     </div>
-                    <p class="st-sugestao-info">Clientes que já compraram (cadastrados em Vendas/CRM) mas ainda não receberam nenhum cupom. A ordem leva em conta o valor gasto e a data da compra — quem gastou mais e comprou mais recentemente aparece primeiro.</p>
+                    <p class="st-sugestao-info">Clientes que já compraram (Vendas/CRM ou O.S.) mas ainda não receberam nenhum cupom. A ordem leva em conta o valor gasto e a data da compra — quem gastou mais e comprou mais recentemente aparece primeiro.</p>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <label for="sorteioSugestoesFiltroMes" style="font-size:12px;color:var(--text-muted);white-space:nowrap;">Filtrar por mês:</label>
+                        <select id="sorteioSugestoesFiltroMes" onchange="sorteioFiltrarSugestoesPorMes()" style="flex:0 0 auto;padding:7px 10px;border-radius:7px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-main);font-size:12.5px;">
+                            <option value="">Todos os meses</option>
+                        </select>
+                    </div>
                     <div class="st-table-box">
                         <table class="st-table">
                             <thead>
                                 <tr>
                                     <th>Cliente</th>
                                     <th>Telefone</th>
+                                    <th>Origem</th>
                                     <th>Valor Gasto</th>
                                     <th>Última Compra</th>
                                     <th>Relevância</th>
@@ -4040,7 +4053,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                 </tr>
                             </thead>
                             <tbody id="sorteioSugestoesLinhas">
-                                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando sugestões...</td></tr>
+                                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando sugestões...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -10812,11 +10825,16 @@ function sorteioRenderizarClientes(lista) {
 }
 
 // ------------------------------------------------------------------
-// SUGESTÃO DE CLIENTES: cruza quem já comprou (crm_clientes) com quem já recebeu
-// cupom (sorteio_lotes) pelo telefone, e sugere quem comprou mas ainda não entrou
+// SUGESTÃO DE CLIENTES: cruza quem já comprou (crm_clientes e ordens_servico) com quem já
+// recebeu cupom (sorteio_lotes) pelo telefone, e sugere quem comprou mas ainda não entrou
 // no sorteio — ordenado por uma pontuação que combina valor gasto e recência da compra.
+// Guarda as compras "cruas" (uma linha por venda/O.S.) em _sorteioSugComprasCruas pra poder
+// refiltrar por mês sem precisar buscar tudo de novo no Supabase.
 // ------------------------------------------------------------------
 function sorteioSoDigitos(v) { return String(v || '').replace(/\D/g, ''); }
+
+let _sorteioSugComprasCruas = [];
+let _sorteioSugTelefonesNoSorteio = new Set();
 
 function sorteioAbrirModalSugestoes() {
     document.getElementById('modalSorteioSugestoes').classList.add('ativo');
@@ -10829,7 +10847,7 @@ function sorteioFecharModalSugestoes() {
 
 async function sorteioCarregarSugestoes() {
     const tbody = document.getElementById('sorteioSugestoesLinhas');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando sugestões...</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando sugestões...</td></tr>`;
     try {
         await carregarLojas();
         const filtroLoja = lojaIdParaFiltro();
@@ -10839,57 +10857,100 @@ async function sorteioCarregarSugestoes() {
         if (filtroLoja) queryLotes = queryLotes.eq('loja_id', filtroLoja);
         const { data: lotes, error: erroLotes } = await medirPromise('Sorteio Sugestões (lotes)', () => queryLotes);
         if (erroLotes) throw new Error(erroLotes.message);
-        const telefonesNoSorteio = new Set((lotes || []).map(l => sorteioSoDigitos(l.telefone)).filter(Boolean));
+        _sorteioSugTelefonesNoSorteio = new Set((lotes || []).map(l => sorteioSoDigitos(l.telefone)).filter(Boolean));
 
-        // Vendas cadastradas no CRM (fonte de valor gasto e data de compra)
-        let queryCrm = supabaseDB.from('crm_clientes').select('nome, telefone, valor_aparelho, valor_pagamento, valor_pagamento_2, data_compra');
+        // Vendas cadastradas no CRM
+        let queryCrm = supabaseDB.from('crm_clientes').select('nome, telefone, valor_aparelho, data_compra');
         if (filtroLoja) queryCrm = queryCrm.eq('loja_id', filtroLoja);
-        const { data: vendas, error: erroCrm } = await medirPromise('Sorteio Sugestões (CRM)', () => queryCrm);
+        const pCrm = medirPromise('Sorteio Sugestões (CRM)', () => queryCrm);
+
+        // Ordens de Serviço (outra fonte de compra/gasto do cliente)
+        let queryOs = supabaseDB.from('ordens_servico').select('cliente, telefone, total, data');
+        if (filtroLoja) queryOs = queryOs.eq('loja_id', filtroLoja);
+        const pOs = medirPromise('Sorteio Sugestões (O.S.)', () => queryOs);
+
+        const [{ data: vendas, error: erroCrm }, { data: osList, error: erroOs }] = await Promise.all([pCrm, pOs]);
         if (erroCrm) throw new Error(erroCrm.message);
+        if (erroOs) throw new Error(erroOs.message);
 
-        // Agrega por telefone: soma o valor gasto em todas as compras e guarda a mais recente
-        const porTelefone = new Map();
+        // Normaliza as duas fontes num formato só: { nome, telefone, valor, dataISO, origem }
+        const compras = [];
         (vendas || []).forEach(v => {
-            const tel = sorteioSoDigitos(v.telefone);
-            if (!tel) return; // sem telefone não dá pra cruzar com segurança
-            const valor = (parseFloat(v.valor_aparelho) || 0);
-            const atual = porTelefone.get(tel) || { nome: v.nome, telefone: v.telefone, valorGasto: 0, ultimaCompraISO: null };
-            atual.valorGasto += valor;
-            if (!atual.ultimaCompraISO || (v.data_compra || '') > atual.ultimaCompraISO) {
-                atual.ultimaCompraISO = v.data_compra || atual.ultimaCompraISO;
-                atual.nome = v.nome || atual.nome;
-                atual.telefone = v.telefone || atual.telefone;
-            }
-            porTelefone.set(tel, atual);
+            if (!sorteioSoDigitos(v.telefone)) return;
+            compras.push({ nome: v.nome, telefone: v.telefone, valor: parseFloat(v.valor_aparelho) || 0, dataISO: (v.data_compra || '').slice(0, 10), origem: 'CRM' });
+        });
+        (osList || []).forEach(o => {
+            if (!sorteioSoDigitos(o.telefone)) return;
+            compras.push({ nome: o.cliente, telefone: o.telefone, valor: parseFloat(o.total) || 0, dataISO: (o.data || '').slice(0, 10), origem: 'OS' });
         });
 
-        // Só quem comprou e ainda não tem cupom nenhum
-        let candidatos = Array.from(porTelefone.values()).filter(c => !telefonesNoSorteio.has(c.telefone ? sorteioSoDigitos(c.telefone) : ''));
-        candidatos = candidatos.filter(c => c.nome); // descarta lixo sem nome
-
-        if (!candidatos.length) {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Nenhuma sugestão no momento — todo mundo que comprou já está no sorteio.</td></tr>`;
-            return;
-        }
-
-        // Pontuação: 70% valor gasto (normalizado pelo maior valor da lista) + 30% recência
-        // (compras de até ~12 meses pontuam mais; mais antigas que isso vão zerando aos poucos).
-        const hoje = new Date();
-        const maiorValor = Math.max(...candidatos.map(c => c.valorGasto), 1);
-        candidatos.forEach(c => {
-            const diasDesde = c.ultimaCompraISO ? Math.max(0, Math.floor((hoje - new Date(c.ultimaCompraISO)) / 86400000)) : 9999;
-            const recencia = Math.max(0, 1 - diasDesde / 365);
-            const valorNorm = c.valorGasto / maiorValor;
-            c.diasDesde = diasDesde;
-            c.pontuacao = (0.7 * valorNorm) + (0.3 * recencia);
-        });
-        candidatos.sort((a, b) => b.pontuacao - a.pontuacao);
-
-        sorteioRenderizarSugestoes(candidatos);
+        _sorteioSugComprasCruas = compras;
+        sorteioPopularFiltroMesSugestoes();
+        sorteioFiltrarSugestoesPorMes();
     } catch (e) {
         console.error('Erro ao carregar sugestões do sorteio:', e);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#f87171;padding:20px;">Erro ao carregar sugestões.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#f87171;padding:20px;">Erro ao carregar sugestões.</td></tr>`;
     }
+}
+
+// Popula o <select> de mês com os meses (AAAA-MM) presentes nas compras carregadas
+function sorteioPopularFiltroMesSugestoes() {
+    const sel = document.getElementById('sorteioSugestoesFiltroMes');
+    if (!sel) return;
+    const valorAtual = sel.value;
+    const meses = new Set();
+    _sorteioSugComprasCruas.forEach(c => { if (c.dataISO && c.dataISO.length >= 7) meses.add(c.dataISO.slice(0, 7)); });
+    const ordenados = Array.from(meses).sort((a, b) => b.localeCompare(a));
+    sel.innerHTML = '<option value="">Todos os meses</option>' + ordenados.map(am => `<option value="${am}">${osFormatarAnoMes(am)}</option>`).join('');
+    if (ordenados.includes(valorAtual)) sel.value = valorAtual;
+}
+
+// Reprocessa a lista de sugestões a partir do cache local (_sorteioSugComprasCruas),
+// aplicando o mês escolhido no filtro — sem precisar buscar tudo de novo no Supabase.
+function sorteioFiltrarSugestoesPorMes() {
+    const tbody = document.getElementById('sorteioSugestoesLinhas');
+    const selMes = document.getElementById('sorteioSugestoesFiltroMes');
+    const mesFiltro = selMes ? selMes.value : '';
+
+    const compras = mesFiltro
+        ? _sorteioSugComprasCruas.filter(c => c.dataISO.slice(0, 7) === mesFiltro)
+        : _sorteioSugComprasCruas;
+
+    const porTelefone = new Map();
+    compras.forEach(c => {
+        const tel = sorteioSoDigitos(c.telefone);
+        const atual = porTelefone.get(tel) || { nome: c.nome, telefone: c.telefone, valorGasto: 0, ultimaCompraISO: null, origens: new Set() };
+        atual.valorGasto += c.valor;
+        atual.origens.add(c.origem);
+        if (!atual.ultimaCompraISO || (c.dataISO || '') > atual.ultimaCompraISO) {
+            atual.ultimaCompraISO = c.dataISO || atual.ultimaCompraISO;
+            atual.nome = c.nome || atual.nome;
+            atual.telefone = c.telefone || atual.telefone;
+        }
+        porTelefone.set(tel, atual);
+    });
+
+    let candidatos = Array.from(porTelefone.values()).filter(c => !_sorteioSugTelefonesNoSorteio.has(sorteioSoDigitos(c.telefone)));
+    candidatos = candidatos.filter(c => c.nome); // descarta lixo sem nome
+
+    if (!candidatos.length) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">${mesFiltro ? 'Nenhuma sugestão para o mês escolhido.' : 'Nenhuma sugestão no momento — todo mundo que comprou já está no sorteio.'}</td></tr>`;
+        return;
+    }
+
+    // Pontuação: 70% valor gasto (normalizado pelo maior valor da lista) + 30% recência
+    // (compras de até ~12 meses pontuam mais; mais antigas que isso vão zerando aos poucos).
+    const hoje = new Date();
+    const maiorValor = Math.max(...candidatos.map(c => c.valorGasto), 1);
+    candidatos.forEach(c => {
+        const diasDesde = c.ultimaCompraISO ? Math.max(0, Math.floor((hoje - new Date(c.ultimaCompraISO)) / 86400000)) : 9999;
+        const recencia = Math.max(0, 1 - diasDesde / 365);
+        const valorNorm = c.valorGasto / maiorValor;
+        c.pontuacao = (0.7 * valorNorm) + (0.3 * recencia);
+    });
+    candidatos.sort((a, b) => b.pontuacao - a.pontuacao);
+
+    sorteioRenderizarSugestoes(candidatos);
 }
 
 function sorteioRenderizarSugestoes(lista) {
@@ -10901,10 +10962,13 @@ function sorteioRenderizarSugestoes(lista) {
         const labelScore = c.pontuacao >= 0.6 ? 'Alta' : (c.pontuacao >= 0.3 ? 'Média' : 'Baixa');
         const nomeSeguro = String(c.nome || '').replace(/'/g, "\\'");
         const telSeguro = String(c.telefone || '').replace(/'/g, "\\'");
+        const badgesOrigem = ['CRM', 'OS'].filter(o => c.origens.has(o))
+            .map(o => `<span class="st-origem-badge ${o.toLowerCase()}">${o === 'OS' ? 'O.S.' : 'CRM'}</span>`).join('');
         return `
             <tr>
                 <td style="font-weight:600;color:var(--text-main);">${c.nome || '-'}</td>
                 <td style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:12px;">${c.telefone || '-'}</td>
+                <td>${badgesOrigem}</td>
                 <td class="ep-mono">${epLikeMoeda(c.valorGasto)}</td>
                 <td style="color:var(--text-muted);font-size:12px;">${dataFmt}</td>
                 <td><span class="st-sugestao-score ${classeScore}">${labelScore}</span></td>
