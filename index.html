@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260911015042">
+    <meta name="app-build" content="20260911121819">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2272,6 +2272,26 @@ body.modo-claro .main-content {
         }
         body.modo-claro #menu-sorteio .st-reimprimir-btn { color: var(--st-vermelho-forte); border-color: var(--st-vermelho-forte); }
         #menu-sorteio .st-reimprimir-btn:hover { background: rgba(194,58,46,0.1); }
+        #menu-sorteio .st-btn-sugestao {
+            background: none; border: 1.5px solid var(--st-dourado); color: var(--st-dourado); border-radius: 7px;
+            cursor: pointer; font-size: 12.5px; font-weight: 700; padding: 7px 12px; display:inline-flex; align-items:center; gap:6px;
+        }
+        #menu-sorteio .st-btn-sugestao:hover { background: rgba(212,175,55,0.1); }
+
+        /* Modal de Sugestão de Clientes para o Sorteio */
+        #modalSorteioSugestoes .modal-box { width: 720px; max-width: 94vw; max-height: 88vh; overflow-y: auto; text-align: left; padding: 28px; }
+        #modalSorteioSugestoes .st-sugestao-info { font-size: 12px; color: var(--text-muted); margin: -6px 0 16px; line-height: 1.5; }
+        #modalSorteioSugestoes .st-sugestao-score {
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 20px;
+        }
+        #modalSorteioSugestoes .st-sugestao-score.alta { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        #modalSorteioSugestoes .st-sugestao-score.media { background: rgba(212,175,55,0.15); color: var(--st-dourado); }
+        #modalSorteioSugestoes .st-sugestao-score.baixa { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+        #modalSorteioSugestoes .st-btn-usar {
+            background: var(--st-vermelho); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;
+            font-weight: 700; padding: 5px 10px;
+        }
+        #modalSorteioSugestoes .st-btn-usar:hover { filter: brightness(1.1); }
 
         /* ==========================================
            ABA CLIENTES — ícones SVG próprios (sem emoji), dash de totais
@@ -3417,19 +3437,6 @@ body.modo-claro .main-content {
                     <button class="action-btn" onclick="salvarAvaliacao()" style="margin-top: 20px; padding: 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="save" style="width:13px;height:13px;vertical-align:-2px;"></i> Atualizar iPhone</button>
                 </div>
 
-                <div class="form-grid" style="gap: 20px;">
-                    <div style="background: rgba(230, 126, 34, 0.1); padding: 20px; border-radius: 12px; border: 1px dashed rgba(230, 126, 34, 0.4);">
-                        <label style="color: #e67e22; margin-top:0;">Backup Completo (Ambos os Bancos)</label>
-                        <button class="action-btn" onclick="exportarBackupFull()" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); margin-top: 10px; padding: 12px; font-size: 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="download" style="width:13px;height:13px;vertical-align:-2px;"></i> Baixar Backup (.JSON)</button>
-                        <input type="file" id="importArquivo" accept=".json" onchange="importarBackupFull()" style="margin-top: 10px; padding: 10px; font-size: 12px; background: rgba(0,0,0,0.5);">
-                    </div>
-                    <div style="background: rgba(46, 204, 113, 0.1); padding: 20px; border-radius: 12px; border: 1px dashed rgba(46, 204, 113, 0.4);">
-                        <label style="color: #2ecc71; margin-top:0;">Salvar Software Definitivo</label>
-                        <button class="action-btn success-btn" onclick="exportarHTML()" style="margin-top: 10px; padding: 12px; font-size: 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="download" style="width:13px;height:13px;vertical-align:-2px;"></i> Baixar Arquivo Fonte (.HTML)</button>
-                        <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.4;">Ao baixar este arquivo, ele já conterá todos os dados inseridos em ambos os módulos.</p>
-                    </div>
-                </div>
-
                 <div class="admin-section" style="border-color: #9b59b6; margin-top: 30px;">
                     <h3 class="sub-title" style="color: #9b59b6;"><i data-lucide="printer" style="width:13px;height:13px;vertical-align:-2px;"></i> Editor de Layout dos Documentos PDF</h3>
                     <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Personalize cada documento separadamente. O preview atualiza em tempo real.</p>
@@ -3988,7 +3995,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <div class="st-clientes-wrap">
                     <div class="st-clientes-head">
                         <h3 style="display:flex;align-items:center;gap:8px;"><i data-lucide="book-open" style="width:16px;height:16px;vertical-align:-2px;"></i> Clientes Cadastrados</h3>
-                        <span id="sorteioClientesLoadingStatus" style="display:none;">Carregando...</span>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span id="sorteioClientesLoadingStatus" style="display:none;">Carregando...</span>
+                            <button type="button" class="st-btn-sugestao" onclick="sorteioAbrirModalSugestoes()"><i data-lucide="sparkles" style="width:13px;height:13px;"></i> Sugestão de Clientes</button>
+                        </div>
                     </div>
                     <input type="text" id="sorteioPesquisaClientes" placeholder="Pesquisar cliente..." oninput="sorteioFiltrarClientes()">
                     <div class="st-table-box">
@@ -4004,6 +4014,33 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             </thead>
                             <tbody id="sorteioClientesLinhas">
                                 <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Abra esta aba para carregar os clientes cadastrados.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modalSorteioSugestoes">
+                <div class="modal-box">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <h3 style="margin:0; color: var(--primary); font-size:1.1rem; letter-spacing:normal; display:flex;align-items:center;gap:8px;"><i data-lucide="sparkles" style="width:17px;height:17px;"></i> Sugestão de Clientes para o Sorteio</h3>
+                        <button onclick="sorteioFecharModalSugestoes()" style="display:inline-flex;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+                    </div>
+                    <p class="st-sugestao-info">Clientes que já compraram (cadastrados em Vendas/CRM) mas ainda não receberam nenhum cupom. A ordem leva em conta o valor gasto e a data da compra — quem gastou mais e comprou mais recentemente aparece primeiro.</p>
+                    <div class="st-table-box">
+                        <table class="st-table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Telefone</th>
+                                    <th>Valor Gasto</th>
+                                    <th>Última Compra</th>
+                                    <th>Relevância</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sorteioSugestoesLinhas">
+                                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando sugestões...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -7203,49 +7240,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         avalPararSincronia();
     }
 
-    function exportarBackupFull() {
-        const bkp = { avaliacao: banco };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bkp, null, 2));
-        const a = document.createElement('a'); a.href = dataStr; a.download = "BKP_COMPLETO_PRADO.json";
-        document.body.appendChild(a); a.click(); a.remove();
-    }
-
-    function importarBackupFull() {
-        const input = document.getElementById('importArquivo'); if (!input.files.length) return;
-        const file = input.files[0]; const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                let obj = JSON.parse(e.target.result);
-                const dadosImportados = obj.avaliacao ? obj.avaliacao : obj;
-                // Mesma lógica do carregarBancosLocal: mescla com os valores
-                // padrão para não perder modelos novos caso o backup seja antigo.
-                banco = Object.assign({}, bancoPadraoOriginal, dadosImportados);
-                salvarBancosLocal(); carregarDadosAdminAvaliacao();
-                mostrarToast("Backup restaurado com sucesso!", 'info');
-            } catch (err) { alert("Erro ao ler o arquivo de backup."); }
-        };
-        reader.readAsText(file);
-    }
-
-    function exportarHTML() {
-        document.getElementById("menu-admin").classList.add("hidden");
-        document.getElementById("menu-inicio").classList.remove("hidden");
-        document.getElementById("step1").classList.remove("hidden");
-
-        let htmlBase = document.documentElement.outerHTML;
-        
-        const strAvaliacao = JSON.stringify(banco);
-        
-        htmlBase = htmlBase.replace(/let banco = \{.*?\};/s, "let banco = " + strAvaliacao + ";");
-        
-        document.getElementById("menu-inicio").classList.add("hidden");
-        document.getElementById("step1").classList.add("hidden");
-        document.getElementById("menu-admin").classList.remove("hidden");
-
-        const blob = new Blob([htmlBase], {type: "text/html"});
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Sistema_Prado_Workspace.html"; a.click();
-    }
-
     function gerarPDFOrcamento() {
         const cliente = document.getElementById("oCliente").value; const modelo = document.getElementById("oModelo").value; const defeito = document.getElementById("oDefeito").value;
         if(!cliente.trim()) return alert("Nome do Cliente é obrigatório!"); if(!modelo.trim()) return alert("Modelo é obrigatório!");
@@ -8893,7 +8887,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -10815,6 +10809,125 @@ function sorteioRenderizarClientes(lista) {
             </tr>
         `;
     }).join('');
+}
+
+// ------------------------------------------------------------------
+// SUGESTÃO DE CLIENTES: cruza quem já comprou (crm_clientes) com quem já recebeu
+// cupom (sorteio_lotes) pelo telefone, e sugere quem comprou mas ainda não entrou
+// no sorteio — ordenado por uma pontuação que combina valor gasto e recência da compra.
+// ------------------------------------------------------------------
+function sorteioSoDigitos(v) { return String(v || '').replace(/\D/g, ''); }
+
+function sorteioAbrirModalSugestoes() {
+    document.getElementById('modalSorteioSugestoes').classList.add('ativo');
+    sorteioCarregarSugestoes();
+}
+
+function sorteioFecharModalSugestoes() {
+    document.getElementById('modalSorteioSugestoes').classList.remove('ativo');
+}
+
+async function sorteioCarregarSugestoes() {
+    const tbody = document.getElementById('sorteioSugestoesLinhas');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Carregando sugestões...</td></tr>`;
+    try {
+        await carregarLojas();
+        const filtroLoja = lojaIdParaFiltro();
+
+        // Telefones que já receberam cupom (qualquer lote já gerado)
+        let queryLotes = supabaseDB.from('sorteio_lotes').select('telefone');
+        if (filtroLoja) queryLotes = queryLotes.eq('loja_id', filtroLoja);
+        const { data: lotes, error: erroLotes } = await medirPromise('Sorteio Sugestões (lotes)', () => queryLotes);
+        if (erroLotes) throw new Error(erroLotes.message);
+        const telefonesNoSorteio = new Set((lotes || []).map(l => sorteioSoDigitos(l.telefone)).filter(Boolean));
+
+        // Vendas cadastradas no CRM (fonte de valor gasto e data de compra)
+        let queryCrm = supabaseDB.from('crm_clientes').select('nome, telefone, valor_aparelho, valor_pagamento, valor_pagamento_2, data_compra');
+        if (filtroLoja) queryCrm = queryCrm.eq('loja_id', filtroLoja);
+        const { data: vendas, error: erroCrm } = await medirPromise('Sorteio Sugestões (CRM)', () => queryCrm);
+        if (erroCrm) throw new Error(erroCrm.message);
+
+        // Agrega por telefone: soma o valor gasto em todas as compras e guarda a mais recente
+        const porTelefone = new Map();
+        (vendas || []).forEach(v => {
+            const tel = sorteioSoDigitos(v.telefone);
+            if (!tel) return; // sem telefone não dá pra cruzar com segurança
+            const valor = (parseFloat(v.valor_aparelho) || 0);
+            const atual = porTelefone.get(tel) || { nome: v.nome, telefone: v.telefone, valorGasto: 0, ultimaCompraISO: null };
+            atual.valorGasto += valor;
+            if (!atual.ultimaCompraISO || (v.data_compra || '') > atual.ultimaCompraISO) {
+                atual.ultimaCompraISO = v.data_compra || atual.ultimaCompraISO;
+                atual.nome = v.nome || atual.nome;
+                atual.telefone = v.telefone || atual.telefone;
+            }
+            porTelefone.set(tel, atual);
+        });
+
+        // Só quem comprou e ainda não tem cupom nenhum
+        let candidatos = Array.from(porTelefone.values()).filter(c => !telefonesNoSorteio.has(c.telefone ? sorteioSoDigitos(c.telefone) : ''));
+        candidatos = candidatos.filter(c => c.nome); // descarta lixo sem nome
+
+        if (!candidatos.length) {
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Nenhuma sugestão no momento — todo mundo que comprou já está no sorteio.</td></tr>`;
+            return;
+        }
+
+        // Pontuação: 70% valor gasto (normalizado pelo maior valor da lista) + 30% recência
+        // (compras de até ~12 meses pontuam mais; mais antigas que isso vão zerando aos poucos).
+        const hoje = new Date();
+        const maiorValor = Math.max(...candidatos.map(c => c.valorGasto), 1);
+        candidatos.forEach(c => {
+            const diasDesde = c.ultimaCompraISO ? Math.max(0, Math.floor((hoje - new Date(c.ultimaCompraISO)) / 86400000)) : 9999;
+            const recencia = Math.max(0, 1 - diasDesde / 365);
+            const valorNorm = c.valorGasto / maiorValor;
+            c.diasDesde = diasDesde;
+            c.pontuacao = (0.7 * valorNorm) + (0.3 * recencia);
+        });
+        candidatos.sort((a, b) => b.pontuacao - a.pontuacao);
+
+        sorteioRenderizarSugestoes(candidatos);
+    } catch (e) {
+        console.error('Erro ao carregar sugestões do sorteio:', e);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#f87171;padding:20px;">Erro ao carregar sugestões.</td></tr>`;
+    }
+}
+
+function sorteioRenderizarSugestoes(lista) {
+    const tbody = document.getElementById('sorteioSugestoesLinhas');
+    if (!tbody) return;
+    tbody.innerHTML = lista.map(c => {
+        const dataFmt = c.ultimaCompraISO ? new Date(c.ultimaCompraISO + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
+        const classeScore = c.pontuacao >= 0.6 ? 'alta' : (c.pontuacao >= 0.3 ? 'media' : 'baixa');
+        const labelScore = c.pontuacao >= 0.6 ? 'Alta' : (c.pontuacao >= 0.3 ? 'Média' : 'Baixa');
+        const nomeSeguro = String(c.nome || '').replace(/'/g, "\\'");
+        const telSeguro = String(c.telefone || '').replace(/'/g, "\\'");
+        return `
+            <tr>
+                <td style="font-weight:600;color:var(--text-main);">${c.nome || '-'}</td>
+                <td style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:12px;">${c.telefone || '-'}</td>
+                <td class="ep-mono">${epLikeMoeda(c.valorGasto)}</td>
+                <td style="color:var(--text-muted);font-size:12px;">${dataFmt}</td>
+                <td><span class="st-sugestao-score ${classeScore}">${labelScore}</span></td>
+                <td>
+                    <button class="st-btn-usar" onclick="sorteioUsarSugestao('${nomeSeguro}', '${telSeguro}', ${c.valorGasto})">Usar</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Preenche o formulário de "Gerar cupons" com os dados da sugestão escolhida e fecha o modal
+function sorteioUsarSugestao(nome, telefone, valorGasto) {
+    const campoNome = document.getElementById('sorteioCliente');
+    const campoTelefone = document.getElementById('sorteioTelefone');
+    const campoValor = document.getElementById('sorteioValorGasto');
+    if (campoNome) campoNome.value = nome;
+    if (campoTelefone) campoTelefone.value = telefone;
+    if (campoValor) campoValor.value = valorGasto ? valorGasto.toFixed(2) : '';
+    sorteioCalcular();
+    sorteioFecharModalSugestoes();
+    const ticket = document.querySelector('#menu-sorteio .st-ticket');
+    if (ticket) ticket.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // Atalho usado pelo botão 🔁 da lista de clientes: preenche o campo de busca e reimprime direto
