@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260912130559">
+    <meta name="app-build" content="20260912130939">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1342,69 +1342,6 @@ body.modo-claro .main-content {
         }
         .btn-resposta-defeito:hover { background: rgba(239, 68, 68, 0.12); border-color: #ef4444; transform: translateY(-2px); }
 
-        /* --- AVALIAÇÃO: painel de valores ao vivo + perguntas em lista (tudo numa tela só) ---
-           Em telas largas fica em 2 colunas (valor à esquerda, perguntas à direita);
-           em telas estreitas empilha (valor em cima, perguntas embaixo). */
-        #stepDiagnostico { max-width: 100%; }
-        /* Um card só englobando as duas colunas (valores | perguntas), com uma linha
-           divisória entre elas — assim os dois lados ficam sempre na mesma altura e
-           alinhados no topo, sem um "vazar" pra fora do outro. */
-        .aval-diag-grid {
-            display:grid; grid-template-columns: minmax(180px, 240px) 1fr; align-items: stretch; width: 100%;
-            background: #17171b; border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden;
-        }
-        body.modo-claro .aval-diag-grid { background: #ffffff; }
-        .aval-diag-grid > * { min-width: 0; } /* evita que texto longo estoure a largura da coluna e invada a vizinha */
-
-        .aval-painel-vivo {
-            position: static; width: 100%; min-width: 0;
-            border-right: 1px solid var(--border-color); padding: 18px; text-align: left;
-        }
-        .aval-painel-topo { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:14px; }
-        .aval-painel-topo span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
-        .aval-painel-topo button { flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:11px; cursor:pointer; text-decoration:underline; font-family:'Inter',sans-serif; padding:0; text-transform:none; letter-spacing:normal; }
-        .aval-painel-valores { display:flex; flex-direction:column; gap:16px; }
-        .aval-valor-bloco { text-align:center; padding: 12px 0; border-radius: 10px; background: rgba(255,255,255,0.03); }
-        body.modo-claro .aval-valor-bloco { background: rgba(0,0,0,0.04); }
-        .aval-valor-bloco .rotulo { display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px; }
-        .aval-valor-bloco .numero { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.5rem; transition: transform 0.18s ease; word-break: break-word; }
-        .aval-valor-bloco .numero.pulso { transform: scale(1.08); }
-        .aval-valor-bloco.troca .numero { color:#e05a4e; }
-        .aval-valor-bloco.venda .numero { color: var(--primary); }
-
-        .aval-perguntas-lista {
-            width:100%; text-align:left; padding: 4px 22px 4px 24px;
-        }
-        .aval-pergunta-row { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:15px 0; border-bottom:1px solid var(--border-color); }
-        .aval-pergunta-row:last-child { border-bottom:none; }
-        .aval-pergunta-row .txt { font-size:13.5px; line-height:1.4; flex:1; color:var(--text-main); }
-        .aval-pergunta-row .txt .deducao { display:block; font-size:11px; color:var(--text-muted); margin-top:2px; font-family:'JetBrains Mono',monospace; }
-        .toggle-par { display:flex; gap:8px; flex-shrink:0; margin-top: 1px; }
-        .toggle-btn {
-            border:1px solid var(--border-color); background: var(--surface-2); color: var(--text-muted);
-            border-radius:9px; padding:9px 0; font-size:12px; font-weight:600; cursor:pointer;
-            font-family:'Inter',sans-serif; transition:all 0.15s ease; white-space:nowrap;
-            width: 80px; text-align:center; margin: 0;
-        }
-        .toggle-btn.ok.ativo { background: rgba(46,204,113,0.15); border-color:#2ecc71; color:#2ecc71; }
-        .toggle-btn.defeito.ativo { background: rgba(239,68,68,0.15); border-color:#ef4444; color:#ef4444; }
-        @media (max-width: 560px) {
-            .aval-diag-grid { grid-template-columns: 1fr; }
-            .aval-painel-vivo { border-right: none; border-bottom: 1px solid var(--border-color); }
-            .aval-painel-valores { flex-direction: row; }
-            .aval-painel-valores .aval-valor-bloco { flex: 1; }
-        }
-        @media (min-width: 561px) and (max-width: 820px) {
-            .aval-valor-bloco .numero { font-size: 1.2rem; }
-            .aval-painel-vivo { padding: 14px; }
-        }
-        @media (max-width: 480px) {
-            .aval-pergunta-row { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .toggle-par { width: 100%; }
-            .toggle-btn { flex: 1; width: auto; }
-            .aval-valor-bloco .numero { font-size: 1.25rem; }
-        }
-
         /* --- UTILITÁRIOS --- */
         .hidden { display: none !important; }
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -1931,14 +1868,6 @@ body.modo-claro .main-content {
             backdrop-filter: none !important;
             box-shadow: none !important;
             overflow-y: auto;
-        }
-
-        /* --- AVALIAÇÃO: card mais largo e com menos padding lateral, pra as 2 colunas
-           (valores | perguntas) respirarem sem ficarem espremidas. Mantém o visual de
-           card (borda + cantos arredondados), só solta o aperto interno. --- */
-        body:has(#menu-inicio:not(.hidden)) .workspace-card {
-            max-width: 1150px !important;
-            padding: 32px !important;
         }
 
         /* Esconde as setinhas nativas (brancas) dos campos numéricos de Peça/Mão de
@@ -2665,7 +2594,7 @@ body.modo-claro .main-content {
                 </div>
                 <style>@keyframes girar { to { transform: rotate(360deg); } }</style>
 
-                <div id="avalHistoricoBox" style="display:none; margin:0 auto 24px; background: var(--surface-1); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 18px;">
+                <div id="avalHistoricoBox" style="display:none; background: var(--surface-1); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 18px; margin-bottom: 24px;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                         <h3 class="sub-title" style="margin:0;font-size:0.95rem;color:var(--primary);"><i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;"></i> Avaliações de Hoje</h3>
                         <button onclick="avalHistoricoLimpar()" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;">limpar</button>
@@ -2693,41 +2622,75 @@ body.modo-claro .main-content {
                     <button class="action-btn" onclick="avancarCapacidade()">Avançar</button>
                 </div>
 
-                <div id="stepDiagnostico" class="step-container hidden">
-                    <div class="aval-diag-grid">
-                        <div class="aval-painel-vivo">
-                            <div class="aval-painel-topo">
-                                <span id="avalVivoAparelho">—</span>
-                                <button type="button" onclick="avalVoltarConfig()">trocar</button>
-                            </div>
-                            <div class="aval-painel-valores">
-                                <div class="aval-valor-bloco troca">
-                                    <span class="rotulo">Custo Troca</span>
-                                    <div class="numero" id="avalVivoTroca">R$ 0,00</div>
-                                </div>
-                                <div class="aval-valor-bloco venda">
-                                    <span class="rotulo">Valor Venda</span>
-                                    <div class="numero" id="avalVivoVenda">R$ 0,00</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="avalPerguntasLista" class="aval-perguntas-lista"></div>
+                <div id="step2" class="step-container hidden">
+                    <label>A tela está em perfeito estado?</label>
+                    <select id="tela" style="display:none"><option value="Sim">Sim, Perfeita</option><option value="Não">Não (Trincos/Manchas)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('tela','Sim',3)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, perfeita</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('tela','Não',3)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Trincos/Manchas)</button>
                     </div>
+                </div>
+                
+                <div id="step3" class="step-container hidden">
+                    <label>A saúde da bateria está acima de 80%?</label>
+                    <select id="bateria" style="display:none"><option value="Sim">Sim</option><option value="Não">Não (Abaixo de 80% / Manutenção)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('bateria','Sim',4)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, acima de 80%</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('bateria','Não',4)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Abaixo de 80%)</button>
+                    </div>
+                </div>
 
-                    <!-- selects escondidos: só guardam a resposta de cada pergunta pro cálculo, igual sempre foi -->
-                    <select id="tela" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
-                    <select id="bateria" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
-                    <select id="tampa" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
-                    <select id="carcaca" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
-                    <select id="cameraT" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
-                    <select id="cameraF" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
-                    <select id="faceid" style="display:none"><option value="Sim">Sim</option><option value="Não">Não</option></select>
-                    <select id="placa" style="display:none"><option value="Não">Não</option><option value="Sim">Sim</option></select>
+                <div id="step4" class="step-container hidden">
+                    <label>O vidro traseiro está intacto?</label>
+                    <select id="tampa" style="display:none"><option value="Sim">Sim, intacto</option><option value="Não">Não (Trincado/Quebrado)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('tampa','Sim',5)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, intacto</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('tampa','Não',5)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Trincado/Quebrado)</button>
+                    </div>
+                </div>
 
-                    <div style="display:flex; gap:12px; width:100%; margin-top:18px;">
-                        <button class="action-btn secondary-btn" style="flex:0 0 auto; width:auto; margin-top:0; padding:14px 18px;" onclick="avalVoltarConfig()">◀</button>
-                        <button class="action-btn" style="flex:1; margin-top:0;" onclick="calcular()">Finalizar Avaliação</button>
+                <div id="step5" class="step-container hidden">
+                    <label>A carcaça está livre de amassados profundos?</label>
+                    <select id="carcaca" style="display:none"><option value="Sim">Sim, estrutura ok</option><option value="Não">Não (Amassada/Empenada)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('carcaca','Sim',6)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, estrutura ok</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('carcaca','Não',6)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Amassada/Empenada)</button>
+                    </div>
+                </div>
+
+                <div id="step6" class="step-container hidden">
+                    <label>O módulo de câmeras traseiras opera sem defeitos?</label>
+                    <select id="cameraT" style="display:none"><option value="Sim">Sim</option><option value="Não">Não (Tremedeira/Manchas/Foco)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('cameraT','Sim',7)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, sem defeitos</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('cameraT','Não',7)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Tremedeira/Manchas/Foco)</button>
+                    </div>
+                </div>
+
+                <div id="step7" class="step-container hidden">
+                    <label>A câmera frontal opera normalmente?</label>
+                    <select id="cameraF" style="display:none"><option value="Sim">Sim</option><option value="Não">Não (Defeito/Falha)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('cameraF','Sim',8)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, normal</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('cameraF','Não',8)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Defeito/Falha)</button>
+                    </div>
+                </div>
+
+                <div id="step8" class="step-container hidden">
+                    <label>Biometria (Face ID / Touch ID) funcional?</label>
+                    <select id="faceid" style="display:none"><option value="Sim">Sim, configura normal</option><option value="Não">Não (Erro de TrueDepth/Falha)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('faceid','Sim',9)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, funcional</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('faceid','Não',9)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Erro/Falha)</button>
+                    </div>
+                </div>
+
+                <div id="step9" class="step-container hidden">
+                    <label>Existem falhas graves na placa ou o aparelho não liga?</label>
+                    <select id="placa" style="display:none"><option value="Não">Aparelho Liga (Tudo OK)</option><option value="Sim">Sim (Não liga / Curto na Placa)</option></select>
+                    <div class="pergunta-botoes">
+                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('placa','Não','calcular')"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Aparelho Liga (Tudo OK)</button>
+                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('placa','Sim','calcular')"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não liga / Curto na Placa</button>
                     </div>
                 </div>
 
@@ -6924,116 +6887,13 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     }
 
     function next(n) {
-        ["step1","step1_5","stepDiagnostico","resultado"].forEach(id => {
+        ["step1","step1_5","step2","step3","step4","step5","step6","step7","step8","step9","resultado"].forEach(id => {
             let el = document.getElementById(id);
             if(el) { el.classList.add("hidden"); el.classList.remove("fade-in"); }
         });
         let stepId = n === 1.5 ? "step1_5" : "step" + n;
         let proximoPasso = document.getElementById(stepId);
         if(proximoPasso) { proximoPasso.classList.remove("hidden"); void proximoPasso.offsetWidth; proximoPasso.classList.add("fade-in"); }
-    }
-
-    // Cada pergunta do diagnóstico: campo (id do select escondido que guarda a
-    // resposta), a chave correspondente no "banco" de valores, o texto da
-    // pergunta e os rótulos dos dois botões. "invertido" é só a pergunta da
-    // placa, cuja opção "sem defeito" é "Não" em vez de "Sim".
-    const AVAL_PERGUNTAS = [
-        { campo:'tela',    banco:'tela', label:'A tela está em perfeito estado?', ok:'Sim, perfeita', defeito:'Trincos/Manchas' },
-        { campo:'bateria', banco:'bat',  label:'A saúde da bateria está acima de 80%?', ok:'Sim, acima de 80%', defeito:'Abaixo de 80%' },
-        { campo:'tampa',   banco:'tam',  label:'O vidro traseiro está intacto?', ok:'Sim, intacto', defeito:'Trincado/Quebrado' },
-        { campo:'carcaca', banco:'car',  label:'A carcaça está livre de amassados profundos?', ok:'Sim, estrutura ok', defeito:'Amassada/Empenada' },
-        { campo:'cameraT', banco:'ct',   label:'O módulo de câmeras traseiras opera sem defeitos?', ok:'Sim, sem defeitos', defeito:'Tremedeira/Manchas/Foco' },
-        { campo:'cameraF', banco:'cf',   label:'A câmera frontal opera normalmente?', ok:'Sim, normal', defeito:'Defeito/Falha' },
-        { campo:'faceid',  banco:'fid',  label:'Biometria (Face ID / Touch ID) funcional?', ok:'Sim, funcional', defeito:'Erro/Falha' },
-        { campo:'placa',   banco:'pla',  label:'Existem falhas graves na placa ou o aparelho não liga?', ok:'Aparelho Liga (Tudo OK)', defeito:'Não liga / Curto na Placa', invertido:true },
-    ];
-
-    function avalCampoTemDefeito(p) {
-        const el = document.getElementById(p.campo);
-        if (!el) return false;
-        return p.invertido ? el.value === 'Sim' : el.value === 'Não';
-    }
-
-    // Desenha as 8 perguntas de uma vez só (em vez de uma tela por pergunta) e
-    // já mostra quanto cada defeito desconta, usando os valores do modelo
-    // escolhido. Todo mundo começa marcado como "sem defeito".
-    function avalMontarPerguntas() {
-        const modelo = document.getElementById('modelo').value;
-        const d = banco[modelo] || {};
-        const cont = document.getElementById('avalPerguntasLista');
-        cont.innerHTML = AVAL_PERGUNTAS.map(p => {
-            const custo = d[p.banco] || 0;
-            return `
-                <div class="aval-pergunta-row">
-                    <div class="txt">${p.label}<span class="deducao">${custo > 0 ? '\u2212 R$ ' + custo.toFixed(2).replace('.', ',') + ' se tiver defeito' : 'sem impacto no valor'}</span></div>
-                    <div class="toggle-par">
-                        <button type="button" class="toggle-btn ok" id="avalBtnOk-${p.campo}" onclick="avalResponder('${p.campo}', false)">OK</button>
-                        <button type="button" class="toggle-btn defeito" id="avalBtnDefeito-${p.campo}" onclick="avalResponder('${p.campo}', true)">Defeito</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        AVAL_PERGUNTAS.forEach(p => {
-            const el = document.getElementById(p.campo);
-            if (el) el.selectedIndex = 0; // primeira opção = sempre "sem defeito"
-            avalPintarBotoes(p);
-        });
-        avalRecalcularAoVivo();
-    }
-
-    function avalPintarBotoes(p) {
-        const temDefeito = avalCampoTemDefeito(p);
-        const btnOk = document.getElementById('avalBtnOk-' + p.campo);
-        const btnDef = document.getElementById('avalBtnDefeito-' + p.campo);
-        if (btnOk) btnOk.classList.toggle('ativo', !temDefeito);
-        if (btnDef) btnDef.classList.toggle('ativo', temDefeito);
-    }
-
-    // Toque num dos dois botões da pergunta: grava a resposta no select
-    // escondido (mesmo mecanismo de sempre) e recalcula na hora, sem trocar de tela.
-    function avalResponder(campo, temDefeito) {
-        const p = AVAL_PERGUNTAS.find(x => x.campo === campo);
-        if (!p) return;
-        const el = document.getElementById(campo);
-        if (!el) return;
-        el.value = p.invertido ? (temDefeito ? 'Sim' : 'Não') : (temDefeito ? 'Não' : 'Sim');
-        avalPintarBotoes(p);
-        avalRecalcularAoVivo();
-    }
-
-    // Atualiza o painel fixo (Custo Troca / Valor Venda) toda vez que uma
-    // resposta muda — a mesma conta de calcular(), só que sem finalizar nada.
-    function avalRecalcularAoVivo() {
-        const m = document.getElementById('modelo').value;
-        const cap = document.getElementById('capacidade').value;
-        const d = banco[m];
-        if (!d) return;
-
-        let ajusteGiga = 0;
-        if (cap === '64GB') ajusteGiga = d.adj64 || 0;
-        else if (cap === '128GB') ajusteGiga = d.adj128 || 0;
-        else if (cap === '256GB') ajusteGiga = d.adj256 || 0;
-        else if (cap === '512GB') ajusteGiga = d.adj512 || 0;
-
-        let desc = 0;
-        AVAL_PERGUNTAS.forEach(p => { if (avalCampoTemDefeito(p)) desc += (d[p.banco] || 0); });
-
-        const tTroca = Math.max(0, (d.tro + ajusteGiga) - desc);
-        const tVenda = Math.max(0, (d.ven + ajusteGiga) - desc);
-
-        const elAparelho = document.getElementById('avalVivoAparelho');
-        if (elAparelho) elAparelho.textContent = m + ' · ' + cap;
-        const elTroca = document.getElementById('avalVivoTroca');
-        const elVenda = document.getElementById('avalVivoVenda');
-        if (elTroca) elTroca.textContent = 'R$ ' + tTroca.toFixed(2).replace('.', ',');
-        if (elVenda) elVenda.textContent = 'R$ ' + tVenda.toFixed(2).replace('.', ',');
-        [elTroca, elVenda].forEach(el => { if (!el) return; el.classList.add('pulso'); setTimeout(() => el.classList.remove('pulso'), 180); });
-    }
-
-    // Botão "◀" / "trocar aparelho" do diagnóstico: volta pro início (mesmo
-    // destino de sempre, escolher modelo de novo).
-    function avalVoltarConfig() {
-        next(1);
     }
 
     // Responde a pergunta do diagnóstico com um único toque: grava a
@@ -7058,8 +6918,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (modoTudoOk) {
             calcularTudoOk();
         } else {
-            avalMontarPerguntas();
-            next('Diagnostico');
+            next(2);
         }
     }
 
@@ -7090,7 +6949,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         const tTroca = Math.max(0, (d.tro + ajusteGiga) - desc);
         const tVenda = Math.max(0, (d.ven + ajusteGiga) - desc);
 
-        document.getElementById("stepDiagnostico").classList.add("hidden");
+        document.getElementById("step9").classList.add("hidden");
 
         finalizarAvaliacao(m, cap, tTroca, tVenda, listaStatus);
     }
@@ -7177,7 +7036,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     }
 
     function voltarInicio() {
-        ["step1_5","stepDiagnostico","resultado"].forEach(id => {
+        ["step1_5","step2","step3","step4","step5","step6","step7","step8","step9","resultado"].forEach(id => {
             let el = document.getElementById(id); if(el){ el.classList.add("hidden"); el.classList.remove("fade-in"); }
         });
         modoTudoOk = false;
