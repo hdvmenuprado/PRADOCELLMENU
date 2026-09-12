@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260912124059">
+    <meta name="app-build" content="20260912124736">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1923,6 +1923,11 @@ body.modo-claro .main-content {
             backdrop-filter: none !important;
             box-shadow: none !important;
             overflow-y: auto;
+        }
+
+        /* --- AVALIAÇÃO: janela um pouco mais larga pra caber as 2 colunas com folga --- */
+        body:has(#menu-inicio:not(.hidden)) .workspace-card {
+            max-width: 920px !important;
         }
 
         /* Esconde as setinhas nativas (brancas) dos campos numéricos de Peça/Mão de
