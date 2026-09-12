@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260912121509">
+    <meta name="app-build" content="20260912124059">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1347,19 +1347,21 @@ body.modo-claro .main-content {
            em telas estreitas empilha (valor em cima, perguntas embaixo). */
         #stepDiagnostico { max-width: 900px; }
         .aval-diag-grid { display:grid; grid-template-columns: 240px 1fr; gap: 20px; align-items: start; width: 100%; }
+        .aval-diag-grid > * { min-width: 0; } /* evita que o conteúdo (texto longo) estoure a largura da coluna e invada a coluna vizinha */
 
         .aval-painel-vivo {
-            position: static; z-index: 3; width: 100%;
+            position: static; z-index: 3; width: 100%; min-width: 0;
             background: #17171b; border: 1px solid var(--border-highlight); border-radius: 16px;
             padding: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.35); text-align: left;
         }
         body.modo-claro .aval-painel-vivo { background: #ffffff; }
-        .aval-painel-topo { display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:14px; }
-        .aval-painel-topo button { background:none; border:none; color:var(--text-muted); font-size:11px; cursor:pointer; text-decoration:underline; font-family:'Inter',sans-serif; padding:0; text-transform:none; letter-spacing:normal; }
+        .aval-painel-topo { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:14px; }
+        .aval-painel-topo span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+        .aval-painel-topo button { flex-shrink:0; background:none; border:none; color:var(--text-muted); font-size:11px; cursor:pointer; text-decoration:underline; font-family:'Inter',sans-serif; padding:0; text-transform:none; letter-spacing:normal; }
         .aval-painel-valores { display:flex; flex-direction:column; gap:16px; }
         .aval-valor-bloco { text-align:center; padding: 10px 0; border-radius: 10px; background: rgba(255,255,255,0.03); }
         .aval-valor-bloco .rotulo { display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px; }
-        .aval-valor-bloco .numero { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.5rem; transition: transform 0.18s ease; }
+        .aval-valor-bloco .numero { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.5rem; transition: transform 0.18s ease; word-break: break-word; }
         .aval-valor-bloco .numero.pulso { transform: scale(1.08); }
         .aval-valor-bloco.troca .numero { color:#e05a4e; }
         .aval-valor-bloco.venda .numero { color: var(--primary); }
