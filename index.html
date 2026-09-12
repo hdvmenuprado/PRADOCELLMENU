@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260912130219">
+    <meta name="app-build" content="20260912130559">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1345,12 +1345,12 @@ body.modo-claro .main-content {
         /* --- AVALIAÇÃO: painel de valores ao vivo + perguntas em lista (tudo numa tela só) ---
            Em telas largas fica em 2 colunas (valor à esquerda, perguntas à direita);
            em telas estreitas empilha (valor em cima, perguntas embaixo). */
-        #stepDiagnostico { max-width: 900px; }
+        #stepDiagnostico { max-width: 100%; }
         /* Um card só englobando as duas colunas (valores | perguntas), com uma linha
            divisória entre elas — assim os dois lados ficam sempre na mesma altura e
            alinhados no topo, sem um "vazar" pra fora do outro. */
         .aval-diag-grid {
-            display:grid; grid-template-columns: minmax(150px, 200px) 1fr; align-items: stretch; width: 100%;
+            display:grid; grid-template-columns: minmax(180px, 240px) 1fr; align-items: stretch; width: 100%;
             background: #17171b; border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden;
         }
         body.modo-claro .aval-diag-grid { background: #ffffff; }
@@ -1379,12 +1379,12 @@ body.modo-claro .main-content {
         .aval-pergunta-row:last-child { border-bottom:none; }
         .aval-pergunta-row .txt { font-size:13.5px; line-height:1.4; flex:1; color:var(--text-main); }
         .aval-pergunta-row .txt .deducao { display:block; font-size:11px; color:var(--text-muted); margin-top:2px; font-family:'JetBrains Mono',monospace; }
-        .toggle-par { display:flex; gap:6px; flex-shrink:0; margin-top: 1px; }
+        .toggle-par { display:flex; gap:8px; flex-shrink:0; margin-top: 1px; }
         .toggle-btn {
             border:1px solid var(--border-color); background: var(--surface-2); color: var(--text-muted);
             border-radius:9px; padding:9px 0; font-size:12px; font-weight:600; cursor:pointer;
             font-family:'Inter',sans-serif; transition:all 0.15s ease; white-space:nowrap;
-            width: 68px; text-align:center; margin: 0;
+            width: 80px; text-align:center; margin: 0;
         }
         .toggle-btn.ok.ativo { background: rgba(46,204,113,0.15); border-color:#2ecc71; color:#2ecc71; }
         .toggle-btn.defeito.ativo { background: rgba(239,68,68,0.15); border-color:#ef4444; color:#ef4444; }
@@ -1933,9 +1933,12 @@ body.modo-claro .main-content {
             overflow-y: auto;
         }
 
-        /* --- AVALIAÇÃO: janela um pouco mais larga pra caber as 2 colunas com folga --- */
+        /* --- AVALIAÇÃO: card mais largo e com menos padding lateral, pra as 2 colunas
+           (valores | perguntas) respirarem sem ficarem espremidas. Mantém o visual de
+           card (borda + cantos arredondados), só solta o aperto interno. --- */
         body:has(#menu-inicio:not(.hidden)) .workspace-card {
-            max-width: 920px !important;
+            max-width: 1150px !important;
+            padding: 32px !important;
         }
 
         /* Esconde as setinhas nativas (brancas) dos campos numéricos de Peça/Mão de
@@ -2662,7 +2665,7 @@ body.modo-claro .main-content {
                 </div>
                 <style>@keyframes girar { to { transform: rotate(360deg); } }</style>
 
-                <div id="avalHistoricoBox" style="display:none; max-width:900px; margin:0 auto 24px; background: var(--surface-1); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 18px;">
+                <div id="avalHistoricoBox" style="display:none; margin:0 auto 24px; background: var(--surface-1); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 18px;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                         <h3 class="sub-title" style="margin:0;font-size:0.95rem;color:var(--primary);"><i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;"></i> Avaliações de Hoje</h3>
                         <button onclick="avalHistoricoLimpar()" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;">limpar</button>
