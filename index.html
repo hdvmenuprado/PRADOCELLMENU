@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260912130939">
+    <meta name="app-build" content="20260913193344">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1502,6 +1502,7 @@ body.modo-claro .main-content {
         .mini-cupom .mc-ass-linha { border-top:1px solid #000; width:80%; margin:0 auto 2px; }
         .mini-cupom .mc-avaliacao { display:flex; align-items:center; justify-content:center; gap:5px; margin:3px 0; }
         .mini-cupom .mc-qrcode-img { width:24px; height:24px; object-fit:contain; flex-shrink:0; }
+        .mini-cupom .mc-logo-aval { width:19px; height:19px; object-fit:contain; flex-shrink:0; }
         .mini-cupom .mc-avaliacao span { font-size:7px; font-weight:700; text-transform:uppercase; }
         .mini-cupom .mc-acompanhar { display:flex; align-items:center; justify-content:center; gap:5px; margin:3px 0; }
         .mini-cupom .mc-acompanhar span { font-size:7px; font-weight:700; text-transform:uppercase; }
@@ -10894,7 +10895,7 @@ function montarHtmlCupom(os, paraPreview) {
         ${sep}
         <div class="mc-acompanhar"><img src="qrcode-status.png" class="mc-qrcode-img" alt="QR Code para acompanhar o reparo"><span>Acompanhe o status<br>do seu reparo aqui</span></div>
         ${sep}
-        <div class="mc-avaliacao"><img src="qrcodeava.jpeg" class="mc-qrcode-img" alt="QR Code Google"><span>Avalie-nos no Google</span></div>
+        <div class="mc-avaliacao"><img src="qrcodeava.jpeg" class="mc-qrcode-img" alt="QR Code Google"><span>Avalie-nos no Google</span><img src="logo-avaliacao.png" class="mc-logo-aval" alt="Logo"></div>
         ${sep}
         <div class="mc-rodape">${escapeHTML(cu.rodape)}</div>
     </div></div>`;
@@ -10949,7 +10950,7 @@ function montarViaCupom(os, via) {
         ${!ehLoja ? `${sep}<div class="cupom-label">TERMOS</div><div class="cupom-termos">${termos}</div>` : ''}
         ${mostrarAss ? `<div class="cupom-declaracao">Declaro que li e concordo com os termos.</div><div class="cupom-assinatura"><div class="cupom-ass-linha"></div>Assinatura do Cliente</div>` : ''}
         ${via === 'CLIENTE' ? `${sep}<div class="cupom-acompanhar"><img src="qrcode-status.png" class="cupom-qrcode-img" alt="QR Code para acompanhar o reparo"><span>Acompanhe o status<br>do seu reparo aqui</span></div>` : ''}
-        ${via === 'CLIENTE' ? `${sep}<div class="cupom-avaliacao"><img src="qrcodeava.jpeg" class="cupom-qrcode-img" alt="QR Code Google"><span>Avalie-nos<br>no Google</span></div>` : ''}
+        ${via === 'CLIENTE' ? `${sep}<div class="cupom-avaliacao"><img src="qrcodeava.jpeg" class="cupom-qrcode-img" alt="QR Code Google"><span>Avalie-nos<br>no Google</span><img src="logo-avaliacao.png" class="cupom-logo-aval" alt="Logo"></div>` : ''}
         ${sep}
         <div class="cupom-rodape">${escapeHTML(cu.rodape)}${os.vendedor ? ` • Vend: ${escapeHTML(os.vendedor)}` : ''}</div>
     </div>`;
@@ -10994,6 +10995,7 @@ function abrirCupomImpressao(os) {
         .cupom-ass-linha{ border-top:2px solid #000; width:80%; margin:0 auto 1.5mm; }
         .cupom-avaliacao{ display:flex; align-items:center; justify-content:center; gap:2.5mm; margin:1.5mm 0; }
         .cupom-qrcode-img{ width:14mm; height:14mm; object-fit:contain; flex-shrink:0; }
+        .cupom-logo-aval{ width:11mm; height:11mm; object-fit:contain; flex-shrink:0; }
         .cupom-avaliacao span{ font-size:9pt; font-weight:900; text-transform:uppercase; line-height:1.2; }
         .cupom-acompanhar{ display:flex; align-items:center; justify-content:center; gap:2.5mm; margin:1.5mm 0; }
         .cupom-acompanhar span{ font-size:9pt; font-weight:900; text-transform:uppercase; line-height:1.2; }
