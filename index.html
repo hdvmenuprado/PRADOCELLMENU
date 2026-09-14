@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260914131934">
+    <meta name="app-build" content="20260914173734">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -9941,7 +9941,7 @@ function osCriarLinha(os) {
             </select>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);text-align:center;white-space:nowrap;">
-            <button onclick="osGerarCupom(this)" title="Gerar cupom de O.S." style="background:none;border:none;color:#a78bfa;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
+            <button onclick="osGerarCupom(this)" title="Cupom de finalização (entrega do aparelho)" style="background:none;border:none;color:#a78bfa;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
             <button onclick="osAbrirFotos(this)" title="Fotos do aparelho" style="background:none;border:none;color:#38bdf8;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
             <button class="osSalvarBtn" onclick="osAtualizarValores(this)" title="Salvar alterações (reparo, peça, mão de obra)" style="background:none;border:none;color:#4ade80;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
             <button class="osBtnMaisOpcoes" onclick="osAbrirMenuPontinhos(this)" title="Mais opções" style="position:relative;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;">
@@ -10508,7 +10508,7 @@ function osSalvar(imprimirCupom) {
     if (document.getElementById('osPesquisa')) document.getElementById('osPesquisa').value = '';
     osPopularFiltroMes();
     osFiltrarTabela();
-    if (imprimirCupom) abrirCupomImpressao(dados);
+    if (imprimirCupom) abrirCupomImpressao(dados, 'entrada');
     ['osCliente','osTelefone','osModelo','osDescricao','osReparo','osVendedor'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('osOrigem').value='';
     document.getElementById('osEstadoAparelho').value='';
@@ -11079,7 +11079,10 @@ function osGerarCupom(btn) {
         total: tr.dataset.total,
         status: tr.querySelector('.osStatusSelect') ? tr.querySelector('.osStatusSelect').value : (tr.dataset.status || '')
     };
-    abrirCupomImpressao(os);
+    // Botão da impressora na linha da O.S. = cupom de FINALIZAÇÃO (entrega do aparelho).
+    // Como ele só existe em linhas de O.S. já cadastradas, esse cupom nunca sai antes de
+    // o cadastro existir — que é a regra desse tipo de cupom.
+    abrirCupomImpressao(os, 'finalizacao');
 }
 
 // Calcula a data de término da garantia a partir de hoje, usando os dias informados na O.S.
@@ -11126,8 +11129,6 @@ function montarHtmlCupom(os, paraPreview) {
     const total = parseFloat(os.total||0).toFixed(2).replace('.', ',');
     const dataFmt = osFormatarData(os.data||'') || new Date().toLocaleDateString('pt-BR');
     const horaFmt = osFormatarHoraEntrada(os.criadoEm);
-    const diasGarantia = (os.garantiaDias !== undefined && os.garantiaDias !== '' && os.garantiaDias !== null) ? parseInt(os.garantiaDias, 10) : 90;
-    const dataGarantia = osCalcularDataGarantia(diasGarantia);
     const logoSrc = 'logocupom.png';
     const mostrarLogo = cu.mostrarLogo !== false;
     const sep = '<div class="mc-sep">— — — — — — — — — — — —</div>';
@@ -11154,7 +11155,6 @@ function montarHtmlCupom(os, paraPreview) {
         <div class="mc-campo"><b>Cliente:</b> ${escapeHTML(os.cliente) || 'João da Silva'}${mostrarTelCliente ? ` — ${escapeHTML(os.telefone) || '(45) 99999-9999'}` : ''}</div>
         <div class="mc-campo"><b>Aparelho:</b> ${escapeHTML(os.modelo) || 'iPhone 14 Pro Max'}${os.estadoAparelho ? ` (${escapeHTML(os.estadoAparelho)})` : ''}</div>
         <div class="mc-campo"><b>Status:</b> ${escapeHTML(os.status) || 'Orçando'}</div>
-        <div class="mc-garantia">${diasGarantia > 0 ? `GARANTIA ATÉ ${dataGarantia} (${osFormatarGarantiaTexto(diasGarantia)})` : 'SEM GARANTIA'}<br><span class="mc-garantia-obs">Não cobre tela com riscos ou trincos</span></div>
         ${sep}
         <div class="mc-label">DESCRIÇÃO DO DEFEITO</div>
         <div class="mc-texto">${escapeHTML(os.descricao) || '-'}</div>
@@ -11177,22 +11177,33 @@ function montarHtmlCupom(os, paraPreview) {
     </div></div>`;
 }
 
-// Monta o HTML de UMA via do cupom (LOJA ou CLIENTE). A via do CLIENTE traz tudo (inclusive
-// termos), pois é o comprovante que ele leva. A via da LOJA é compacta e sem o bloco de
-// termos (fica só o essencial pro controle interno), economizando papel.
-function montarViaCupom(os, via) {
+// Monta o HTML de UMA via do cupom (LOJA ou CLIENTE), em dois tipos:
+//   'entrada'     → impresso no cadastro da O.S.: termos, valores e assinatura, com os dois
+//                   QR codes. NÃO leva bloco de garantia (na entrada o prazo ainda não corre).
+//   'finalizacao' → impresso na entrega do aparelho, pelo botão da impressora na linha da O.S.
+//                   (por isso só existe quando o cadastro já existe): leva a garantia e a hora
+//                   da entrega, sem termos e sem o QR de acompanhamento de status — quem já
+//                   está retirando o aparelho não precisa acompanhar reparo.
+// A via da LOJA é compacta em ambos os casos, pra economizar papel.
+function montarViaCupom(os, via, tipo) {
     const c = getPDFConfig();
     const cu = c.cupom || {};
     const ehLoja = via === 'LOJA';
+    const ehFinalizacao = tipo === 'finalizacao';
     const total = parseFloat(os.total||0).toFixed(2).replace('.', ',');
     const dataFmt = osFormatarData(os.data||'') || new Date().toLocaleDateString('pt-BR');
     const horaFmt = osFormatarHoraEntrada(os.criadoEm);
     const diasGarantia = (os.garantiaDias !== undefined && os.garantiaDias !== '' && os.garantiaDias !== null) ? parseInt(os.garantiaDias, 10) : 90;
     const dataGarantia = osCalcularDataGarantia(diasGarantia);
+    // Data/hora em que o cupom de finalização está sendo impresso = momento da entrega
+    const agoraEntrega = new Date();
+    const entregaFmt = agoraEntrega.toLocaleDateString('pt-BR') + ' às ' + agoraEntrega.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const logoSrc = 'logocupom.png';
     const mostrarLogo = cu.mostrarLogo !== false;
     const sep = '<div class="cupom-sep"></div>';
-    const titulo = escapeHTML(cu.titulo) || 'CUPOM DE ORDEM DE SERVIÇO';
+    const titulo = ehFinalizacao
+        ? (escapeHTML(cu.tituloFinalizacao) || 'COMPROVANTE DE ENTREGA')
+        : (escapeHTML(cu.titulo) || 'CUPOM DE ORDEM DE SERVIÇO');
     const termos = escapeHTML(cu.textoTermos || '').replace(/\n/g, '<br>');
     const mostrarTelCliente = cu.mostrarTelefoneCliente !== false;
     const mostrarAss = cu.mostrarAssinatura !== false;
@@ -11211,10 +11222,11 @@ function montarViaCupom(os, via) {
         <div class="cupom-titulo">${titulo}</div>
         ${sep}
         <div class="cupom-campo"><b>Código:</b> ${escapeHTML(os.codigo) || '-'} &nbsp;|&nbsp; <b>Data:</b> ${dataFmt}${horaFmt ? ' às ' + horaFmt : ''}</div>
+        ${ehFinalizacao ? `<div class="cupom-campo"><b>Entrega:</b> ${entregaFmt}</div>` : ''}
         <div class="cupom-campo"><b>Cliente:</b> ${escapeHTML(os.cliente) || '-'}${mostrarTelCliente && os.telefone ? ` — ${escapeHTML(os.telefone)}` : ''}</div>
         <div class="cupom-campo"><b>Aparelho:</b> ${escapeHTML(os.modelo) || '-'}${os.estadoAparelho ? ` (${escapeHTML(os.estadoAparelho)})` : ''}</div>
         <div class="cupom-campo"><b>Status:</b> ${escapeHTML(os.status) || '-'}</div>
-        <div class="cupom-garantia">${diasGarantia > 0 ? `GARANTIA ATÉ ${dataGarantia} (${osFormatarGarantiaTexto(diasGarantia)})` : 'SEM GARANTIA'}<br><span class="cupom-garantia-obs">Não cobre tela com riscos, arranhões ou trincos</span></div>
+        ${ehFinalizacao ? `<div class="cupom-garantia">${diasGarantia > 0 ? `GARANTIA ATÉ ${dataGarantia} (${osFormatarGarantiaTexto(diasGarantia)})` : 'SEM GARANTIA'}<br><span class="cupom-garantia-obs">Não cobre tela com riscos, arranhões ou trincos</span></div>` : ''}
         ${sep}
         <div class="cupom-label">DESCRIÇÃO DO DEFEITO</div>
         <div class="cupom-texto">${escapeHTML(os.descricao) || '-'}</div>
@@ -11223,23 +11235,25 @@ function montarViaCupom(os, via) {
         <div class="cupom-texto">${escapeHTML(os.reparo) || '-'}</div>
         ${sep}
         <div class="cupom-linha-valor cupom-total"><span>TOTAL</span><span>R$ ${total}</span></div>
-        ${!ehLoja ? `${sep}<div class="cupom-label">TERMOS</div><div class="cupom-termos">${termos}</div>` : ''}
-        ${mostrarAss ? `<div class="cupom-declaracao">Declaro que li e concordo com os termos.</div><div class="cupom-assinatura"><div class="cupom-ass-linha"></div>Assinatura do Cliente</div>` : ''}
-        ${via === 'CLIENTE' ? `${sep}<div class="cupom-acompanhar"><img src="qrcode-status.png" class="cupom-qrcode-img" alt="QR Code para acompanhar o reparo"><span>Acompanhe o status<br>do seu reparo aqui</span></div>` : ''}
+        ${(!ehFinalizacao && !ehLoja) ? `${sep}<div class="cupom-label">TERMOS</div><div class="cupom-termos">${termos}</div>` : ''}
+        ${mostrarAss ? `<div class="cupom-declaracao">${ehFinalizacao ? 'Declaro que recebi o aparelho nas condições acima.' : 'Declaro que li e concordo com os termos.'}</div><div class="cupom-assinatura"><div class="cupom-ass-linha"></div>Assinatura do Cliente</div>` : ''}
+        ${(!ehFinalizacao && via === 'CLIENTE') ? `${sep}<div class="cupom-acompanhar"><img src="qrcode-status.png" class="cupom-qrcode-img" alt="QR Code para acompanhar o reparo"><span>Acompanhe o status<br>do seu reparo aqui</span></div>` : ''}
         ${via === 'CLIENTE' ? `${sep}<div class="cupom-avaliacao"><img src="qrcodeava.jpeg" class="cupom-qrcode-img" alt="QR Code Google"><span>Avalie-nos<br>no Google</span><img src="logo-avaliacao.png" class="cupom-logo-aval" alt="Logo"></div>` : ''}
         ${sep}
         <div class="cupom-rodape">${escapeHTML(cu.rodape)}${os.vendedor ? ` • Vend: ${escapeHTML(os.vendedor)}` : ''}</div>
     </div>`;
 }
 
-function abrirCupomImpressao(os) {
+// tipo: 'entrada' (cadastro da O.S.) ou 'finalizacao' (entrega do aparelho)
+function abrirCupomImpressao(os, tipo) {
+    tipo = tipo || 'entrada';
     const c = getPDFConfig();
     const largura = (c.cupom && c.cupom.largura) || '80mm';
     // Gera as duas vias (loja + cliente) numa única impressão. O separador entre elas tem
     // page-break-after, então em impressoras térmicas com guilhotina automática o corte
     // acontece sozinho nessa marca; sem guilhotina, a linha tracejada serve de guia pra tesoura.
-    const viaLoja = montarViaCupom(os, 'LOJA');
-    const viaCliente = montarViaCupom(os, 'CLIENTE');
+    const viaLoja = montarViaCupom(os, 'LOJA', tipo);
+    const viaCliente = montarViaCupom(os, 'CLIENTE', tipo);
     const corte = '<div class="cupom-corte">✂ - - - - - - - - - - CORTE AQUI - - - - - - - - - - ✂</div>';
     const html = viaLoja + corte + viaCliente;
     const win = window.open('', '_blank', 'width=420,height=650');
