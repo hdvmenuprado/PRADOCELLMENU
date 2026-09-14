@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260914173734">
+    <meta name="app-build" content="20260914174109">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -11209,7 +11209,7 @@ function montarViaCupom(os, via, tipo) {
     const mostrarAss = cu.mostrarAssinatura !== false;
 
     return `<div class="cupom-via${ehLoja ? ' compacta' : ''}">
-        <div class="cupom-via-tag">— VIA ${via} —</div>
+        ${ehFinalizacao ? '' : `<div class="cupom-via-tag">— VIA ${via} —</div>`}
         <div class="cupom-cabecalho">
             ${mostrarLogo ? `<img src="${logoSrc}" class="cupom-logo-mini">` : ''}
             <div class="cupom-cabecalho-txt">
@@ -11249,13 +11249,15 @@ function abrirCupomImpressao(os, tipo) {
     tipo = tipo || 'entrada';
     const c = getPDFConfig();
     const largura = (c.cupom && c.cupom.largura) || '80mm';
-    // Gera as duas vias (loja + cliente) numa única impressão. O separador entre elas tem
-    // page-break-after, então em impressoras térmicas com guilhotina automática o corte
-    // acontece sozinho nessa marca; sem guilhotina, a linha tracejada serve de guia pra tesoura.
-    const viaLoja = montarViaCupom(os, 'LOJA', tipo);
-    const viaCliente = montarViaCupom(os, 'CLIENTE', tipo);
+    // Entrada sai em duas vias (loja + cliente): o separador entre elas tem page-break-after,
+    // então em impressoras térmicas com guilhotina automática o corte acontece sozinho nessa
+    // marca; sem guilhotina, a linha tracejada serve de guia pra tesoura.
+    // A finalização sai só na via do cliente — o controle interno da O.S. já ficou registrado
+    // na via da loja impressa lá na entrada, então repetir aqui só gastaria papel.
     const corte = '<div class="cupom-corte">✂ - - - - - - - - - - CORTE AQUI - - - - - - - - - - ✂</div>';
-    const html = viaLoja + corte + viaCliente;
+    const html = tipo === 'finalizacao'
+        ? montarViaCupom(os, 'CLIENTE', tipo)
+        : montarViaCupom(os, 'LOJA', tipo) + corte + montarViaCupom(os, 'CLIENTE', tipo);
     const win = window.open('', '_blank', 'width=420,height=650');
     if(!win){ alert('Seu navegador bloqueou a janela do cupom. Permita pop-ups para este site e tente novamente.'); return; }
     win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cupom O.S. ${escapeHTML(os.codigo)}</title>
