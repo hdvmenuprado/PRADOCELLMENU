@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260914174109">
+    <meta name="app-build" content="20260914174601">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -4005,6 +4005,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     <!-- Menu flutuante compartilhado do botão "⋮" de cada linha -->
                     <div id="osMenuPontinhos" class="hidden" style="position:fixed;z-index:200;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);overflow:hidden;min-width:170px;backdrop-filter:blur(20px);">
                         <button onclick="osMenuAcaoEditar()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar cadastro</button>
+                        <button onclick="osMenuAcaoOrcamento()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="receipt" style="width:14px;height:14px;"></i> Reimprimir guia de orçamento</button>
                         <button onclick="osMenuAcaoSenha()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="lock" style="width:14px;height:14px;"></i> Senha do aparelho</button>
                         <button onclick="osMenuAcaoExcluir()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#f87171;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir O.S.</button>
                     </div>
@@ -10798,6 +10799,12 @@ function osMenuAcaoEditar() {
     if (tr) osAbrirModalEditar(tr);
 }
 
+function osMenuAcaoOrcamento() {
+    const tr = _osMenuTrAtual;
+    osFecharMenuPontinhos();
+    if (tr) osImprimirOrcamento(tr);
+}
+
 // Abre o modal de edição completa do cadastro (campos que não dá pra mudar direto na linha
 // da tabela, como telefone, vendedor, data e origem — os editáveis inline continuam
 // funcionando normalmente e ficam sincronizados por causa do osAtualizarLinha no salvar).
@@ -11082,7 +11089,57 @@ function osGerarCupom(btn) {
     // Botão da impressora na linha da O.S. = cupom de FINALIZAÇÃO (entrega do aparelho).
     // Como ele só existe em linhas de O.S. já cadastradas, esse cupom nunca sai antes de
     // o cadastro existir — que é a regra desse tipo de cupom.
+    // Imprimir a retirada já marca o aparelho como retirado: na prática o cupom só sai
+    // quando o cliente está levando o aparelho, então deixar o status pra trás só geraria
+    // O.S. "esquecida" como pronta. O status entra no objeto ANTES de montar o cupom pra
+    // sair impresso já atualizado.
+    const selStatus = tr.querySelector('.osStatusSelect');
+    if (selStatus && selStatus.value !== 'Aparelho retirado') {
+        selStatus.value = 'Aparelho retirado';
+        os.status = 'Aparelho retirado';
+        osAtualizarStatus(selStatus);
+    }
     abrirCupomImpressao(os, 'finalizacao');
+}
+
+// Reimpressão da guia de orçamento a partir da linha da O.S. (menu "⋮").
+// Reaproveita o mesmo template/config do PDF de Orçamento usado na aba de Laudo, só que
+// preenchido com os dados desta O.S. em vez do formulário — assim o layout, as cores e os
+// textos configurados no Admin continuam valendo, sem duplicar template.
+function osImprimirOrcamento(tr) {
+    const item = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    if (!item) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
+    if (typeof html2pdf === 'undefined') { mostrarToast('Biblioteca de PDF ainda carregando, tente de novo em instantes.', 'erro'); return; }
+
+    const inputsNum = tr.querySelectorAll('input[type=number]');
+    const custoPeca = parseFloat(inputsNum[0] ? inputsNum[0].value : item.custoPeca) || 0;
+    const maoDeObra = parseFloat(inputsNum[1] ? inputsNum[1].value : item.maoDeObra) || 0;
+    const total = custoPeca + maoDeObra;
+
+    document.getElementById('pdfOrcCliente').innerText = item.cliente || '-';
+    document.getElementById('pdfOrcData').innerText = new Date().toLocaleDateString('pt-BR');
+    document.getElementById('pdfOrcModelo').innerText = item.modelo || '-';
+    document.getElementById('pdfOrcDefeito').innerText = (item.descricao && item.descricao.trim()) ? item.descricao : 'Nenhum laudo informado.';
+
+    const linha = (nome, valor) => `<tr><td style='padding: 8px; border-bottom: 1px solid #eee; text-align: left; color:#000000;'>${escapeHTML(nome)}</td><td style='padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold; color:#000000;'>R$ ${valor.toFixed(2).replace('.', ',')}</td></tr>`;
+    let linhas = '';
+    if (item.reparo && item.reparo.trim()) linhas += linha(item.reparo, maoDeObra + custoPeca);
+    else {
+        if (custoPeca > 0) linhas += linha('Peça(s)', custoPeca);
+        if (maoDeObra > 0) linhas += linha('Mão de obra', maoDeObra);
+    }
+    if (!linhas) linhas = "<tr><td colspan='2' style='padding: 12px; text-align: center; color: #777;'>Nenhum valor adicionado.</td></tr>";
+
+    document.getElementById('pdfOrcLinhas').innerHTML = linhas;
+    document.getElementById('pdfOrcTotal').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
+
+    const nomeArquivo = 'Orcamento_' + String(item.cliente || 'cliente').replace(/\s+/g, '_') + '.pdf';
+    html2pdf().set({
+        margin: [10, 12, 10, 12], filename: nomeArquivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2.5, logging: false, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(document.getElementById('pdf-orcamento-template')).save();
 }
 
 // Calcula a data de término da garantia a partir de hoje, usando os dias informados na O.S.
