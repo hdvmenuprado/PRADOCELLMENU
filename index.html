@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260914174601">
+    <meta name="app-build" content="20260914202400">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -3964,6 +3964,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             <option value="Cliente Indicação">Indicação</option>
                             <option value="Cliente Antigo">Antigo</option>
                         </select>
+                        <button onclick="osAbrirConsultasStatus()" class="ep-btn" style="flex:0 0 auto;padding:8px 10px;font-size:11px;display:inline-flex;align-items:center;gap:5px;" title="Ver quem consultou o status pelo site público"><i data-lucide="search" style="width:13px;height:13px;"></i> Consultas</button>
                         <span id="osAvisoFiltro" style="flex:1 1 100%;font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
                     </div>
 
@@ -4639,6 +4640,52 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         <div class="modal-btn-row" style="margin-top:10px;">
             <button class="action-btn secondary-btn" onclick="backupFecharModal()" style="margin-top:0;">Cancelar</button>
             <button class="action-btn" id="backupBtnConfirmar" onclick="backupConfirmar()" style="margin-top:0;"><span id="backupBtnConfirmarTexto">Baixar</span></button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalConsultasStatus">
+    <div class="modal-box" style="width:820px; max-width:94vw; max-height:88vh; overflow-y:auto; text-align:left; padding:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <h3 style="margin:0; color: var(--primary); font-size:1.05rem; letter-spacing:normal;display:flex;align-items:center;gap:8px;"><i data-lucide="search" style="width:16px;height:16px;"></i> Consultas de status pelo site</h3>
+            <button onclick="osFecharConsultasStatus()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 16px;line-height:1.55;">Cada vez que alguém usa o QR code do cupom pra ver o andamento do reparo, fica registrado aqui.</p>
+
+        <div class="ep-stats" style="margin-bottom:16px;">
+            <div class="ep-stat">
+                <div class="ep-stat-label">Consultas (total)</div>
+                <div class="ep-stat-value" id="osConsTotal">—</div>
+            </div>
+            <div class="ep-stat">
+                <div class="ep-stat-label">Últimos 7 dias</div>
+                <div class="ep-stat-value" id="osCons7d">—</div>
+            </div>
+            <div class="ep-stat">
+                <div class="ep-stat-label">Aparelhos diferentes</div>
+                <div class="ep-stat-value" id="osConsAparelhos">—</div>
+            </div>
+            <div class="ep-stat saida">
+                <div class="ep-stat-label">Buscas sem resultado</div>
+                <div class="ep-stat-value" id="osConsFalhas">—</div>
+            </div>
+        </div>
+
+        <div class="ep-table-wrap">
+            <table class="ep-table">
+                <thead>
+                    <tr>
+                        <th>Quando</th>
+                        <th>Aparelho consultado</th>
+                        <th>O.S.</th>
+                        <th>Status na hora</th>
+                        <th>Resultado</th>
+                    </tr>
+                </thead>
+                <tbody id="osConsultasLinhas">
+                    <tr><td colspan="5" class="ep-empty">Carregando...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -9432,7 +9479,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -10797,6 +10844,69 @@ function osMenuAcaoEditar() {
     const tr = _osMenuTrAtual;
     osFecharMenuPontinhos();
     if (tr) osAbrirModalEditar(tr);
+}
+
+// ------------------------------------------------------------------
+// CONSULTAS DE STATUS — registro de quem usou o QR code do cupom pra acompanhar
+// o reparo no site público. A gravação acontece no banco (função consultar_status_os),
+// aqui é só a leitura.
+// ------------------------------------------------------------------
+function osAbrirConsultasStatus() {
+    document.getElementById('modalConsultasStatus').classList.add('ativo');
+    osCarregarConsultasStatus();
+}
+
+function osFecharConsultasStatus() {
+    document.getElementById('modalConsultasStatus').classList.remove('ativo');
+}
+
+async function osCarregarConsultasStatus() {
+    const tbody = document.getElementById('osConsultasLinhas');
+    tbody.innerHTML = '<tr><td colspan="5" class="ep-empty">Carregando...</td></tr>';
+    try {
+        await carregarLojas();
+        const filtroLoja = lojaIdParaFiltro();
+        let query = supabaseDB.from('consultas_status')
+            .select('consultado_em, encontrou, os_codigo, modelo, status_no_momento')
+            .order('consultado_em', { ascending: false })
+            .limit(300);
+        // Buscas que não acharam nada não têm loja, então ficam de fora quando se filtra
+        // por uma loja específica — elas só aparecem no modo "todas as lojas".
+        if (filtroLoja) query = query.eq('loja_id', filtroLoja);
+
+        const { data, error } = await medirPromise('Consultas Status', () => query);
+        if (error) throw new Error(error.message);
+
+        const lista = data || [];
+        const seteDiasAtras = new Date(Date.now() - 7 * 86400000);
+        document.getElementById('osConsTotal').textContent = lista.length;
+        document.getElementById('osCons7d').textContent = lista.filter(c => new Date(c.consultado_em) >= seteDiasAtras).length;
+        document.getElementById('osConsAparelhos').textContent = new Set(lista.filter(c => c.os_codigo).map(c => c.os_codigo)).size;
+        document.getElementById('osConsFalhas').textContent = lista.filter(c => !c.encontrou).length;
+
+        if (!lista.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="ep-empty">Ninguém consultou o status ainda.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = lista.map(c => {
+            const d = new Date(c.consultado_em);
+            const quando = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            return `
+                <tr>
+                    <td style="font-size:11.5px;color:var(--text-muted);">${quando}</td>
+                    <td style="font-weight:600;">${escapeHTML(c.modelo) || '—'}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:11px;">${escapeHTML(c.os_codigo) || '—'}</td>
+                    <td style="font-size:11.5px;color:var(--text-muted);">${escapeHTML(c.status_no_momento) || '—'}</td>
+                    <td>${c.encontrou
+                        ? '<span style="color:#2ecc71;font-size:11px;font-weight:700;">Encontrou</span>'
+                        : '<span style="color:var(--text-muted);font-size:11px;">Não achou</span>'}</td>
+                </tr>`;
+        }).join('');
+    } catch (e) {
+        console.error('Erro ao carregar consultas de status:', e);
+        tbody.innerHTML = '<tr><td colspan="5" class="ep-empty" style="color:#f87171;">Erro ao carregar as consultas.</td></tr>';
+    }
 }
 
 function osMenuAcaoOrcamento() {
