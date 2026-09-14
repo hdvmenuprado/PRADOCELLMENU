@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260913193344">
+    <meta name="app-build" content="20260914131934">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2867,6 +2867,7 @@ body.modo-claro .main-content {
                         <button type="button" id="epBtnSubviewIphone" class="ep-tab active" onclick="epMudarSubview('iphone')" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="smartphone" style="width:13px;height:13px;"></i> iPhone · por modelo</button>
                         <button type="button" id="epBtnSubviewAndroid" class="ep-tab" onclick="epMudarSubview('android')" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="bot" style="width:13px;height:13px;"></i> Android · peças avulsas</button>
                         <button type="button" id="epBtnSubviewLaptop" class="ep-tab" onclick="epMudarSubview('laptop')" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="laptop" style="width:13px;height:13px;"></i> Laptop · peças avulsas</button>
+                        <button type="button" id="epBtnSubviewSugestao" class="ep-tab" onclick="epMudarSubview('sugestao')" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="shopping-cart" style="width:13px;height:13px;"></i> Sugestão de compra</button>
                     </div>
 
                     <!-- ================= VIEW: IPHONE (POR MODELO) ================= -->
@@ -3106,6 +3107,69 @@ body.modo-claro .main-content {
                                 </thead>
                                 <tbody id="epHistoricoLaptopLinhas">
                                     <tr><td colspan="5" class="ep-empty">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ================= VIEW: SUGESTÃO DE COMPRA ================= -->
+                    <div id="epViewSugestao" class="hidden">
+                        <div class="ep-panel">
+                            <div class="ep-panel-title" style="display:flex;align-items:center;gap:6px;"><i data-lucide="shopping-cart" style="width:14px;height:14px;"></i> O que vale a pena comprar</div>
+                            <p style="font-size:11.5px;color:var(--text-muted);margin:0 0 14px;line-height:1.55;">
+                                Olha todo o histórico de movimentação pra ver o que costuma sair, com que frequência, e compara com o que tem em estoque agora.
+                                Peça que sai direto merece ter mais de uma guardada; peça que saiu uma vez só há meses não precisa.
+                            </p>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+                                <div class="ep-field" style="flex:1 1 160px;">
+                                    <label>Cobertura desejada</label>
+                                    <select id="epSugCobertura" onchange="epCalcularSugestoes()">
+                                        <option value="30">Pra 30 dias</option>
+                                        <option value="45" selected>Pra 45 dias</option>
+                                        <option value="60">Pra 60 dias</option>
+                                    </select>
+                                </div>
+                                <div class="ep-field" style="flex:1 1 160px;">
+                                    <label>Mostrar</label>
+                                    <select id="epSugFiltro" onchange="epRenderizarSugestoes()">
+                                        <option value="comprar">Só o que precisa comprar</option>
+                                        <option value="tudo">Tudo que já teve saída</option>
+                                    </select>
+                                </div>
+                                <button class="ep-btn" onclick="epCalcularSugestoes()" style="flex:0 0 auto;">Atualizar</button>
+                            </div>
+                        </div>
+
+                        <div class="ep-stats" id="epSugResumo" style="display:none;">
+                            <div class="ep-stat">
+                                <div class="ep-stat-label">Peças a comprar</div>
+                                <div class="ep-stat-value" id="epSugTotalItens">—</div>
+                            </div>
+                            <div class="ep-stat saida">
+                                <div class="ep-stat-label">Itens zerados que saem direto</div>
+                                <div class="ep-stat-value" id="epSugCriticos">—</div>
+                            </div>
+                            <div class="ep-stat valor-restrito">
+                                <div class="ep-stat-label">Custo estimado da compra</div>
+                                <div class="ep-stat-value" id="epSugCustoTotal">—</div>
+                            </div>
+                        </div>
+
+                        <div class="ep-table-wrap" style="margin-top:14px;">
+                            <table class="ep-table">
+                                <thead>
+                                    <tr>
+                                        <th>Peça</th>
+                                        <th>Prioridade</th>
+                                        <th>Tem</th>
+                                        <th>Comprar</th>
+                                        <th>Consumo</th>
+                                        <th>Motivo</th>
+                                        <th class="valor-restrito">Custo est.</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="epSugestaoLinhas">
+                                    <tr><td colspan="7" class="ep-empty">Abra esta aba para calcular as sugestões.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -6732,20 +6796,227 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         // ------------------------------------------------------------------
         // ALTERNAR SUB-ABAS
         // ------------------------------------------------------------------
+        // ------------------------------------------------------------------
+        // SUGESTÃO DE COMPRA
+        // Lê TODO o histórico de movimentações (não só o mês), calcula o ritmo de
+        // consumo de cada peça e compara com o que tem em estoque agora.
+        // A ideia: peça que sai com frequência merece ter mais de uma guardada;
+        // peça que saiu uma vez só, há muito tempo, não precisa de reposição.
+        // ------------------------------------------------------------------
+        let _epSugestoes = [];
+
+        function epSugDiasEntre(a, b){ return Math.max(0, Math.round((a - b) / 86400000)); }
+
+        async function epCalcularSugestoes(){
+            const tbody = document.getElementById('epSugestaoLinhas');
+            if (!tbody) return;
+            const filtroLoja = lojaIdParaFiltro();
+            if (!filtroLoja){
+                tbody.innerHTML = '<tr><td colspan="7" class="ep-empty">Escolha uma loja no seletor à esquerda pra calcular as sugestões.</td></tr>';
+                document.getElementById('epSugResumo').style.display = 'none';
+                return;
+            }
+            tbody.innerHTML = '<tr><td colspan="7" class="ep-empty">Analisando o histórico...</td></tr>';
+
+            try {
+                // 1) Todo o histórico de saídas (o que realmente foi consumido)
+                let qMov = supabaseDB.from('estoque_movimentacoes')
+                    .select('modelo_nome, categoria_nome, tipo, quantidade, custo_unitario, criado_em, origem_avulso')
+                    .eq('loja_id', filtroLoja);
+                // 2) Estoque atual, com os nomes de modelo/categoria pra casar com o histórico
+                let qItens = supabaseDB.from('estoque_itens')
+                    .select('quantidade, custo_unitario, estoque_modelos(nome), estoque_categorias(nome)')
+                    .eq('loja_id', filtroLoja);
+
+                const [{ data: movs, error: eMov }, { data: itens, error: eItens }] = await Promise.all([
+                    medirPromise('Estoque Sugestão (movs)', () => qMov),
+                    medirPromise('Estoque Sugestão (itens)', () => qItens)
+                ]);
+                if (eMov) throw new Error(eMov.message);
+                if (eItens) throw new Error(eItens.message);
+
+                const chaveDe = (modelo, categoria) => (modelo || '(avulso)') + ' || ' + (categoria || '');
+
+                // Estoque atual por peça
+                const estoqueAtual = new Map();
+                (itens || []).forEach(it => {
+                    const modelo = it.estoque_modelos ? it.estoque_modelos.nome : null;
+                    const categoria = it.estoque_categorias ? it.estoque_categorias.nome : null;
+                    if (!categoria) return;
+                    const k = chaveDe(modelo, categoria);
+                    const atual = estoqueAtual.get(k) || { quantidade: 0, custo: 0 };
+                    atual.quantidade += (it.quantidade || 0);
+                    if (it.custo_unitario) atual.custo = it.custo_unitario;
+                    estoqueAtual.set(k, atual);
+                });
+
+                // Consumo por peça, a partir das saídas
+                const consumo = new Map();
+                const hoje = new Date();
+                let dataMaisAntiga = hoje;
+
+                // Um bug antigo (já corrigido) gravava a mesma saída duas vezes: mesma peça,
+                // mesma quantidade, no mesmo instante — uma linha com custo zerado e outra
+                // com o custo real. Sem filtrar isso, o consumo do histórico antigo apareceria
+                // em dobro e a sugestão de compra viria inflada. Aqui fica só uma de cada par
+                // (a que tem custo, quando existe).
+                const vistos = new Map();
+                const movsLimpas = [];
+                (movs || []).slice()
+                    .sort((a, b) => (parseFloat(b.custo_unitario) || 0) - (parseFloat(a.custo_unitario) || 0))
+                    .forEach(m => {
+                        const instante = Math.floor(new Date(m.criado_em).getTime() / 5000); // janela de 5s
+                        const k = [m.modelo_nome, m.categoria_nome, m.tipo, m.quantidade, instante].join('|');
+                        if (vistos.has(k)) return;
+                        vistos.set(k, true);
+                        movsLimpas.push(m);
+                    });
+
+                movsLimpas.forEach(m => {
+                    const d = new Date(m.criado_em);
+                    if (d < dataMaisAntiga) dataMaisAntiga = d;
+                    if (m.tipo !== 'Saída') return;
+                    const k = chaveDe(m.modelo_nome, m.categoria_nome);
+                    const c = consumo.get(k) || {
+                        modelo: m.modelo_nome, categoria: m.categoria_nome, origem: m.origem_avulso,
+                        totalSaidas: 0, vezes: 0, ultimaSaida: null, custoVisto: 0, quantidades: []
+                    };
+                    c.totalSaidas += (m.quantidade || 0);
+                    c.quantidades.push(m.quantidade || 0);
+                    c.vezes += 1;
+                    if (!c.ultimaSaida || d > c.ultimaSaida) c.ultimaSaida = d;
+                    if (m.custo_unitario) c.custoVisto = m.custo_unitario;
+                    consumo.set(k, c);
+                });
+
+                // Janela de histórico disponível (no mínimo 30 dias, pra não inflar o ritmo
+                // quando o sistema tem pouco tempo de uso)
+                const diasHistorico = Math.max(30, epSugDiasEntre(hoje, dataMaisAntiga));
+                const cobertura = parseInt(document.getElementById('epSugCobertura').value) || 45;
+
+                const lista = [];
+                consumo.forEach((c, k) => {
+                    const est = estoqueAtual.get(k) || { quantidade: 0, custo: 0 };
+                    const diasSemSair = c.ultimaSaida ? epSugDiasEntre(hoje, c.ultimaSaida) : 9999;
+
+                    // Baixa gigante de uma vez (normalmente acerto de estoque, não venda)
+                    // não pode inflar a média: corta cada movimento no triplo do tamanho
+                    // típico antes de calcular o ritmo.
+                    const ordenadas = [...c.quantidades].sort((a, b) => a - b);
+                    const mediana = ordenadas[Math.floor(ordenadas.length / 2)] || 1;
+                    const teto = Math.max(mediana * 3, mediana + 2);
+                    const totalAparado = c.quantidades.reduce((s, q) => s + Math.min(q, teto), 0);
+
+                    // Ritmo: quantas unidades por dia essa peça consome, na média do histórico
+                    const porDia = totalAparado / diasHistorico;
+                    // Quanto deveria ter pra cobrir o período escolhido
+                    let ideal = Math.ceil(porDia * cobertura);
+
+                    // Peça que já saiu várias vezes em dias diferentes é recorrente:
+                    // vale ter pelo menos 2 guardadas, mesmo que o cálculo dê 1.
+                    const recorrente = c.vezes >= 3;
+                    if (recorrente && ideal < 2) ideal = 2;
+                    if (ideal < 1) ideal = 1;
+
+                    // Parou de sair há muito tempo: não force reposição
+                    const parada = diasSemSair > 120;
+                    if (parada) ideal = Math.min(ideal, est.quantidade);
+
+                    const comprar = Math.max(0, ideal - est.quantidade);
+                    const custoUnit = est.custo || c.custoVisto || 0;
+
+                    // Prioridade: zerado + recorrente é o pior caso
+                    let prioridade = 'baixa';
+                    if (comprar > 0 && est.quantidade === 0 && recorrente) prioridade = 'critica';
+                    else if (comprar > 0 && (est.quantidade === 0 || recorrente)) prioridade = 'alta';
+                    else if (comprar > 0) prioridade = 'media';
+
+                    let motivo;
+                    if (parada) motivo = `Sem saída há ${diasSemSair} dias — não precisa repor`;
+                    else if (est.quantidade === 0 && recorrente) motivo = `Zerada e sai direto (${c.vezes}x no período)`;
+                    else if (est.quantidade === 0) motivo = 'Estoque zerado';
+                    else if (recorrente) motivo = `Sai com frequência (${c.vezes}x) — vale ter reserva`;
+                    else if (comprar > 0) motivo = 'Abaixo da cobertura desejada';
+                    else motivo = 'Estoque suficiente';
+
+                    lista.push({
+                        modelo: c.modelo, categoria: c.categoria, origem: c.origem,
+                        tem: est.quantidade, ideal, comprar, prioridade, motivo,
+                        totalSaidas: c.totalSaidas, vezes: c.vezes, diasSemSair,
+                        custoUnit, custoTotal: comprar * custoUnit
+                    });
+                });
+
+                const pesoPrioridade = { critica: 0, alta: 1, media: 2, baixa: 3 };
+                lista.sort((a, b) => (pesoPrioridade[a.prioridade] - pesoPrioridade[b.prioridade]) || (b.totalSaidas - a.totalSaidas));
+
+                _epSugestoes = lista;
+                epRenderizarSugestoes();
+            } catch(e){
+                console.error('Erro ao calcular sugestões de compra:', e);
+                tbody.innerHTML = '<tr><td colspan="7" class="ep-empty" style="color:#f87171;">Erro ao analisar o histórico.</td></tr>';
+            }
+        }
+
+        function epRenderizarSugestoes(){
+            const tbody = document.getElementById('epSugestaoLinhas');
+            if (!tbody) return;
+            const filtro = document.getElementById('epSugFiltro').value;
+            const lista = filtro === 'comprar' ? _epSugestoes.filter(s => s.comprar > 0) : _epSugestoes;
+
+            const aComprar = _epSugestoes.filter(s => s.comprar > 0);
+            const resumo = document.getElementById('epSugResumo');
+            if (_epSugestoes.length){
+                resumo.style.display = '';
+                document.getElementById('epSugTotalItens').textContent = aComprar.reduce((s, x) => s + x.comprar, 0);
+                document.getElementById('epSugCriticos').textContent = _epSugestoes.filter(s => s.prioridade === 'critica').length;
+                document.getElementById('epSugCustoTotal').textContent = epFormatarMoeda(aComprar.reduce((s, x) => s + x.custoTotal, 0));
+            } else {
+                resumo.style.display = 'none';
+            }
+
+            if (!lista.length){
+                tbody.innerHTML = `<tr><td colspan="7" class="ep-empty">${filtro === 'comprar' ? 'Nada pra comprar agora — o estoque cobre o consumo atual.' : 'Ainda não há saídas registradas pra analisar.'}</td></tr>`;
+                return;
+            }
+
+            const cores = { critica: '#ef4444', alta: '#e67e22', media: 'var(--primary)', baixa: 'var(--text-muted)' };
+            const rotulos = { critica: 'CRÍTICA', alta: 'Alta', media: 'Média', baixa: 'OK' };
+
+            tbody.innerHTML = lista.map(s => `
+                <tr>
+                    <td><span class="ep-nivel ${epNivelClasse(s.tem)}"></span>${s.modelo ? s.modelo + ' · ' : ''}${s.categoria || '-'}</td>
+                    <td><span style="color:${cores[s.prioridade]};font-weight:700;font-size:11px;">${rotulos[s.prioridade]}</span></td>
+                    <td>${s.tem}</td>
+                    <td style="font-weight:700;color:${s.comprar > 0 ? 'var(--primary)' : 'var(--text-muted)'};">${s.comprar > 0 ? '+' + s.comprar : '—'}</td>
+                    <td style="font-size:11.5px;color:var(--text-muted);">${s.totalSaidas} un · ${s.vezes}x</td>
+                    <td style="font-size:11.5px;color:var(--text-muted);">${s.motivo}</td>
+                    <td class="valor-restrito">${s.custoTotal > 0 ? epFormatarMoeda(s.custoTotal) : '—'}</td>
+                </tr>
+            `).join('');
+        }
+
+        window.epCalcularSugestoes = epCalcularSugestoes;
+        window.epRenderizarSugestoes = epRenderizarSugestoes;
+
         window.epMudarSubview = function(subview){
             const viewIphone = document.getElementById('epViewIphone');
             const viewAndroid = document.getElementById('epViewAndroid');
             const viewLaptop = document.getElementById('epViewLaptop');
+            const viewSugestao = document.getElementById('epViewSugestao');
             const btnIphone = document.getElementById('epBtnSubviewIphone');
             const btnAndroid = document.getElementById('epBtnSubviewAndroid');
             const btnLaptop = document.getElementById('epBtnSubviewLaptop');
+            const btnSugestao = document.getElementById('epBtnSubviewSugestao');
 
             viewIphone.classList.add('hidden');
             viewAndroid.classList.add('hidden');
             viewLaptop.classList.add('hidden');
+            viewSugestao.classList.add('hidden');
             btnIphone.classList.remove('active');
             btnAndroid.classList.remove('active');
             btnLaptop.classList.remove('active');
+            btnSugestao.classList.remove('active');
 
             if (subview === 'android'){
                 viewAndroid.classList.remove('hidden');
@@ -6757,10 +7028,15 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 btnLaptop.classList.add('active');
                 epCarregarDashboardLaptop();
                 epCarregarItensLaptop();
+            } else if (subview === 'sugestao'){
+                viewSugestao.classList.remove('hidden');
+                btnSugestao.classList.add('active');
+                epCalcularSugestoes();
             } else {
                 viewIphone.classList.remove('hidden');
                 btnIphone.classList.add('active');
             }
+            if (window.lucide) lucide.createIcons();
         };
 
         // ------------------------------------------------------------------
