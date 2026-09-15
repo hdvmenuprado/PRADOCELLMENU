@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260914210640">
+    <meta name="app-build" content="20260915170740">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -11624,8 +11624,94 @@ function sorteioRenderizarClientes(lista) {
 // ------------------------------------------------------------------
 function sorteioSoDigitos(v) { return String(v || '').replace(/\D/g, ''); }
 
+// Telefone vira chave pelos ÚLTIMOS 8 DÍGITOS. É o pedaço que não muda: ignora DDD,
+// o 9 extra do celular, o 55 do país e qualquer formatação. Sem isso o mesmo cliente
+// gravado como "4599130709" e "45999130709" virava duas pessoas diferentes.
+function sorteioTelChave(v) {
+    const d = sorteioSoDigitos(v);
+    return d.length >= 8 ? d.slice(-8) : '';
+}
+
+// Nome vira chave sem acento, sem pontuação, minúsculo e sem espaço duplicado.
+function sorteioNomeChave(v) {
+    return String(v || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().replace(/[^a-z\s]/g, ' ')
+        .replace(/\s+/g, ' ').trim();
+}
+
+// Distância de edição (quantas letras precisam mudar pra um virar o outro).
+// Usada pra reconhecer "david"/"deivid" e afins como a mesma pessoa.
+function sorteioDistancia(a, b) {
+    if (a === b) return 0;
+    if (!a.length || !b.length) return Math.max(a.length, b.length);
+    let linha = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+        let anterior = linha[0];
+        linha[0] = i;
+        for (let j = 1; j <= b.length; j++) {
+            const temp = linha[j];
+            linha[j] = Math.min(
+                linha[j] + 1,
+                linha[j - 1] + 1,
+                anterior + (a[i - 1] === b[j - 1] ? 0 : 1)
+            );
+            anterior = temp;
+        }
+    }
+    return linha[b.length];
+}
+
+// Dois nomes são "a mesma pessoa"? Tolera acento, ordem de preposições ("lucas oliveira"
+// x "lucas de oliveira"), sobrenome a mais ("wallace armando" x "wallace armando de
+// campos") e uma letra trocada. Não considera igual quem só compartilha o primeiro nome
+// (senão todo "Ana" viraria a mesma cliente).
+function sorteioMesmoNome(a, b) {
+    const na = sorteioNomeChave(a), nb = sorteioNomeChave(b);
+    if (!na || !nb) return false;
+    if (na === nb) return true;
+
+    const ignorar = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
+    const ta = na.split(' ').filter(p => p && !ignorar.has(p));
+    const tb = nb.split(' ').filter(p => p && !ignorar.has(p));
+    if (!ta.length || !tb.length) return false;
+
+    const parecido = (x, y) => {
+        if (x === y) return true;
+        if (Math.min(x.length, y.length) < 5 || x[0] !== y[0]) return false;
+        // "bruno" e "bruna", "gabriel" e "gabriela": uma letra de diferença, mas são
+        // pessoas diferentes. Quando a única mudança é a vogal final (trocada ou
+        // acrescentada), trata como nomes distintos.
+        const vogais = 'aeo';
+        if (x.length === y.length && x.slice(0, -1) === y.slice(0, -1)
+            && vogais.includes(x.slice(-1)) && vogais.includes(y.slice(-1))) return false;
+        const [curto, longo] = x.length < y.length ? [x, y] : [y, x];
+        if (longo.length === curto.length + 1 && longo.slice(0, -1) === curto
+            && vogais.includes(longo.slice(-1))) return false;
+        return sorteioDistancia(x, y) <= 1;
+    };
+
+    // Primeiro nome tem que bater sempre
+    if (!parecido(ta[0], tb[0])) return false;
+
+    // Só o primeiro nome não basta: precisa de um sobrenome em comum.
+    // Exceção: quando um dos cadastros só tem o primeiro nome mesmo (muito comum aqui),
+    // aí o primeiro nome batendo já vale.
+    if (ta.length === 1 || tb.length === 1) return true;
+    return ta.slice(1).some(x => tb.slice(1).some(y => parecido(x, y)));
+}
+
+// Já recebeu cupom? Confere primeiro pelo telefone (mais confiável) e, se não achar,
+// pelo nome — pega quem foi cadastrado com telefone diferente ou sem telefone.
+function sorteioJaTemCupom(nome, telefone) {
+    const tel = sorteioTelChave(telefone);
+    if (tel && _sorteioSugTelefonesNoSorteio.has(tel)) return true;
+    return _sorteioSugNomesNoSorteio.some(n => sorteioMesmoNome(n, nome));
+}
+
 let _sorteioSugComprasCruas = [];
 let _sorteioSugTelefonesNoSorteio = new Set();
+let _sorteioSugNomesNoSorteio = [];
 
 function sorteioAbrirModalSugestoes() {
     document.getElementById('modalSorteioSugestoes').classList.add('ativo');
@@ -11643,12 +11729,15 @@ async function sorteioCarregarSugestoes() {
         await carregarLojas();
         const filtroLoja = lojaIdParaFiltro();
 
-        // Telefones que já receberam cupom (qualquer lote já gerado)
-        let queryLotes = supabaseDB.from('sorteio_lotes').select('telefone');
+        // Quem já recebeu cupom (qualquer lote já gerado) — guarda telefone E nome,
+        // porque muita gente foi cadastrada com o telefone em formato diferente, ou
+        // sem telefone nenhum (às vezes está lá o @ do Instagram).
+        let queryLotes = supabaseDB.from('sorteio_lotes').select('cliente, telefone');
         if (filtroLoja) queryLotes = queryLotes.eq('loja_id', filtroLoja);
         const { data: lotes, error: erroLotes } = await medirPromise('Sorteio Sugestões (lotes)', () => queryLotes);
         if (erroLotes) throw new Error(erroLotes.message);
-        _sorteioSugTelefonesNoSorteio = new Set((lotes || []).map(l => sorteioSoDigitos(l.telefone)).filter(Boolean));
+        _sorteioSugTelefonesNoSorteio = new Set((lotes || []).map(l => sorteioTelChave(l.telefone)).filter(Boolean));
+        _sorteioSugNomesNoSorteio = (lotes || []).map(l => l.cliente).filter(n => sorteioNomeChave(n));
 
         // Vendas cadastradas no CRM
         let queryCrm = supabaseDB.from('crm_clientes').select('nome, telefone, valor_aparelho, data_compra');
@@ -11664,14 +11753,15 @@ async function sorteioCarregarSugestoes() {
         if (erroCrm) throw new Error(erroCrm.message);
         if (erroOs) throw new Error(erroOs.message);
 
-        // Normaliza as duas fontes num formato só: { nome, telefone, valor, dataISO, origem }
+        // Normaliza as duas fontes num formato só. Antes, quem não tinha telefone era
+        // descartado aqui; agora entra também, porque a comparação por nome dá conta.
         const compras = [];
         (vendas || []).forEach(v => {
-            if (!sorteioSoDigitos(v.telefone)) return;
+            if (!sorteioNomeChave(v.nome)) return;
             compras.push({ nome: v.nome, telefone: v.telefone, valor: parseFloat(v.valor_aparelho) || 0, dataISO: (v.data_compra || '').slice(0, 10), origem: 'CRM' });
         });
         (osList || []).forEach(o => {
-            if (!sorteioSoDigitos(o.telefone)) return;
+            if (!sorteioNomeChave(o.cliente)) return;
             compras.push({ nome: o.cliente, telefone: o.telefone, valor: parseFloat(o.total) || 0, dataISO: (o.data || '').slice(0, 10), origem: 'OS' });
         });
 
@@ -11707,22 +11797,49 @@ function sorteioFiltrarSugestoesPorMes() {
         ? _sorteioSugComprasCruas.filter(c => c.dataISO.slice(0, 7) === mesFiltro)
         : _sorteioSugComprasCruas;
 
-    const porTelefone = new Map();
+    // Agrupa as compras por PESSOA, não por telefone cru. A chave é o telefone
+    // normalizado (últimos 8 dígitos); quem não tem telefone entra pelo nome.
+    // Depois ainda junta os grupos que são a mesma pessoa com telefones diferentes
+    // (o mesmo cliente cadastrado uma vez com o 9 e outra sem, por exemplo).
+    const grupos = [];
+    const porChave = new Map();
     compras.forEach(c => {
-        const tel = sorteioSoDigitos(c.telefone);
-        const atual = porTelefone.get(tel) || { nome: c.nome, telefone: c.telefone, valorGasto: 0, ultimaCompraISO: null, origens: new Set() };
-        atual.valorGasto += c.valor;
-        atual.origens.add(c.origem);
-        if (!atual.ultimaCompraISO || (c.dataISO || '') > atual.ultimaCompraISO) {
-            atual.ultimaCompraISO = c.dataISO || atual.ultimaCompraISO;
-            atual.nome = c.nome || atual.nome;
-            atual.telefone = c.telefone || atual.telefone;
+        const tel = sorteioTelChave(c.telefone);
+        const chave = tel || ('nome:' + sorteioNomeChave(c.nome));
+        let g = porChave.get(chave);
+        if (!g) {
+            g = { nome: c.nome, telefone: c.telefone, valorGasto: 0, ultimaCompraISO: null, origens: new Set() };
+            porChave.set(chave, g);
+            grupos.push(g);
         }
-        porTelefone.set(tel, atual);
+        g.valorGasto += c.valor;
+        g.origens.add(c.origem);
+        if (!g.ultimaCompraISO || (c.dataISO || '') > g.ultimaCompraISO) {
+            g.ultimaCompraISO = c.dataISO || g.ultimaCompraISO;
+            g.nome = c.nome || g.nome;
+            g.telefone = c.telefone || g.telefone;
+        }
     });
 
-    let candidatos = Array.from(porTelefone.values()).filter(c => !_sorteioSugTelefonesNoSorteio.has(sorteioSoDigitos(c.telefone)));
-    candidatos = candidatos.filter(c => c.nome); // descarta lixo sem nome
+    // Junta grupos que são a mesma pessoa (mesmo nome), somando o que cada um gastou
+    const unificados = [];
+    grupos.forEach(g => {
+        const igual = unificados.find(u => sorteioMesmoNome(u.nome, g.nome));
+        if (igual) {
+            igual.valorGasto += g.valorGasto;
+            g.origens.forEach(o => igual.origens.add(o));
+            if (!igual.ultimaCompraISO || (g.ultimaCompraISO || '') > igual.ultimaCompraISO) {
+                igual.ultimaCompraISO = g.ultimaCompraISO || igual.ultimaCompraISO;
+                if (g.telefone) igual.telefone = g.telefone;
+            }
+            // fica com o nome mais completo dos dois
+            if ((g.nome || '').length > (igual.nome || '').length) igual.nome = g.nome;
+        } else {
+            unificados.push(g);
+        }
+    });
+
+    const candidatos = unificados.filter(c => c.nome && !sorteioJaTemCupom(c.nome, c.telefone));
 
     if (!candidatos.length) {
         if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">${mesFiltro ? 'Nenhuma sugestão para o mês escolhido.' : 'Nenhuma sugestão no momento — todo mundo que comprou já está no sorteio.'}</td></tr>`;
