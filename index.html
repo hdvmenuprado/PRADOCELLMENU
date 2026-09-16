@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260916140630">
+    <meta name="app-build" content="20260916202523">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1520,6 +1520,28 @@ body.modo-claro .main-content {
             font-weight:700; font-size:9px; padding:0 4px; border-radius:3px; letter-spacing:0.3px;
         }
         .os-tag-retorno:hover { background:rgba(230,126,34,0.32); }
+        /* Checklist de entrada */
+        .os-chk-grupo { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin:14px 0 6px; font-weight:700; }
+        .os-chk-linha { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--border-color); }
+        .os-chk-linha:last-child { border-bottom:none; }
+        .os-chk-nome { font-size:13px; flex:1; }
+        .os-chk-botoes { display:flex; gap:5px; flex-shrink:0; }
+        .os-chk-botoes button {
+            width:44px; padding:6px 0; border-radius:7px; cursor:pointer; font-size:10.5px; font-weight:700;
+            font-family:'Inter',sans-serif; border:1px solid var(--border-color);
+            background:var(--surface-2); color:var(--text-muted); transition:all .15s ease;
+        }
+        .os-chk-botoes button.ok.on { background:rgba(46,204,113,.16); border-color:#2ecc71; color:#2ecc71; }
+        .os-chk-botoes button.def.on { background:rgba(239,68,68,.16); border-color:#ef4444; color:#ef4444; }
+        .os-chk-botoes button.nt.on { background:rgba(148,163,184,.18); border-color:#94a3b8; color:#cbd5e1; }
+        /* Tag de checklist na linha da O.S. */
+        .os-tag-chk {
+            display:inline-block; cursor:pointer; vertical-align:1px; margin-left:3px;
+            background:rgba(46,204,113,0.14); color:#2ecc71; border:1px solid rgba(46,204,113,0.45);
+            font-weight:700; font-size:9px; padding:0 4px; border-radius:3px;
+        }
+        .os-tag-chk.com-defeito { background:rgba(239,68,68,0.14); color:#ef4444; border-color:rgba(239,68,68,0.45); }
+        .os-tag-chk:hover { filter:brightness(1.3); }
         .os-hist-item {
             background: var(--surface-1); border:1px solid var(--border-color); border-left:3px solid #e67e22;
             border-radius:9px; padding:12px 14px; margin-bottom:10px;
@@ -4025,6 +4047,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         <button onclick="osMenuAcaoEditar()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar cadastro</button>
                         <button onclick="osMenuAcaoOrcamento()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="receipt" style="width:14px;height:14px;"></i> Reimprimir cupom de entrada</button>
                         <button onclick="osMenuAcaoGarantia()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#60a5fa;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i> Reabrir em garantia</button>
+                        <button onclick="osMenuAcaoChecklist()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="clipboard-check" style="width:14px;height:14px;"></i> Checklist de entrada</button>
                         <button onclick="osMenuAcaoSenha()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="lock" style="width:14px;height:14px;"></i> Senha do aparelho</button>
                         <button onclick="osMenuAcaoExcluir()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#f87171;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir O.S.</button>
                     </div>
@@ -4729,6 +4752,37 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             <button onclick="osFecharHistoricoRetornos()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
         </div>
         <div id="osHistRetornosLista" style="margin-top:16px;"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOsChecklist">
+    <div class="modal-box" style="width:640px; max-width:94vw; max-height:88vh; overflow-y:auto; text-align:left; padding:26px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">
+            <div>
+                <h3 style="margin:0; color: var(--primary); font-size:1.02rem; letter-spacing:normal;display:flex;align-items:center;gap:8px;"><i data-lucide="clipboard-check" style="width:16px;height:16px;"></i> Checklist de entrada</h3>
+                <div id="osChkTitulo" style="font-size:13px;font-weight:600;margin-top:8px;"></div>
+                <div id="osChkSub" style="font-size:11.5px;color:var(--text-muted);margin-top:2px;"></div>
+            </div>
+            <button onclick="osFecharChecklist()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+        </div>
+
+        <div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap;">
+            <button type="button" class="ep-btn" onclick="osChkMarcarTodos('ok')" style="font-size:11px;padding:7px 10px;">Tudo funcionando</button>
+            <button type="button" class="ep-btn" onclick="osChkMarcarTodos('nt')" style="font-size:11px;padding:7px 10px;">Não dá pra testar (não liga)</button>
+            <button type="button" class="ep-btn" onclick="osChkMarcarTodos('')" style="font-size:11px;padding:7px 10px;">Limpar</button>
+        </div>
+
+        <div id="osChkItens"></div>
+
+        <div class="form-group" style="margin-top:16px;">
+            <label>Observações (marcas, riscos, acessórios que vieram junto...)</label>
+            <textarea id="osChkObs" placeholder="Ex.: trinco no canto inferior direito, veio com capa e película" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:70px;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div class="modal-btn-row" style="margin-top:18px;">
+            <button class="action-btn secondary-btn" onclick="osFecharChecklist()" style="margin-top:0;">Cancelar</button>
+            <button class="action-btn" onclick="osSalvarChecklist()" style="margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="save" style="width:14px;height:14px;"></i> Salvar Checklist</button>
+        </div>
     </div>
 </div>
 
@@ -9521,7 +9575,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -9777,6 +9831,10 @@ function osDoBanco(row) {
         senhaAparelho: row.senha_aparelho,
         status: row.status,
         retornos: row.retornos || 0,
+        checklist: row.checklist || null,
+        checklistObs: row.checklist_obs,
+        checklistEm: row.checklist_em,
+        checklistPor: row.checklist_por,
         historicoRetornos: Array.isArray(row.historico_retornos) ? row.historico_retornos : [],
         garantiaAte: row.garantia_ate,
         lojaId: row.loja_id,
@@ -9969,7 +10027,7 @@ function osCriarLinha(os) {
     tr.innerHTML = `
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);">
             ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:var(--text-muted);font-style:italic;">sem código</span>'}
-            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}${os.retornos > 0 ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>` : ''}</div>
+            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}${os.retornos > 0 ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>` : ''}${(() => { const r = osChkResumo(os); return r ? ` <span class="os-tag-chk ${r.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${r.falhas ? ' — ' + r.falhas + ' falha(s)' : ' — tudo ok'}">CHK${r.falhas ? ' ' + r.falhas : ''}</span>` : ''; })()}</div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
             <input type="text" class="osClienteNomeInput" placeholder="Nome do cliente"
@@ -10118,9 +10176,14 @@ function osAtualizarLinha(tr, os, forcarTudo) {
     // A tag de retorno mora dentro dessa mesma div, então aqui tem que reescrever as duas
     // coisas juntas — usar textContent apagaria a tag a cada auto-refresh da lista.
     if (dataEl) {
-        dataEl.innerHTML = data + ((os.retornos > 0)
-            ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>`
-            : '');
+        const rChk = osChkResumo(os);
+        dataEl.innerHTML = data
+            + ((os.retornos > 0)
+                ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>`
+                : '')
+            + (rChk
+                ? ` <span class="os-tag-chk ${rChk.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${rChk.falhas ? ' — ' + rChk.falhas + ' falha(s)' : ' — tudo ok'}">CHK${rChk.falhas ? ' ' + rChk.falhas : ''}</span>`
+                : '');
     }
 
     const nomeEl = tr.querySelector('.osClienteNomeInput');
@@ -10443,6 +10506,18 @@ function osApiPost(dados) {
                 garantia_dias: parseInt(dados.garantiaDias) || 0,
                 cliente: dados.cliente,
                 modelo: dados.modelo
+            }).eq('codigo', dados.codigo);
+            if (error) throw new Error(error.message);
+            return { ok: true };
+        }
+
+        // Checklist de entrada (preenchido pelo menu "⋮", depois da O.S. já cadastrada)
+        if (acao === 'ATUALIZAR_CHECKLIST') {
+            const { error } = await supabaseDB.from('ordens_servico').update({
+                checklist: dados.checklist || null,
+                checklist_obs: dados.checklistObs || null,
+                checklist_em: dados.checklistEm || null,
+                checklist_por: dados.checklistPor || null
             }).eq('codigo', dados.codigo);
             if (error) throw new Error(error.message);
             return { ok: true };
@@ -11049,6 +11124,153 @@ async function osReabrirEmGarantia(tr) {
 }
 
 // Histórico escondido: só aparece ao clicar na tag "RETORNO n" da linha.
+// ------------------------------------------------------------------
+// CHECKLIST DE ENTRADA — estado do aparelho item a item, do jeito que chegou.
+// Preenchido depois que a O.S. já existe, pelo menu "⋮" da linha. Serve de prova
+// do que funcionava (ou não) antes do reparo, pra evitar discussão na entrega.
+// ------------------------------------------------------------------
+const OS_CHECKLIST_ITENS = [
+    { grupo: 'Geral', itens: [
+        { id: 'liga', nome: 'Liga / dá imagem' },
+        { id: 'carrega', nome: 'Carrega (conector)' },
+        { id: 'bateria', nome: 'Bateria segura carga' },
+    ]},
+    { grupo: 'Tela', itens: [
+        { id: 'imagem', nome: 'Imagem sem manchas ou linhas' },
+        { id: 'touch', nome: 'Touch responde em toda a tela' },
+        { id: 'vidro', nome: 'Vidro sem trincos' },
+    ]},
+    { grupo: 'Câmeras e biometria', itens: [
+        { id: 'cam_tras', nome: 'Câmera traseira' },
+        { id: 'cam_front', nome: 'Câmera frontal' },
+        { id: 'biometria', nome: 'Face ID / Touch ID' },
+    ]},
+    { grupo: 'Áudio', itens: [
+        { id: 'alto_falante', nome: 'Alto-falante (música)' },
+        { id: 'auricular', nome: 'Auricular (chamada)' },
+        { id: 'microfone', nome: 'Microfone' },
+        { id: 'vibracao', nome: 'Vibração' },
+    ]},
+    { grupo: 'Conectividade e botões', itens: [
+        { id: 'wifi', nome: 'Wi-Fi' },
+        { id: 'chip', nome: 'Chip / rede móvel' },
+        { id: 'botoes', nome: 'Botões (power e volume)' },
+        { id: 'sensores', nome: 'Sensor de proximidade' },
+    ]},
+    { grupo: 'Estrutura', itens: [
+        { id: 'carcaca', nome: 'Carcaça sem amassados' },
+        { id: 'tampa', nome: 'Tampa traseira íntegra' },
+        { id: 'oxidacao', nome: 'Sem sinal de água / oxidação' },
+    ]},
+];
+
+let _osChkTrAtual = null;
+let _osChkRespostas = {};
+
+function osMenuAcaoChecklist() {
+    const tr = _osMenuTrAtual;
+    osFecharMenuPontinhos();
+    if (tr) osAbrirChecklist(tr);
+}
+
+function osAbrirChecklist(tr) {
+    const os = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    if (!os) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
+    _osChkTrAtual = tr;
+    _osChkRespostas = Object.assign({}, os.checklist || {});
+
+    document.getElementById('osChkTitulo').textContent = `${os.cliente || '-'} — ${os.modelo || '-'}`;
+    document.getElementById('osChkSub').textContent = os.checklistEm
+        ? `O.S. ${os.codigo} · preenchido em ${new Date(os.checklistEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}${os.checklistPor ? ' por ' + os.checklistPor : ''}`
+        : `O.S. ${os.codigo} · ainda não preenchido`;
+    document.getElementById('osChkObs').value = os.checklistObs || '';
+
+    osChkRenderizar();
+    document.getElementById('modalOsChecklist').classList.add('ativo');
+    if (window.lucide) lucide.createIcons();
+}
+
+function osFecharChecklist() {
+    document.getElementById('modalOsChecklist').classList.remove('ativo');
+}
+
+function osChkRenderizar() {
+    document.getElementById('osChkItens').innerHTML = OS_CHECKLIST_ITENS.map(g => `
+        <div class="os-chk-grupo">${g.grupo}</div>
+        ${g.itens.map(i => {
+            const v = _osChkRespostas[i.id] || '';
+            return `
+            <div class="os-chk-linha">
+                <span class="os-chk-nome">${i.nome}</span>
+                <div class="os-chk-botoes">
+                    <button type="button" class="ok ${v === 'ok' ? 'on' : ''}" onclick="osChkMarcar('${i.id}','ok')" title="Funcionando">OK</button>
+                    <button type="button" class="def ${v === 'def' ? 'on' : ''}" onclick="osChkMarcar('${i.id}','def')" title="Com defeito">Falha</button>
+                    <button type="button" class="nt ${v === 'nt' ? 'on' : ''}" onclick="osChkMarcar('${i.id}','nt')" title="Não foi possível testar">N/T</button>
+                </div>
+            </div>`;
+        }).join('')}
+    `).join('');
+}
+
+// Clicar de novo no mesmo botão desmarca, pra corrigir sem precisar limpar tudo
+function osChkMarcar(id, valor) {
+    _osChkRespostas[id] = (_osChkRespostas[id] === valor) ? '' : valor;
+    osChkRenderizar();
+}
+
+function osChkMarcarTodos(valor) {
+    OS_CHECKLIST_ITENS.forEach(g => g.itens.forEach(i => { _osChkRespostas[i.id] = valor; }));
+    osChkRenderizar();
+}
+
+async function osSalvarChecklist() {
+    const tr = _osChkTrAtual;
+    if (!tr) return;
+    const os = _osListaCompleta.find(o => o.codigo === tr.dataset.codigo);
+    if (!os) { mostrarToast('O.S. não encontrada.', 'erro'); return; }
+
+    // Guarda só o que foi respondido, pra não encher o banco de campos vazios
+    const respostas = {};
+    Object.keys(_osChkRespostas).forEach(k => { if (_osChkRespostas[k]) respostas[k] = _osChkRespostas[k]; });
+    const obs = document.getElementById('osChkObs').value || '';
+
+    if (!Object.keys(respostas).length && !obs.trim()) {
+        mostrarToast('Marque ao menos um item antes de salvar.', 'erro');
+        return;
+    }
+
+    const quem = (typeof PERFIL_ATUAL !== 'undefined' && PERFIL_ATUAL)
+        ? ({ gestao: 'Gestão', loja_norte: 'Loja Norte', loja_sul: 'Loja Sul' }[PERFIL_ATUAL] || PERFIL_ATUAL)
+        : null;
+    const agora = new Date().toISOString();
+
+    try {
+        await osApiPost({ acao: 'ATUALIZAR_CHECKLIST', codigo: os.codigo, checklist: respostas, checklistObs: obs, checklistEm: agora, checklistPor: quem });
+        os.checklist = respostas; os.checklistObs = obs; os.checklistEm = agora; os.checklistPor = quem;
+        osAtualizarLinha(tr, os, true);
+        mostrarToast('Checklist salvo!');
+        osFecharChecklist();
+    } catch (e) {
+        mostrarToast('Não deu pra salvar o checklist: ' + e.message, 'erro');
+    }
+}
+
+function osAbrirChecklistPelaTag(el) {
+    const tr = el.closest('tr');
+    if (tr) osAbrirChecklist(tr);
+}
+
+// Quantos itens do checklist deram falha (usado na tag da linha)
+function osChkResumo(os) {
+    const c = os.checklist || {};
+    const chaves = Object.keys(c);
+    if (!chaves.length) return null;
+    return {
+        preenchidos: chaves.length,
+        falhas: chaves.filter(k => c[k] === 'def').length
+    };
+}
+
 function osVerHistoricoRetornos(el) {
     const tr = el.closest('tr');
     const os = _osListaCompleta.find(o => o.codigo === tr.dataset.codigo);
