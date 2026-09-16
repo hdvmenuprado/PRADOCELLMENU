@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260916135503">
+    <meta name="app-build" content="20260916140125">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1512,20 +1512,20 @@ body.modo-claro .main-content {
             display:inline-block; background:#1e293b; color:#facc15; font-weight:700;
             font-size:11px; padding:2px 7px; border-radius:5px; letter-spacing:0.5px;
         }
-        /* Tag de retorno na coluna do código: aparece quando o aparelho já voltou em
-           garantia. É clicável e abre o histórico das reaberturas. */
+        /* Tag de retorno: fica inline junto da data, compacta, pra não roubar altura da
+           linha. Clicável — abre o histórico das reaberturas. */
         .os-tag-retorno {
-            display:inline-block; margin-top:3px; cursor:pointer;
-            background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.45);
-            font-weight:700; font-size:9px; padding:1px 5px; border-radius:4px; letter-spacing:0.4px;
+            display:inline-block; cursor:pointer; vertical-align:1px;
+            background:rgba(230,126,34,0.16); color:#e67e22; border:1px solid rgba(230,126,34,0.5);
+            font-weight:700; font-size:9px; padding:0 4px; border-radius:3px; letter-spacing:0.3px;
         }
-        .os-tag-retorno:hover { background:rgba(96,165,250,0.3); }
+        .os-tag-retorno:hover { background:rgba(230,126,34,0.32); }
         .os-hist-item {
-            background: var(--surface-1); border:1px solid var(--border-color); border-left:3px solid #60a5fa;
+            background: var(--surface-1); border:1px solid var(--border-color); border-left:3px solid #e67e22;
             border-radius:9px; padding:12px 14px; margin-bottom:10px;
         }
         .os-hist-cabecalho { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:7px; }
-        .os-hist-num { font-size:10.5px; font-weight:700; color:#60a5fa; letter-spacing:0.5px; }
+        .os-hist-num { font-size:10.5px; font-weight:700; color:#e67e22; letter-spacing:0.5px; }
         .os-hist-data { font-size:11px; color:var(--text-muted); }
         .os-hist-linha { font-size:12px; color:var(--text-main); line-height:1.55; }
         .os-hist-linha b { color:var(--text-muted); font-weight:600; }
@@ -9969,8 +9969,7 @@ function osCriarLinha(os) {
     tr.innerHTML = `
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);">
             ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:var(--text-muted);font-style:italic;">sem código</span>'}
-            ${os.retornos > 0 ? `<div class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Clique para ver o histórico de retornos">RETORNO ${os.retornos}</div>` : ''}
-            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}</div>
+            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}${os.retornos > 0 ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>` : ''}</div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
             <input type="text" class="osClienteNomeInput" placeholder="Nome do cliente"
