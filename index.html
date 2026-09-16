@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260916140125">
+    <meta name="app-build" content="20260916140630">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -10115,7 +10115,13 @@ function osAtualizarLinha(tr, os, forcarTudo) {
     const badge = tr.querySelector('.os-codigo-badge');
     if (badge) { badge.textContent = os.codigo; badge.title = os.codigo; }
     const dataEl = tr.querySelector('td:first-child > div');
-    if (dataEl) dataEl.textContent = data;
+    // A tag de retorno mora dentro dessa mesma div, então aqui tem que reescrever as duas
+    // coisas juntas — usar textContent apagaria a tag a cada auto-refresh da lista.
+    if (dataEl) {
+        dataEl.innerHTML = data + ((os.retornos > 0)
+            ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>`
+            : '');
+    }
 
     const nomeEl = tr.querySelector('.osClienteNomeInput');
     if (nomeEl && document.activeElement !== nomeEl) { nomeEl.value = os.cliente || ''; nomeEl.title = os.cliente || ''; }
