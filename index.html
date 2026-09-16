@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260915171110">
+    <meta name="app-build" content="20260916134734">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1511,6 +1511,18 @@ body.modo-claro .main-content {
         .os-codigo-badge {
             display:inline-block; background:#1e293b; color:#facc15; font-weight:700;
             font-size:11px; padding:2px 7px; border-radius:5px; letter-spacing:0.5px;
+        }
+        /* Selos de garantia na coluna do código: a O.S. de retorno fica marcada, e a
+           O.S. original ganha um aviso de que aquele aparelho já voltou. */
+        .os-selo-garantia {
+            display:inline-block; margin-top:3px; background:rgba(96,165,250,0.15); color:#60a5fa;
+            border:1px solid rgba(96,165,250,0.45); font-weight:700; font-size:9px;
+            padding:1px 5px; border-radius:4px; letter-spacing:0.4px;
+        }
+        .os-selo-voltou {
+            display:inline-block; margin-top:3px; background:rgba(148,163,184,0.12); color:var(--text-muted);
+            border:1px solid var(--border-color); font-size:9px; font-weight:600;
+            padding:1px 5px; border-radius:4px;
         }
         .logo-upload-preview {
             display:none; max-width:140px; max-height:70px; object-fit:contain;
@@ -4007,6 +4019,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     <div id="osMenuPontinhos" class="hidden" style="position:fixed;z-index:200;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);overflow:hidden;min-width:170px;backdrop-filter:blur(20px);">
                         <button onclick="osMenuAcaoEditar()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar cadastro</button>
                         <button onclick="osMenuAcaoOrcamento()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="receipt" style="width:14px;height:14px;"></i> Reimprimir cupom de entrada</button>
+                        <button onclick="osMenuAcaoGarantia()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#60a5fa;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i> Reabrir em garantia</button>
                         <button onclick="osMenuAcaoSenha()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="lock" style="width:14px;height:14px;"></i> Senha do aparelho</button>
                         <button onclick="osMenuAcaoExcluir()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#f87171;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir O.S.</button>
                     </div>
@@ -9717,6 +9730,9 @@ function osParaBanco(os) {
         tecnico: os.tecnico || null,
         senha_aparelho: os.senhaAparelho || null,
         status: os.status || 'Orçando',
+        tipo_os: os.tipoOs || 'Normal',
+        os_origem: os.osOrigem || null,
+        garantia_ate: os.garantiaAte || null,
         loja_id: lojaIdParaGravar(),
         criado_em: os.criadoEm || new Date().toISOString()
     };
@@ -9743,6 +9759,10 @@ function osDoBanco(row) {
         tecnico: row.tecnico,
         senhaAparelho: row.senha_aparelho,
         status: row.status,
+        tipoOs: row.tipo_os || 'Normal',
+        osOrigem: row.os_origem,
+        retornouGarantia: row.retornou_garantia === true,
+        garantiaAte: row.garantia_ate,
         lojaId: row.loja_id,
         criadoEm: row.criado_em
     };
@@ -9933,6 +9953,8 @@ function osCriarLinha(os) {
     tr.innerHTML = `
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);">
             ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:var(--text-muted);font-style:italic;">sem código</span>'}
+            ${os.tipoOs === 'Garantia' ? `<div class="os-selo-garantia" title="Retorno de garantia da O.S. ${escapeHTML(os.osOrigem || '')}">🛡️ GARANTIA</div>` : ''}
+            ${os.retornouGarantia && os.tipoOs !== 'Garantia' ? '<div class="os-selo-voltou" title="Este aparelho já voltou em garantia">↩ voltou</div>' : ''}
             <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}</div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
@@ -10030,6 +10052,9 @@ function osPreencherDatasetLinha(tr, os) {
     tr.dataset.descricao = os.descricao || '';
     tr.dataset.reparo = os.reparo || '';
     tr.dataset.garantiaDias = osGarantiaDiasStr(os.garantiaDias);
+    tr.dataset.garantiaAte = os.garantiaAte || '';
+    tr.dataset.tipoOs = os.tipoOs || 'Normal';
+    tr.dataset.osOrigem = os.osOrigem || '';
     tr.dataset.vendedor = os.vendedor || '';
     tr.dataset.tecnico = os.tecnico || '';
     tr.dataset.senhaAparelho = os.senhaAparelho ? JSON.stringify(os.senhaAparelho) : '';
@@ -10919,6 +10944,86 @@ async function osCarregarConsultasStatus() {
     }
 }
 
+function osMenuAcaoGarantia() {
+    const tr = _osMenuTrAtual;
+    osFecharMenuPontinhos();
+    if (tr) osReabrirEmGarantia(tr);
+}
+
+// Calcula até quando vale a garantia de uma O.S.: usa a data fixa quando existe (caso das
+// O.S. de retorno, que herdam o prazo da original) e, senão, conta os dias a partir da
+// data da O.S.
+function osGarantiaValidaAte(os) {
+    if (os.garantiaAte) return new Date(os.garantiaAte + 'T23:59:59');
+    const dias = (os.garantiaDias === undefined || os.garantiaDias === null || os.garantiaDias === '') ? 90 : parseInt(os.garantiaDias, 10);
+    if (!dias) return null;
+    const base = os.data ? new Date(os.data + 'T23:59:59') : new Date(os.criadoEm || Date.now());
+    base.setDate(base.getDate() + dias);
+    return base;
+}
+
+// Aparelho voltou em garantia: cria uma O.S. NOVA (sem valor, marcada como Garantia e
+// ligada à original) em vez de reabrir a antiga. Assim a entrega original fica preservada,
+// dá pra contar quantas vezes o mesmo aparelho voltou, e o retorno não entra como receita.
+// A garantia não reinicia: a nova O.S. herda a data de fim da original.
+async function osReabrirEmGarantia(tr) {
+    const original = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    if (!original) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
+    if (original.tipoOs === 'Garantia') { mostrarToast('Essa O.S. já é um retorno de garantia.', 'erro'); return; }
+
+    const validaAte = osGarantiaValidaAte(original);
+    const hoje = new Date();
+    let aviso = `Abrir retorno de garantia para:\n\n${original.cliente} — ${original.modelo}\nO.S. original: ${original.codigo}\n\n`;
+    if (!validaAte) {
+        aviso += 'ATENÇÃO: essa O.S. foi registrada SEM garantia.\n\nAbrir mesmo assim?';
+    } else if (validaAte < hoje) {
+        const diasVencida = Math.floor((hoje - validaAte) / 86400000);
+        aviso += `ATENÇÃO: a garantia venceu em ${validaAte.toLocaleDateString('pt-BR')} (há ${diasVencida} dia(s)).\n\nAbrir mesmo assim?`;
+    } else {
+        const diasRestantes = Math.ceil((validaAte - hoje) / 86400000);
+        aviso += `Garantia válida até ${validaAte.toLocaleDateString('pt-BR')} (faltam ${diasRestantes} dia(s)).\n\nA nova O.S. entra com valor R$ 0,00 e mantém essa mesma data de vencimento — a garantia não reinicia.\n\nConfirmar?`;
+    }
+    if (!confirm(aviso)) return;
+
+    const nova = {
+        codigo: osGerarCodigo(),
+        data: new Date().toISOString().slice(0, 10),
+        cliente: original.cliente,
+        telefone: original.telefone,
+        modelo: original.modelo,
+        origem: original.origem,
+        estadoAparelho: original.estadoAparelho,
+        descricao: `[RETORNO DE GARANTIA da O.S. ${original.codigo}]\nServiço anterior: ${original.reparo || '-'}\n\nDefeito relatado agora: `,
+        reparo: '',
+        garantiaDias: original.garantiaDias,
+        garantiaAte: validaAte ? validaAte.toISOString().slice(0, 10) : null,
+        custoPeca: 0,
+        maoDeObra: 0,
+        total: 0,
+        vendedor: original.vendedor,
+        tecnico: original.tecnico,
+        senhaAparelho: original.senhaAparelho,
+        status: 'Orçando',
+        tipoOs: 'Garantia',
+        osOrigem: original.codigo,
+        criadoEm: new Date().toISOString()
+    };
+
+    try {
+        const { error } = await medirPromise('O.S. Retorno Garantia', () => supabaseDB.from('ordens_servico').insert(osParaBanco(nova)));
+        if (error) throw new Error(error.message);
+
+        // Marca a original pra dar pra ver, na lista, que esse aparelho já voltou
+        await supabaseDB.from('ordens_servico').update({ retornou_garantia: true }).eq('codigo', original.codigo);
+        original.retornouGarantia = true;
+
+        mostrarToast('Retorno de garantia aberto: ' + nova.codigo);
+        osCarregar();
+    } catch (e) {
+        mostrarToast('Não deu pra abrir o retorno: ' + e.message, 'erro');
+    }
+}
+
 function osMenuAcaoOrcamento() {
     const tr = _osMenuTrAtual;
     osFecharMenuPontinhos();
@@ -11201,6 +11306,7 @@ function osDadosDaLinha(tr) {
         descricao: tr.dataset.descricao,
         reparo: tr.dataset.reparo,
         garantiaDias: tr.dataset.garantiaDias,
+        garantiaAte: tr.dataset.garantiaAte,
         vendedor: tr.dataset.vendedor,
         criadoEm: tr.dataset.criadoEm,
         custoPeca: inputsNum[0] ? inputsNum[0].value : 0,
@@ -11345,7 +11451,11 @@ function montarViaCupom(os, via, tipo) {
     const dataFmt = osFormatarData(os.data||'') || new Date().toLocaleDateString('pt-BR');
     const horaFmt = osFormatarHoraEntrada(os.criadoEm);
     const diasGarantia = (os.garantiaDias !== undefined && os.garantiaDias !== '' && os.garantiaDias !== null) ? parseInt(os.garantiaDias, 10) : 90;
-    const dataGarantia = osCalcularDataGarantia(diasGarantia);
+    // Quando a O.S. tem data fixa de garantia (caso dos retornos, que herdam o prazo da
+    // original), usa ela direto — senão o retorno sairia com garantia nova contada de hoje.
+    const dataGarantia = os.garantiaAte
+        ? new Date(os.garantiaAte + 'T12:00:00').toLocaleDateString('pt-BR')
+        : osCalcularDataGarantia(diasGarantia);
     // Data/hora em que o cupom de finalização está sendo impresso = momento da entrega
     const agoraEntrega = new Date();
     const entregaFmt = agoraEntrega.toLocaleDateString('pt-BR') + ' às ' + agoraEntrega.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
