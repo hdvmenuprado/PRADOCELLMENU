@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260916134734">
+    <meta name="app-build" content="20260916135503">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1512,18 +1512,23 @@ body.modo-claro .main-content {
             display:inline-block; background:#1e293b; color:#facc15; font-weight:700;
             font-size:11px; padding:2px 7px; border-radius:5px; letter-spacing:0.5px;
         }
-        /* Selos de garantia na coluna do código: a O.S. de retorno fica marcada, e a
-           O.S. original ganha um aviso de que aquele aparelho já voltou. */
-        .os-selo-garantia {
-            display:inline-block; margin-top:3px; background:rgba(96,165,250,0.15); color:#60a5fa;
-            border:1px solid rgba(96,165,250,0.45); font-weight:700; font-size:9px;
-            padding:1px 5px; border-radius:4px; letter-spacing:0.4px;
+        /* Tag de retorno na coluna do código: aparece quando o aparelho já voltou em
+           garantia. É clicável e abre o histórico das reaberturas. */
+        .os-tag-retorno {
+            display:inline-block; margin-top:3px; cursor:pointer;
+            background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.45);
+            font-weight:700; font-size:9px; padding:1px 5px; border-radius:4px; letter-spacing:0.4px;
         }
-        .os-selo-voltou {
-            display:inline-block; margin-top:3px; background:rgba(148,163,184,0.12); color:var(--text-muted);
-            border:1px solid var(--border-color); font-size:9px; font-weight:600;
-            padding:1px 5px; border-radius:4px;
+        .os-tag-retorno:hover { background:rgba(96,165,250,0.3); }
+        .os-hist-item {
+            background: var(--surface-1); border:1px solid var(--border-color); border-left:3px solid #60a5fa;
+            border-radius:9px; padding:12px 14px; margin-bottom:10px;
         }
+        .os-hist-cabecalho { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:7px; }
+        .os-hist-num { font-size:10.5px; font-weight:700; color:#60a5fa; letter-spacing:0.5px; }
+        .os-hist-data { font-size:11px; color:var(--text-muted); }
+        .os-hist-linha { font-size:12px; color:var(--text-main); line-height:1.55; }
+        .os-hist-linha b { color:var(--text-muted); font-weight:600; }
         .logo-upload-preview {
             display:none; max-width:140px; max-height:70px; object-fit:contain;
             border-radius:6px; border:1px solid var(--border-color); padding:4px; background:#fff; margin-top:8px;
@@ -4710,6 +4715,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOsHistRetornos">
+    <div class="modal-box" style="width:560px; max-width:94vw; max-height:85vh; overflow-y:auto; text-align:left; padding:26px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">
+            <div>
+                <h3 style="margin:0; color: var(--primary); font-size:1.02rem; letter-spacing:normal;display:flex;align-items:center;gap:8px;"><i data-lucide="history" style="width:16px;height:16px;"></i> Histórico de retornos</h3>
+                <div id="osHistRetornosTitulo" style="font-size:13px;font-weight:600;margin-top:8px;"></div>
+                <div id="osHistRetornosSub" style="font-size:11.5px;color:var(--text-muted);margin-top:2px;"></div>
+            </div>
+            <button onclick="osFecharHistoricoRetornos()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+        </div>
+        <div id="osHistRetornosLista" style="margin-top:16px;"></div>
     </div>
 </div>
 
@@ -9502,7 +9521,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -9730,8 +9749,6 @@ function osParaBanco(os) {
         tecnico: os.tecnico || null,
         senha_aparelho: os.senhaAparelho || null,
         status: os.status || 'Orçando',
-        tipo_os: os.tipoOs || 'Normal',
-        os_origem: os.osOrigem || null,
         garantia_ate: os.garantiaAte || null,
         loja_id: lojaIdParaGravar(),
         criado_em: os.criadoEm || new Date().toISOString()
@@ -9759,9 +9776,8 @@ function osDoBanco(row) {
         tecnico: row.tecnico,
         senhaAparelho: row.senha_aparelho,
         status: row.status,
-        tipoOs: row.tipo_os || 'Normal',
-        osOrigem: row.os_origem,
-        retornouGarantia: row.retornou_garantia === true,
+        retornos: row.retornos || 0,
+        historicoRetornos: Array.isArray(row.historico_retornos) ? row.historico_retornos : [],
         garantiaAte: row.garantia_ate,
         lojaId: row.loja_id,
         criadoEm: row.criado_em
@@ -9953,8 +9969,7 @@ function osCriarLinha(os) {
     tr.innerHTML = `
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);">
             ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:var(--text-muted);font-style:italic;">sem código</span>'}
-            ${os.tipoOs === 'Garantia' ? `<div class="os-selo-garantia" title="Retorno de garantia da O.S. ${escapeHTML(os.osOrigem || '')}">🛡️ GARANTIA</div>` : ''}
-            ${os.retornouGarantia && os.tipoOs !== 'Garantia' ? '<div class="os-selo-voltou" title="Este aparelho já voltou em garantia">↩ voltou</div>' : ''}
+            ${os.retornos > 0 ? `<div class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Clique para ver o histórico de retornos">RETORNO ${os.retornos}</div>` : ''}
             <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}</div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
@@ -10053,8 +10068,7 @@ function osPreencherDatasetLinha(tr, os) {
     tr.dataset.reparo = os.reparo || '';
     tr.dataset.garantiaDias = osGarantiaDiasStr(os.garantiaDias);
     tr.dataset.garantiaAte = os.garantiaAte || '';
-    tr.dataset.tipoOs = os.tipoOs || 'Normal';
-    tr.dataset.osOrigem = os.osOrigem || '';
+    tr.dataset.retornos = os.retornos || 0;
     tr.dataset.vendedor = os.vendedor || '';
     tr.dataset.tecnico = os.tecnico || '';
     tr.dataset.senhaAparelho = os.senhaAparelho ? JSON.stringify(os.senhaAparelho) : '';
@@ -10962,66 +10976,102 @@ function osGarantiaValidaAte(os) {
     return base;
 }
 
-// Aparelho voltou em garantia: cria uma O.S. NOVA (sem valor, marcada como Garantia e
-// ligada à original) em vez de reabrir a antiga. Assim a entrega original fica preservada,
-// dá pra contar quantas vezes o mesmo aparelho voltou, e o retorno não entra como receita.
-// A garantia não reinicia: a nova O.S. herda a data de fim da original.
+// Aparelho voltou em garantia: REABRE a própria O.S. em vez de criar outra.
+// A data de entrada passa a ser hoje (o aparelho está na bancada de novo), o status volta
+// pro começo do fluxo e o contador de retornos sobe — virando a tag "RETORNO 1", "RETORNO 2".
+// Antes de sobrescrever, guarda no histórico como a O.S. estava, pra não perder a data de
+// entrada e o status anteriores. A garantia NÃO reinicia: a data de vencimento original
+// fica congelada em garantia_ate.
 async function osReabrirEmGarantia(tr) {
-    const original = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
-    if (!original) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
-    if (original.tipoOs === 'Garantia') { mostrarToast('Essa O.S. já é um retorno de garantia.', 'erro'); return; }
+    const os = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    if (!os) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
 
-    const validaAte = osGarantiaValidaAte(original);
+    const validaAte = osGarantiaValidaAte(os);
     const hoje = new Date();
-    let aviso = `Abrir retorno de garantia para:\n\n${original.cliente} — ${original.modelo}\nO.S. original: ${original.codigo}\n\n`;
+    const proximoRetorno = (os.retornos || 0) + 1;
+
+    let aviso = `Reabrir esta O.S. como RETORNO ${proximoRetorno}?\n\n${os.cliente} — ${os.modelo}\nO.S. ${os.codigo}\n\n`;
     if (!validaAte) {
-        aviso += 'ATENÇÃO: essa O.S. foi registrada SEM garantia.\n\nAbrir mesmo assim?';
+        aviso += 'ATENÇÃO: essa O.S. foi registrada SEM garantia.\n\nReabrir mesmo assim?';
     } else if (validaAte < hoje) {
         const diasVencida = Math.floor((hoje - validaAte) / 86400000);
-        aviso += `ATENÇÃO: a garantia venceu em ${validaAte.toLocaleDateString('pt-BR')} (há ${diasVencida} dia(s)).\n\nAbrir mesmo assim?`;
+        aviso += `ATENÇÃO: a garantia venceu em ${validaAte.toLocaleDateString('pt-BR')} (há ${diasVencida} dia(s)).\n\nReabrir mesmo assim?`;
     } else {
         const diasRestantes = Math.ceil((validaAte - hoje) / 86400000);
-        aviso += `Garantia válida até ${validaAte.toLocaleDateString('pt-BR')} (faltam ${diasRestantes} dia(s)).\n\nA nova O.S. entra com valor R$ 0,00 e mantém essa mesma data de vencimento — a garantia não reinicia.\n\nConfirmar?`;
+        aviso += `Garantia válida até ${validaAte.toLocaleDateString('pt-BR')} (faltam ${diasRestantes} dia(s)) — o prazo não reinicia.\n\nA data de entrada passa a ser hoje e o status volta pra Orçando.\n\nConfirmar?`;
     }
     if (!confirm(aviso)) return;
 
-    const nova = {
-        codigo: osGerarCodigo(),
-        data: new Date().toISOString().slice(0, 10),
-        cliente: original.cliente,
-        telefone: original.telefone,
-        modelo: original.modelo,
-        origem: original.origem,
-        estadoAparelho: original.estadoAparelho,
-        descricao: `[RETORNO DE GARANTIA da O.S. ${original.codigo}]\nServiço anterior: ${original.reparo || '-'}\n\nDefeito relatado agora: `,
-        reparo: '',
-        garantiaDias: original.garantiaDias,
-        garantiaAte: validaAte ? validaAte.toISOString().slice(0, 10) : null,
-        custoPeca: 0,
-        maoDeObra: 0,
-        total: 0,
-        vendedor: original.vendedor,
-        tecnico: original.tecnico,
-        senhaAparelho: original.senhaAparelho,
-        status: 'Orçando',
-        tipoOs: 'Garantia',
-        osOrigem: original.codigo,
-        criadoEm: new Date().toISOString()
+    // Foto de como a O.S. está agora, pra ficar no histórico antes de ser sobrescrita
+    const entradaHistorico = {
+        retorno: proximoRetorno,
+        reaberto_em: new Date().toISOString(),
+        data_anterior: os.data || null,
+        status_anterior: os.status || null,
+        reparo_anterior: os.reparo || null,
+        total_anterior: parseFloat(os.total || 0),
+        tecnico_anterior: os.tecnico || null
     };
+    const historico = [...(os.historicoRetornos || []), entradaHistorico];
+    const hojeISO = new Date().toISOString().slice(0, 10);
+
+    const mudancas = {
+        data: hojeISO,
+        status: 'Orçando',
+        retornos: proximoRetorno,
+        historico_retornos: historico
+    };
+    // Congela a data de fim da garantia na primeira reabertura, pra que as próximas
+    // (e o cupom) continuem contando do prazo original em vez de recomeçar.
+    if (!os.garantiaAte && validaAte) mudancas.garantia_ate = validaAte.toISOString().slice(0, 10);
 
     try {
-        const { error } = await medirPromise('O.S. Retorno Garantia', () => supabaseDB.from('ordens_servico').insert(osParaBanco(nova)));
+        const { error } = await medirPromise('O.S. Reabrir Garantia', () =>
+            supabaseDB.from('ordens_servico').update(mudancas).eq('codigo', os.codigo));
         if (error) throw new Error(error.message);
 
-        // Marca a original pra dar pra ver, na lista, que esse aparelho já voltou
-        await supabaseDB.from('ordens_servico').update({ retornou_garantia: true }).eq('codigo', original.codigo);
-        original.retornouGarantia = true;
+        os.data = hojeISO;
+        os.status = 'Orçando';
+        os.retornos = proximoRetorno;
+        os.historicoRetornos = historico;
+        if (mudancas.garantia_ate) os.garantiaAte = mudancas.garantia_ate;
 
-        mostrarToast('Retorno de garantia aberto: ' + nova.codigo);
+        mostrarToast(`O.S. reaberta como RETORNO ${proximoRetorno}`);
         osCarregar();
     } catch (e) {
-        mostrarToast('Não deu pra abrir o retorno: ' + e.message, 'erro');
+        mostrarToast('Não deu pra reabrir: ' + e.message, 'erro');
     }
+}
+
+// Histórico escondido: só aparece ao clicar na tag "RETORNO n" da linha.
+function osVerHistoricoRetornos(el) {
+    const tr = el.closest('tr');
+    const os = _osListaCompleta.find(o => o.codigo === tr.dataset.codigo);
+    if (!os || !(os.historicoRetornos || []).length) { mostrarToast('Sem histórico registrado.', 'erro'); return; }
+
+    document.getElementById('osHistRetornosTitulo').textContent = `${os.cliente} — ${os.modelo}`;
+    document.getElementById('osHistRetornosSub').textContent = `O.S. ${os.codigo} · ${os.retornos} retorno(s)` + (os.garantiaAte ? ` · garantia até ${new Date(os.garantiaAte + 'T12:00:00').toLocaleDateString('pt-BR')}` : '');
+
+    document.getElementById('osHistRetornosLista').innerHTML = [...os.historicoRetornos].reverse().map(h => {
+        const quando = h.reaberto_em ? new Date(h.reaberto_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+        return `
+            <div class="os-hist-item">
+                <div class="os-hist-cabecalho">
+                    <span class="os-hist-num">RETORNO ${h.retorno}</span>
+                    <span class="os-hist-data">reaberto em ${quando}</span>
+                </div>
+                <div class="os-hist-linha"><b>Entrada anterior:</b> ${h.data_anterior ? osFormatarData(h.data_anterior) : '-'}</div>
+                <div class="os-hist-linha"><b>Status anterior:</b> ${escapeHTML(h.status_anterior) || '-'}</div>
+                <div class="os-hist-linha"><b>Serviço anterior:</b> ${escapeHTML(h.reparo_anterior) || '-'}</div>
+                <div class="os-hist-linha"><b>Técnico:</b> ${escapeHTML(h.tecnico_anterior) || '-'} &nbsp;|&nbsp; <b>Valor cobrado:</b> R$ ${(h.total_anterior || 0).toFixed(2).replace('.', ',')}</div>
+            </div>`;
+    }).join('');
+
+    document.getElementById('modalOsHistRetornos').classList.add('ativo');
+}
+
+function osFecharHistoricoRetornos() {
+    document.getElementById('modalOsHistRetornos').classList.remove('ativo');
 }
 
 function osMenuAcaoOrcamento() {
