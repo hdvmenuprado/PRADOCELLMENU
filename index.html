@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260917132218">
+    <meta name="app-build" content="20260917172932">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1520,6 +1520,10 @@ body.modo-claro .main-content {
             font-weight:700; font-size:9px; padding:0 4px; border-radius:3px; letter-spacing:0.3px;
         }
         .os-tag-retorno:hover { background:rgba(230,126,34,0.32); }
+        /* Menu "⋮" da O.S.: fundo sólido (sem transparência/blur) pra não atrapalhar a
+           leitura das opções por cima do conteúdo da tabela. */
+        body.modo-claro #osMenuPontinhos { background:#ffffff !important; }
+        body.modo-claro #osMenuPontinhos button { color:#1a1a1a; }
         /* Checklist de entrada */
         .os-chk-grupo { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin:14px 0 6px; font-weight:700; }
         .os-chk-linha { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--border-color); }
@@ -1551,6 +1555,10 @@ body.modo-claro .main-content {
         .os-hist-data { font-size:11px; color:var(--text-muted); }
         .os-hist-linha { font-size:12px; color:var(--text-main); line-height:1.55; }
         .os-hist-linha b { color:var(--text-muted); font-weight:600; }
+        .os-hist-motivo {
+            background:rgba(230,126,34,.1); border-left:2px solid #e67e22; border-radius:4px;
+            padding:6px 9px; margin-bottom:7px; font-size:12px; line-height:1.5; color:var(--text-main);
+        }
         .logo-upload-preview {
             display:none; max-width:140px; max-height:70px; object-fit:contain;
             border-radius:6px; border:1px solid var(--border-color); padding:4px; background:#fff; margin-top:8px;
@@ -4043,7 +4051,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     </div>
 
                     <!-- Menu flutuante compartilhado do botão "⋮" de cada linha -->
-                    <div id="osMenuPontinhos" class="hidden" style="position:fixed;z-index:200;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);overflow:hidden;min-width:170px;backdrop-filter:blur(20px);">
+                    <div id="osMenuPontinhos" class="hidden" style="position:fixed;z-index:200;background:#1c1c20;border:1px solid var(--border-color);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);overflow:hidden;min-width:170px;">
                         <button onclick="osMenuAcaoEditar()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="pencil" style="width:14px;height:14px;"></i> Editar cadastro</button>
                         <button onclick="osMenuAcaoOrcamento()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="receipt" style="width:14px;height:14px;"></i> Reimprimir cupom de entrada</button>
                         <button onclick="osMenuAcaoGarantia()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#60a5fa;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i> Reabrir em garantia</button>
@@ -4795,6 +4803,30 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     </div>
 </div>
 <style>@keyframes pdfGarantiaGirar { to { transform:rotate(360deg); } }</style>
+
+<div class="modal-overlay" id="modalOsReabrir">
+    <div class="modal-box" style="width:520px; max-width:94vw; text-align:left; padding:26px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">
+            <div>
+                <h3 style="margin:0; color: var(--primary); font-size:1.02rem; letter-spacing:normal;display:flex;align-items:center;gap:8px;"><i data-lucide="shield-alert" style="width:16px;height:16px;"></i> Reabrir em garantia</h3>
+                <div id="osReabrirTitulo" style="font-size:13px;font-weight:600;margin-top:8px;"></div>
+            </div>
+            <button onclick="osFecharReabrir()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+        </div>
+
+        <div id="osReabrirAviso" style="border-radius:8px;padding:10px 12px;margin:14px 0;font-size:12px;line-height:1.55;"></div>
+
+        <div class="form-group">
+            <label>Motivo do retorno <span style="color:var(--text-muted);font-weight:400;">(o que o cliente relatou)</span></label>
+            <textarea id="osReabrirMotivo" placeholder="Ex.: voltou a apresentar manchas na tela depois de 10 dias" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div class="modal-btn-row" style="margin-top:18px;">
+            <button class="action-btn secondary-btn" onclick="osFecharReabrir()" style="margin-top:0;">Cancelar</button>
+            <button class="action-btn" onclick="osConfirmarReabrir()" style="margin-top:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i> Confirmar retorno</button>
+        </div>
+    </div>
+</div>
 
 <div style="position: absolute; left: -9999px; top: -9999px;">
     <div id="pdf-resumo-os" style="width: 190mm; padding: 6mm; background:#ffffff !important; color:#1a1a1a !important; font-family: Arial, Helvetica, sans-serif !important; font-size: 10.5pt; line-height: 1.45;"></div>
@@ -9580,7 +9612,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -11063,49 +11095,74 @@ function osGarantiaValidaAte(os) {
 
 // Aparelho voltou em garantia: REABRE a própria O.S. em vez de criar outra.
 // A data de entrada passa a ser hoje (o aparelho está na bancada de novo), o status volta
-// pro começo do fluxo e o contador de retornos sobe — virando a tag "RETORNO 1", "RETORNO 2".
-// Antes de sobrescrever, guarda no histórico como a O.S. estava, pra não perder a data de
-// entrada e o status anteriores. A garantia NÃO reinicia: a data de vencimento original
-// fica congelada em garantia_ate.
-async function osReabrirEmGarantia(tr) {
+// pro começo do fluxo e o contador de retornos sobe — virando a tag "RET 1", "RET 2".
+// Antes de sobrescrever, guarda no histórico como a O.S. estava (e o motivo do retorno),
+// pra não perder a data de entrada e o status anteriores. A garantia NÃO reinicia: a data
+// de vencimento original fica congelada em garantia_ate.
+let _osReabrirTr = null;
+
+function osReabrirEmGarantia(tr) {
     const os = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
     if (!os) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
+    _osReabrirTr = tr;
 
     const validaAte = osGarantiaValidaAte(os);
     const hoje = new Date();
-    const proximoRetorno = (os.retornos || 0) + 1;
+    const proximo = (os.retornos || 0) + 1;
 
-    let aviso = `Reabrir esta O.S. como RETORNO ${proximoRetorno}?\n\n${os.cliente} — ${os.modelo}\nO.S. ${os.codigo}\n\n`;
+    document.getElementById('osReabrirTitulo').textContent = `${os.cliente || '-'} — ${os.modelo || '-'} · O.S. ${os.codigo} · será o RETORNO ${proximo}`;
+
+    const aviso = document.getElementById('osReabrirAviso');
     if (!validaAte) {
-        aviso += 'ATENÇÃO: essa O.S. foi registrada SEM garantia.\n\nReabrir mesmo assim?';
+        aviso.style.cssText = 'border-radius:8px;padding:10px 12px;margin:14px 0;font-size:12px;line-height:1.55;background:rgba(239,68,68,0.1);border:1px dashed #ef4444;';
+        aviso.innerHTML = '<b>Atenção:</b> essa O.S. foi registrada <b>sem garantia</b>. Dá pra reabrir mesmo assim, mas não havia prazo contratado.';
     } else if (validaAte < hoje) {
-        const diasVencida = Math.floor((hoje - validaAte) / 86400000);
-        aviso += `ATENÇÃO: a garantia venceu em ${validaAte.toLocaleDateString('pt-BR')} (há ${diasVencida} dia(s)).\n\nReabrir mesmo assim?`;
+        const dias = Math.floor((hoje - validaAte) / 86400000);
+        aviso.style.cssText = 'border-radius:8px;padding:10px 12px;margin:14px 0;font-size:12px;line-height:1.55;background:rgba(239,68,68,0.1);border:1px dashed #ef4444;';
+        aviso.innerHTML = `<b>Atenção: garantia vencida.</b> Terminou em ${validaAte.toLocaleDateString('pt-BR')}, há ${dias} dia(s). Reabra só se decidir atender por cortesia.`;
     } else {
-        const diasRestantes = Math.ceil((validaAte - hoje) / 86400000);
-        aviso += `Garantia válida até ${validaAte.toLocaleDateString('pt-BR')} (faltam ${diasRestantes} dia(s)) — o prazo não reinicia.\n\nA data de entrada passa a ser hoje e o status volta pra Orçando.\n\nConfirmar?`;
+        const dias = Math.ceil((validaAte - hoje) / 86400000);
+        aviso.style.cssText = 'border-radius:8px;padding:10px 12px;margin:14px 0;font-size:12px;line-height:1.55;background:rgba(46,204,113,0.1);border:1px dashed #2ecc71;';
+        aviso.innerHTML = `Garantia <b>válida até ${validaAte.toLocaleDateString('pt-BR')}</b> (faltam ${dias} dia(s)). O prazo não reinicia.<br>A data de entrada passa a ser hoje e o status volta pra <b>Orçando</b>.`;
     }
-    if (!confirm(aviso)) return;
+
+    document.getElementById('osReabrirMotivo').value = '';
+    document.getElementById('modalOsReabrir').classList.add('ativo');
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => document.getElementById('osReabrirMotivo').focus(), 80);
+}
+
+function osFecharReabrir() {
+    document.getElementById('modalOsReabrir').classList.remove('ativo');
+}
+
+async function osConfirmarReabrir() {
+    const tr = _osReabrirTr;
+    if (!tr) return;
+    const os = _osListaCompleta.find(o => o.codigo === tr.dataset.codigo);
+    if (!os) { mostrarToast('O.S. não encontrada.', 'erro'); return; }
+
+    const motivo = (document.getElementById('osReabrirMotivo').value || '').trim();
+    if (!motivo) { mostrarToast('Descreva o motivo do retorno.', 'erro'); return; }
+
+    const validaAte = osGarantiaValidaAte(os);
+    const proximo = (os.retornos || 0) + 1;
 
     // Foto de como a O.S. está agora, pra ficar no histórico antes de ser sobrescrita
-    const entradaHistorico = {
-        retorno: proximoRetorno,
+    const entrada = {
+        retorno: proximo,
         reaberto_em: new Date().toISOString(),
+        motivo: motivo,
         data_anterior: os.data || null,
         status_anterior: os.status || null,
         reparo_anterior: os.reparo || null,
         total_anterior: parseFloat(os.total || 0),
         tecnico_anterior: os.tecnico || null
     };
-    const historico = [...(os.historicoRetornos || []), entradaHistorico];
+    const historico = [...(os.historicoRetornos || []), entrada];
     const hojeISO = new Date().toISOString().slice(0, 10);
 
-    const mudancas = {
-        data: hojeISO,
-        status: 'Orçando',
-        retornos: proximoRetorno,
-        historico_retornos: historico
-    };
+    const mudancas = { data: hojeISO, status: 'Orçando', retornos: proximo, historico_retornos: historico };
     // Congela a data de fim da garantia na primeira reabertura, pra que as próximas
     // (e o cupom) continuem contando do prazo original em vez de recomeçar.
     if (!os.garantiaAte && validaAte) mudancas.garantia_ate = validaAte.toISOString().slice(0, 10);
@@ -11115,13 +11172,11 @@ async function osReabrirEmGarantia(tr) {
             supabaseDB.from('ordens_servico').update(mudancas).eq('codigo', os.codigo));
         if (error) throw new Error(error.message);
 
-        os.data = hojeISO;
-        os.status = 'Orçando';
-        os.retornos = proximoRetorno;
-        os.historicoRetornos = historico;
+        os.data = hojeISO; os.status = 'Orçando'; os.retornos = proximo; os.historicoRetornos = historico;
         if (mudancas.garantia_ate) os.garantiaAte = mudancas.garantia_ate;
 
-        mostrarToast(`O.S. reaberta como RETORNO ${proximoRetorno}`);
+        osFecharReabrir();
+        mostrarToast(`O.S. reaberta como RETORNO ${proximo}`);
         osCarregar();
     } catch (e) {
         mostrarToast('Não deu pra reabrir: ' + e.message, 'erro');
@@ -11332,6 +11387,7 @@ function osGerarResumoPDF(tr) {
             const quando = h.reaberto_em ? new Date(h.reaberto_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
             return `<div style="border:1px solid ${LINHA};border-left:3px solid #e67e22;border-radius:4px;padding:6px 9px;margin-bottom:4px;background:#fffaf5;">
                 <div style="font-size:9pt;margin-bottom:2px;"><b style="color:#b3611a;letter-spacing:.4px;">RETORNO ${h.retorno}</b> <span style="color:${CINZA};float:right;">reaberto em ${quando}</span></div>
+                ${h.motivo ? `<div style="font-size:9pt;clear:both;padding:3px 0 4px;"><b style="color:${CINZA};">Motivo do retorno:</b> ${esc(h.motivo)}</div>` : ''}
                 <div style="font-size:9pt;clear:both;"><b style="color:${CINZA};">Entrada anterior:</b> ${h.data_anterior ? osFormatarData(h.data_anterior) : '—'} &nbsp;·&nbsp; <b style="color:${CINZA};">Status anterior:</b> ${esc(h.status_anterior)}</div>
                 <div style="font-size:9pt;"><b style="color:${CINZA};">Serviço anterior:</b> ${esc(h.reparo_anterior) || '—'}</div>
                 <div style="font-size:9pt;"><b style="color:${CINZA};">Técnico:</b> ${esc(h.tecnico_anterior) || '—'} &nbsp;·&nbsp; <b style="color:${CINZA};">Valor cobrado:</b> ${moeda(h.total_anterior)}</div>
@@ -11455,6 +11511,7 @@ function osVerHistoricoRetornos(el) {
                     <span class="os-hist-num">RETORNO ${h.retorno}</span>
                     <span class="os-hist-data">reaberto em ${quando}</span>
                 </div>
+                ${h.motivo ? `<div class="os-hist-motivo">${escapeHTML(h.motivo)}</div>` : ''}
                 <div class="os-hist-linha"><b>Entrada anterior:</b> ${h.data_anterior ? osFormatarData(h.data_anterior) : '-'}</div>
                 <div class="os-hist-linha"><b>Status anterior:</b> ${escapeHTML(h.status_anterior) || '-'}</div>
                 <div class="os-hist-linha"><b>Serviço anterior:</b> ${escapeHTML(h.reparo_anterior) || '-'}</div>
