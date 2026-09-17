@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260916202523">
+    <meta name="app-build" content="20260917132218">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -4048,6 +4048,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         <button onclick="osMenuAcaoOrcamento()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="receipt" style="width:14px;height:14px;"></i> Reimprimir cupom de entrada</button>
                         <button onclick="osMenuAcaoGarantia()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#60a5fa;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i> Reabrir em garantia</button>
                         <button onclick="osMenuAcaoChecklist()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="clipboard-check" style="width:14px;height:14px;"></i> Checklist de entrada</button>
+                        <button onclick="osMenuAcaoResumo()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="file-text" style="width:14px;height:14px;"></i> Resumo da O.S. (PDF)</button>
                         <button onclick="osMenuAcaoSenha()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:var(--text-main);font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="lock" style="width:14px;height:14px;"></i> Senha do aparelho</button>
                         <button onclick="osMenuAcaoExcluir()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;border-top:1px solid var(--border-color);color:#f87171;font-size:13px;cursor:pointer;text-align:left;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i> Excluir O.S.</button>
                     </div>
@@ -4794,6 +4795,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     </div>
 </div>
 <style>@keyframes pdfGarantiaGirar { to { transform:rotate(360deg); } }</style>
+
+<div style="position: absolute; left: -9999px; top: -9999px;">
+    <div id="pdf-resumo-os" style="width: 190mm; padding: 6mm; background:#ffffff !important; color:#1a1a1a !important; font-family: Arial, Helvetica, sans-serif !important; font-size: 10.5pt; line-height: 1.45;"></div>
+</div>
 
 <div style="position: absolute; left: -9999px; top: -9999px;">
     <div id="pdf-orcamento-template" style="width: 175mm; min-height: 255mm; padding: 5mm; background: #ffffff !important; color: #000000 !important; font-family: Arial, sans-serif !important; font-size: 11pt !important; line-height: 1.5 !important;">
@@ -11253,6 +11258,169 @@ async function osSalvarChecklist() {
     } catch (e) {
         mostrarToast('Não deu pra salvar o checklist: ' + e.message, 'erro');
     }
+}
+
+// ------------------------------------------------------------------
+// PDF "RESUMO DA ORDEM DE SERVIÇO" — um documento A4 com tudo o que se sabe da O.S.:
+// cliente, aparelho, defeito, serviço, valores, garantia, checklist de entrada e o
+// histórico de retornos. As seções sem dado simplesmente não são montadas, pra não
+// deixar espaço vazio no papel.
+// ------------------------------------------------------------------
+function osMenuAcaoResumo() {
+    const tr = _osMenuTrAtual;
+    osFecharMenuPontinhos();
+    if (tr) osGerarResumoPDF(tr);
+}
+
+function osGerarResumoPDF(tr) {
+    const os = _osListaCompleta.find(o => (tr.dataset.codigo && o.codigo === tr.dataset.codigo) || (!tr.dataset.codigo && o.cliente === tr.dataset.cliente && o.modelo === tr.dataset.modelo));
+    if (!os) { mostrarToast('Não encontrei essa O.S. na lista carregada.', 'erro'); return; }
+    if (typeof html2pdf === 'undefined') { mostrarToast('Biblioteca de PDF ainda carregando, tente de novo.', 'erro'); return; }
+
+    const c = getPDFConfig();
+    const OURO = '#d4af37', ESCURO = '#1a1a1a', CINZA = '#6b6b6b', LINHA = '#e0e0e0', VERM = '#b71c1c', VERDE = '#1f7a44';
+    const esc = v => escapeHTML(v || '');
+    const moeda = v => 'R$ ' + (parseFloat(v) || 0).toFixed(2).replace('.', ',');
+    const agora = new Date();
+
+    const custoPeca = parseFloat(os.custoPeca) || 0;
+    const maoObra = parseFloat(os.maoDeObra) || 0;
+    const total = parseFloat(os.total) || (custoPeca + maoObra);
+    const diasGarantia = (os.garantiaDias === undefined || os.garantiaDias === null || os.garantiaDias === '') ? 90 : parseInt(os.garantiaDias, 10);
+    const fimGarantia = osGarantiaValidaAte(os);
+
+    const sec = txt => `<h2 style="font-size:9pt;text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px;padding-bottom:3px;border-bottom:1.5px solid ${OURO};font-weight:bold;">${txt}</h2>`;
+    const campo = (rot, val) => `<div style="margin-bottom:5px;"><div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.7px;color:${CINZA};font-weight:bold;">${rot}</div><div style="font-size:10.5pt;font-weight:bold;">${val || '—'}</div></div>`;
+    const caixa = txt => `<div style="border:1px solid ${LINHA};border-left:3px solid ${OURO};border-radius:4px;padding:7px 9px;background:#fbfbfb;font-size:10pt;white-space:pre-wrap;">${txt || '—'}</div>`;
+
+    // --- checklist (só monta se tiver sido preenchido) ---
+    let blocoChecklist = '';
+    const chk = os.checklist || {};
+    const chaves = Object.keys(chk).filter(k => chk[k]);
+    if (chaves.length) {
+        const nOk = chaves.filter(k => chk[k] === 'ok').length;
+        const nDef = chaves.filter(k => chk[k] === 'def').length;
+        const nNt = chaves.filter(k => chk[k] === 'nt').length;
+        const pill = (txt, cor, borda, fundo) => `<span style="font-size:8.5pt;font-weight:bold;padding:2px 8px;border-radius:20px;border:1px solid ${borda};background:${fundo};color:${cor};margin-right:5px;">${txt}</span>`;
+        const marcas = { ok: ['✓', VERDE], def: ['✕', VERM], nt: ['?', '#999'] };
+        const linhas = [];
+        OS_CHECKLIST_ITENS.forEach(g => g.itens.forEach(i => {
+            const v = chk[i.id];
+            if (!v) return;
+            const [marca, cor] = marcas[v] || ['-', CINZA];
+            linhas.push(`<td style="width:33.3%;font-size:9pt;padding:2px 6px 2px 0;border-bottom:1px dotted #e8e8e8;${v === 'def' ? 'font-weight:bold;' : ''}${v === 'nt' ? 'color:#888;' : ''}"><span style="color:${cor};font-weight:bold;">${marca}</span> ${esc(i.nome)}</td>`);
+        }));
+        let tabela = '<table style="width:100%;border-collapse:collapse;"><tr>';
+        linhas.forEach((td, idx) => { tabela += td; if ((idx + 1) % 3 === 0) tabela += '</tr><tr>'; });
+        tabela += '</tr></table>';
+
+        blocoChecklist = sec('Checklist de entrada — como o aparelho chegou')
+            + `<div style="margin-bottom:6px;">
+                ${nOk ? pill(nOk + ' funcionando', VERDE, '#9ed4b5', '#eefaf3') : ''}
+                ${nDef ? pill(nDef + ' com falha', VERM, '#e9b4b4', '#fdeeee') : ''}
+                ${nNt ? pill(nNt + ' sem teste', '#666', '#ccc', '#f4f4f4') : ''}
+                <span style="font-size:8pt;color:${CINZA};">${os.checklistEm ? 'Conferido em ' + new Date(os.checklistEm).toLocaleDateString('pt-BR') : ''}${os.checklistPor ? ' por ' + esc(os.checklistPor) : ''}</span>
+            </div>` + tabela
+            + (os.checklistObs ? `<div style="margin-top:6px;"><div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.7px;color:${CINZA};font-weight:bold;">Observações da entrada</div>${caixa(esc(os.checklistObs))}</div>` : '');
+    }
+
+    // --- retornos em garantia (só monta se já voltou alguma vez) ---
+    let blocoRetornos = '';
+    const hist = os.historicoRetornos || [];
+    if (hist.length) {
+        blocoRetornos = sec('Histórico de retornos em garantia') + [...hist].reverse().map(h => {
+            const quando = h.reaberto_em ? new Date(h.reaberto_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+            return `<div style="border:1px solid ${LINHA};border-left:3px solid #e67e22;border-radius:4px;padding:6px 9px;margin-bottom:4px;background:#fffaf5;">
+                <div style="font-size:9pt;margin-bottom:2px;"><b style="color:#b3611a;letter-spacing:.4px;">RETORNO ${h.retorno}</b> <span style="color:${CINZA};float:right;">reaberto em ${quando}</span></div>
+                <div style="font-size:9pt;clear:both;"><b style="color:${CINZA};">Entrada anterior:</b> ${h.data_anterior ? osFormatarData(h.data_anterior) : '—'} &nbsp;·&nbsp; <b style="color:${CINZA};">Status anterior:</b> ${esc(h.status_anterior)}</div>
+                <div style="font-size:9pt;"><b style="color:${CINZA};">Serviço anterior:</b> ${esc(h.reparo_anterior) || '—'}</div>
+                <div style="font-size:9pt;"><b style="color:${CINZA};">Técnico:</b> ${esc(h.tecnico_anterior) || '—'} &nbsp;·&nbsp; <b style="color:${CINZA};">Valor cobrado:</b> ${moeda(h.total_anterior)}</div>
+            </div>`;
+        }).join('')
+        + (fimGarantia ? `<div style="font-size:8.5pt;color:${CINZA};margin-top:3px;">A garantia não reinicia a cada retorno: o prazo continua contando da entrega original (${fimGarantia.toLocaleDateString('pt-BR')}).</div>` : '');
+    }
+
+    const faixaItem = (rot, val, cor) => `<td style="background:#fafafa;padding:7px 9px;border:1px solid ${LINHA};"><div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.8px;color:${CINZA};font-weight:bold;">${rot}</div><div style="font-size:11pt;font-weight:bold;${cor ? 'color:' + cor + ';' : ''}">${val}</div></td>`;
+
+    document.getElementById('pdf-resumo-os').innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid ${ESCURO};padding-bottom:8px;">
+            <div>
+                <div style="font-size:16pt;font-weight:bold;letter-spacing:.6px;">${esc(c.nome) || 'PRADO CELULARES'}</div>
+                ${c.mostrarEndereco && c.endereco ? `<div style="font-size:9pt;color:${CINZA};margin-top:2px;">${esc(c.endereco)}</div>` : ''}
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:12pt;font-weight:bold;">RESUMO DA ORDEM DE SERVIÇO</div>
+                <div style="font-family:'Courier New',monospace;font-size:13pt;font-weight:bold;color:${OURO};background:${ESCURO};padding:3px 9px;border-radius:4px;display:inline-block;margin-top:4px;">${esc(os.codigo) || '—'}</div>
+                <div style="font-size:8.5pt;color:${CINZA};margin-top:4px;">Emitido em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+            </div>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+            <tr>
+                ${faixaItem('Entrada', osFormatarData(os.data) || '—')}
+                ${faixaItem('Status atual', esc(os.status) || '—', VERDE)}
+                ${faixaItem('Garantia', diasGarantia > 0 ? osFormatarGarantiaTexto(diasGarantia) : 'Sem garantia')}
+                ${faixaItem('Retornos', (os.retornos || 0) > 0 ? os.retornos + ' (garantia)' : 'Nenhum')}
+            </tr>
+        </table>
+
+        ${sec('Cliente e aparelho')}
+        <table style="width:100%;border-collapse:collapse;"><tr>
+            <td style="width:33.3%;vertical-align:top;">${campo('Cliente', esc(os.cliente))}</td>
+            <td style="width:33.3%;vertical-align:top;">${campo('Telefone', esc(os.telefone))}</td>
+            <td style="width:33.3%;vertical-align:top;">${campo('Origem', esc(os.origem))}</td>
+        </tr><tr>
+            <td style="vertical-align:top;">${campo('Aparelho', esc(os.modelo))}</td>
+            <td style="vertical-align:top;">${campo('Estado na entrada', esc(os.estadoAparelho))}</td>
+            <td style="vertical-align:top;">${campo('Atendente / Técnico', (esc(os.vendedor) || '—') + (os.tecnico ? ' · Téc. ' + esc(os.tecnico) : ''))}</td>
+        </tr></table>
+
+        ${sec('Defeito relatado pelo cliente')}
+        ${caixa(esc(os.descricao))}
+        ${sec('Serviço realizado')}
+        ${caixa(esc(os.reparo))}
+
+        ${sec('Valores e garantia')}
+        <table style="width:100%;border-collapse:collapse;"><tr>
+            <td style="width:64%;vertical-align:top;padding-right:9px;">
+                <table style="width:100%;border-collapse:collapse;border:1px solid ${LINHA};">
+                    <tr><td style="padding:5px 9px;font-size:10pt;">Peça(s)</td><td style="padding:5px 9px;font-size:10pt;text-align:right;">${moeda(custoPeca)}</td></tr>
+                    <tr><td style="padding:5px 9px;font-size:10pt;border-top:1px solid ${LINHA};">Mão de obra</td><td style="padding:5px 9px;font-size:10pt;text-align:right;border-top:1px solid ${LINHA};">${moeda(maoObra)}</td></tr>
+                    <tr><td style="padding:6px 9px;font-size:12pt;font-weight:bold;background:${ESCURO};color:#fff;">TOTAL</td><td style="padding:6px 9px;font-size:12pt;font-weight:bold;text-align:right;background:${ESCURO};color:${OURO};">${moeda(total)}</td></tr>
+                </table>
+            </td>
+            <td style="width:36%;vertical-align:top;">
+                <div style="border:1.5px dashed ${ESCURO};border-radius:5px;padding:9px;text-align:center;">
+                    <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.8px;color:${CINZA};font-weight:bold;">Garantia</div>
+                    <div style="font-size:13pt;font-weight:bold;margin-top:2px;">${diasGarantia > 0 ? osFormatarGarantiaTexto(diasGarantia) : 'Sem garantia'}</div>
+                    ${fimGarantia && diasGarantia > 0 ? `<div style="font-size:9.5pt;color:${CINZA};margin-top:1px;">até ${fimGarantia.toLocaleDateString('pt-BR')}</div>` : ''}
+                </div>
+            </td>
+        </tr></table>
+
+        ${blocoChecklist}
+        ${blocoRetornos}
+
+        <table style="width:100%;border-collapse:collapse;margin-top:22px;"><tr>
+            <td style="width:45%;text-align:center;"><div style="border-top:1.5px solid ${ESCURO};margin-bottom:3px;"></div><div style="font-size:9pt;font-weight:bold;">${esc(os.cliente) || 'Cliente'}</div><div style="font-size:8pt;color:${CINZA};">Cliente</div></td>
+            <td style="width:10%;"></td>
+            <td style="width:45%;text-align:center;"><div style="border-top:1.5px solid ${ESCURO};margin-bottom:3px;"></div><div style="font-size:9pt;font-weight:bold;">${esc(c.nome) || 'PRADO CELULARES'}</div><div style="font-size:8pt;color:${CINZA};">Responsável técnico</div></td>
+        </tr></table>
+
+        <div style="margin-top:14px;padding-top:6px;border-top:1px solid ${LINHA};font-size:8pt;color:${CINZA};">
+            Documento gerado pelo sistema em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} &nbsp;·&nbsp; O.S. ${esc(os.codigo)}
+        </div>`;
+
+    const nome = 'Resumo_OS_' + String(os.codigo || 'os').replace(/[^\w-]/g, '_') + '.pdf';
+    html2pdf().set({
+        margin: [8, 8, 8, 8], filename: nome,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2.5, logging: false, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css'] }
+    }).from(document.getElementById('pdf-resumo-os')).save();
+
+    mostrarToast('Gerando o resumo em PDF...');
 }
 
 function osAbrirChecklistPelaTag(el) {
