@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260918134123">
+    <meta name="app-build" content="20260918134724">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2396,6 +2396,68 @@ body.modo-claro .main-content {
             cursor: pointer; font-size: 12.5px; font-weight: 700; padding: 7px 12px; display:inline-flex; align-items:center; gap:6px;
         }
         #menu-sorteio .st-btn-sugestao:hover { background: rgba(212,175,55,0.1); }
+        #menu-sorteio .st-btn-sortear {
+            background: linear-gradient(135deg, var(--st-dourado), #a6841e); border: none; color: #1a1204;
+            border-radius: 7px; cursor: pointer; font-size: 12.5px; font-weight: 800; padding: 8px 14px;
+            display: inline-flex; align-items: center; gap: 6px; letter-spacing: .3px;
+        }
+        #menu-sorteio .st-btn-sortear:hover { filter: brightness(1.1); }
+
+        /* ---------------- ROLETA DO SORTEIO ---------------- */
+        #modalSorteioRoleta .st-roleta-box {
+            width: 560px; max-width: 95vw; max-height: 92vh; overflow-y: auto; text-align: left;
+            padding: 24px; background: #15151a; border: 1px solid rgba(212,175,55,.3);
+        }
+        body.modo-claro #modalSorteioRoleta .st-roleta-box { background: #fff; }
+        .st-roleta-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+        .st-roleta-topo h3 {
+            margin: 0; color: var(--st-dourado); font-size: 1.1rem; letter-spacing: normal;
+            display: flex; align-items: center; gap: 8px; text-transform: none;
+        }
+        .st-roleta-topo p { margin: 5px 0 0; font-size: 12px; color: var(--text-muted); }
+        .st-roleta-fechar { background: none; border: none; color: var(--text-muted); cursor: pointer; display: inline-flex; }
+
+        .st-roleta-palco { position: relative; width: 320px; max-width: 78vw; margin: 0 auto; aspect-ratio: 1; }
+        #sorteioRoletaCanvas { width: 100%; height: 100%; display: block; border-radius: 50%; box-shadow: 0 0 0 6px #1f1f26, 0 12px 40px rgba(0,0,0,.5); }
+        body.modo-claro #sorteioRoletaCanvas { box-shadow: 0 0 0 6px #e8e8ee, 0 12px 40px rgba(0,0,0,.2); }
+        .st-roleta-ponteiro {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 3;
+            width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent;
+            border-top: 24px solid var(--st-vermelho); filter: drop-shadow(0 3px 4px rgba(0,0,0,.5));
+        }
+        .st-roleta-centro {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 2;
+            width: 30%; height: 30%; border-radius: 50%; background: #15151a; border: 3px solid var(--st-dourado);
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; color: var(--st-dourado);
+            padding: 6px; line-height: 1.15; word-break: break-word;
+        }
+        body.modo-claro .st-roleta-centro { background: #fff; }
+
+        .st-roleta-resultado {
+            margin-top: 18px; padding: 14px; border-radius: 12px; text-align: center;
+            background: var(--surface-1); border: 1px dashed var(--border-color); opacity: .45;
+            transition: all .3s ease;
+        }
+        .st-roleta-resultado.revelado {
+            opacity: 1; border-style: solid; border-color: var(--st-dourado);
+            background: rgba(212,175,55,.1);
+        }
+        .st-roleta-resultado .rot { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); font-weight: 700; }
+        .st-roleta-resultado .nome { display: block; font-size: 1.25rem; font-weight: 800; margin: 4px 0 2px; }
+        .st-roleta-resultado.revelado .nome { color: var(--st-dourado); }
+        .st-roleta-resultado .det { display: block; font-size: 11.5px; color: var(--text-muted); }
+
+        .st-roleta-acoes { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+        .st-btn-girar {
+            flex: 2 1 200px; background: linear-gradient(135deg, var(--st-vermelho), var(--st-vermelho-forte));
+            color: #fff; border: none; border-radius: 10px; padding: 13px; font-size: 13.5px; font-weight: 800;
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+            text-transform: uppercase; letter-spacing: .5px; font-family: 'Inter', sans-serif;
+        }
+        .st-btn-girar:hover:not(:disabled) { filter: brightness(1.12); }
+        .st-btn-girar:disabled { opacity: .5; cursor: not-allowed; }
+        #modalSorteioRoleta .st-btn-outline { flex: 1 1 160px; margin: 0; }
 
         /* Modal de Sugestão de Clientes para o Sorteio */
         #modalSorteioSugestoes .modal-box { width: 820px; max-width: 94vw; max-height: 88vh; overflow-y: auto; text-align: left; padding: 28px; }
@@ -4220,6 +4282,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span id="sorteioClientesLoadingStatus" style="display:none;">Carregando...</span>
                             <button type="button" class="st-btn-sugestao" onclick="sorteioAbrirModalSugestoes()"><i data-lucide="sparkles" style="width:13px;height:13px;"></i> Sugestão de Clientes</button>
+                            <button type="button" class="st-btn-sortear" onclick="sorteioAbrirRoleta()"><i data-lucide="trophy" style="width:13px;height:13px;"></i> Realizar Sorteio</button>
                         </div>
                     </div>
                     <input type="text" id="sorteioPesquisaClientes" placeholder="Pesquisar cliente..." oninput="sorteioFiltrarClientes()">
@@ -4238,6 +4301,35 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                 <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Abra esta aba para carregar os clientes cadastrados.</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modalSorteioRoleta">
+                <div class="modal-box st-roleta-box">
+                    <div class="st-roleta-topo">
+                        <div>
+                            <h3><i data-lucide="trophy" style="width:18px;height:18px;"></i> Sorteio</h3>
+                            <p id="sorteioRoletaInfo">—</p>
+                        </div>
+                        <button onclick="sorteioFecharRoleta()" class="st-roleta-fechar"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+                    </div>
+
+                    <div class="st-roleta-palco">
+                        <div class="st-roleta-ponteiro"></div>
+                        <canvas id="sorteioRoletaCanvas" width="640" height="640"></canvas>
+                        <div class="st-roleta-centro"><span id="sorteioRoletaCentro">GIRE</span></div>
+                    </div>
+
+                    <div class="st-roleta-resultado" id="sorteioRoletaResultado">
+                        <span class="rot">Ganhador</span>
+                        <span class="nome" id="sorteioRoletaGanhador">—</span>
+                        <span class="det" id="sorteioRoletaDetalhe">—</span>
+                    </div>
+
+                    <div class="st-roleta-acoes">
+                        <button class="st-btn-girar" id="sorteioBtnGirar" onclick="sorteioGirarRoleta()"><i data-lucide="play" style="width:15px;height:15px;"></i> Girar a roleta</button>
+                        <button class="st-btn-outline" id="sorteioBtnRemover" onclick="sorteioRemoverGanhador()" style="display:none;"><i data-lucide="user-minus" style="width:14px;height:14px;"></i> Tirar e sortear outro</button>
                     </div>
                 </div>
             </div>
@@ -9749,7 +9841,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -12337,6 +12429,201 @@ async function sorteioCarregarClientes() {
     } finally {
         if (loading) loading.style.display = 'none';
     }
+}
+
+// ------------------------------------------------------------------
+// ROLETA DO SORTEIO — cada cliente ocupa uma fatia proporcional ao número de cupons
+// que tem, que é justamente a regra do sorteio: mais cupons, mais chance. O ganhador
+// é escolhido primeiro (sorteio ponderado) e a animação é calculada pra parar nele.
+// ------------------------------------------------------------------
+let _roletaParticipantes = [];
+let _roletaAngulo = 0;
+let _roletaGirando = false;
+let _roletaGanhador = null;
+
+const ROLETA_CORES = ['#c23a2e', '#d4af37', '#8f2318', '#b8942c', '#a32f25', '#e0b944'];
+
+function sorteioAbrirRoleta() {
+    // Parte da lista já carregada na aba, só com quem tem cupom
+    _roletaParticipantes = (_sorteioClientesCompleta || [])
+        .filter(c => (c.total || 0) > 0)
+        .map(c => ({ nome: c.cliente, telefone: c.telefone, cupons: c.total }));
+    _roletaGanhador = null;
+    _roletaAngulo = 0;
+    _roletaGirando = false;
+
+    document.getElementById('sorteioRoletaGanhador').textContent = '—';
+    document.getElementById('sorteioRoletaDetalhe').textContent = 'Gire a roleta para sortear';
+    document.getElementById('sorteioRoletaResultado').classList.remove('revelado');
+    document.getElementById('sorteioRoletaCentro').textContent = 'GIRE';
+    document.getElementById('sorteioBtnRemover').style.display = 'none';
+
+    sorteioRoletaAtualizarInfo();
+    document.getElementById('modalSorteioRoleta').classList.add('ativo');
+    if (window.lucide) lucide.createIcons();
+    setTimeout(sorteioDesenharRoleta, 40);
+}
+
+function sorteioRoletaAtualizarInfo() {
+    const totalCupons = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
+    const info = document.getElementById('sorteioRoletaInfo');
+    const btn = document.getElementById('sorteioBtnGirar');
+    if (!_roletaParticipantes.length) {
+        info.textContent = 'Nenhum cliente com cupom para sortear.';
+        btn.disabled = true;
+    } else {
+        info.textContent = `${_roletaParticipantes.length} participante(s) · ${totalCupons} cupom(ns) concorrendo`;
+        btn.disabled = false;
+    }
+}
+
+function sorteioFecharRoleta() {
+    if (_roletaGirando) return; // não fecha no meio do giro
+    document.getElementById('modalSorteioRoleta').classList.remove('ativo');
+}
+
+function sorteioDesenharRoleta() {
+    const canvas = document.getElementById('sorteioRoletaCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const L = canvas.width, meio = L / 2, raio = meio - 8;
+    ctx.clearRect(0, 0, L, L);
+
+    if (!_roletaParticipantes.length) {
+        ctx.fillStyle = '#2a2a32';
+        ctx.beginPath(); ctx.arc(meio, meio, raio, 0, Math.PI * 2); ctx.fill();
+        return;
+    }
+
+    const totalCupons = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
+    // Com muita gente o nome não cabe na fatia; nesses casos fica só a cor, e o nome
+    // aparece no centro e no resultado.
+    const mostrarNomes = _roletaParticipantes.length <= 18;
+    let anguloAtual = _roletaAngulo;
+
+    _roletaParticipantes.forEach((p, i) => {
+        const fatia = (p.cupons / totalCupons) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(meio, meio);
+        ctx.arc(meio, meio, raio, anguloAtual, anguloAtual + fatia);
+        ctx.closePath();
+        ctx.fillStyle = ROLETA_CORES[i % ROLETA_CORES.length];
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; ctx.stroke();
+
+        if (mostrarNomes && fatia > 0.12) {
+            ctx.save();
+            ctx.translate(meio, meio);
+            ctx.rotate(anguloAtual + fatia / 2);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 22px Inter, sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 4;
+            const nome = String(p.nome || '').slice(0, 14);
+            ctx.fillText(nome, raio - 18, 8);
+            ctx.restore();
+        }
+        anguloAtual += fatia;
+    });
+
+    // Aro externo
+    ctx.beginPath(); ctx.arc(meio, meio, raio, 0, Math.PI * 2);
+    ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 6; ctx.stroke();
+}
+
+// Sorteio ponderado: cada cupom é um bilhete, então quem tem 5 cupons tem 5x mais chance
+function sorteioEscolherGanhador() {
+    const total = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
+    let ponto = Math.random() * total;
+    for (let i = 0; i < _roletaParticipantes.length; i++) {
+        ponto -= _roletaParticipantes[i].cupons;
+        if (ponto <= 0) return i;
+    }
+    return _roletaParticipantes.length - 1;
+}
+
+function sorteioGirarRoleta() {
+    if (_roletaGirando || !_roletaParticipantes.length) return;
+    _roletaGirando = true;
+
+    const btn = document.getElementById('sorteioBtnGirar');
+    btn.disabled = true;
+    document.getElementById('sorteioBtnRemover').style.display = 'none';
+    document.getElementById('sorteioRoletaResultado').classList.remove('revelado');
+    document.getElementById('sorteioRoletaGanhador').textContent = '—';
+    document.getElementById('sorteioRoletaDetalhe').textContent = 'Girando...';
+
+    const idx = sorteioEscolherGanhador();
+    const total = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
+
+    // Onde fica o meio da fatia do ganhador, e quanto girar pra ela parar no ponteiro (topo)
+    let inicio = 0;
+    for (let i = 0; i < idx; i++) inicio += (_roletaParticipantes[i].cupons / total) * Math.PI * 2;
+    const fatia = (_roletaParticipantes[idx].cupons / total) * Math.PI * 2;
+    const meioFatia = inicio + fatia / 2;
+    const alvo = (-Math.PI / 2) - meioFatia; // ponteiro fica em -90°
+
+    const voltas = 6 + Math.floor(Math.random() * 3);
+    const anguloInicial = _roletaAngulo;
+    const anguloFinal = alvo + voltas * Math.PI * 2 + Math.ceil((anguloInicial - alvo) / (Math.PI * 2)) * Math.PI * 2;
+    const duracao = 4800;
+    const t0 = performance.now();
+
+    const animar = agora => {
+        const t = Math.min(1, (agora - t0) / duracao);
+        const eased = 1 - Math.pow(1 - t, 4); // desacelera no fim, como roleta de verdade
+        _roletaAngulo = anguloInicial + (anguloFinal - anguloInicial) * eased;
+        sorteioDesenharRoleta();
+
+        // Enquanto gira, o centro vai mostrando quem está passando pelo ponteiro
+        if (t < 1) {
+            const nomeAtual = sorteioQuemEstaNoPonteiro();
+            document.getElementById('sorteioRoletaCentro').textContent = nomeAtual ? nomeAtual.slice(0, 12) : '';
+            requestAnimationFrame(animar);
+        } else {
+            _roletaGirando = false;
+            _roletaGanhador = _roletaParticipantes[idx];
+            const chance = ((_roletaGanhador.cupons / total) * 100).toFixed(1).replace('.', ',');
+            document.getElementById('sorteioRoletaCentro').textContent = '🏆';
+            document.getElementById('sorteioRoletaGanhador').textContent = _roletaGanhador.nome;
+            document.getElementById('sorteioRoletaDetalhe').textContent =
+                `${_roletaGanhador.cupons} cupom(ns) · ${chance}% de chance${_roletaGanhador.telefone ? ' · ' + _roletaGanhador.telefone : ''}`;
+            document.getElementById('sorteioRoletaResultado').classList.add('revelado');
+            document.getElementById('sorteioBtnRemover').style.display = '';
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="rotate-cw" style="width:15px;height:15px;"></i> Girar de novo';
+            if (window.lucide) lucide.createIcons();
+        }
+    };
+    requestAnimationFrame(animar);
+}
+
+// Descobre qual fatia está embaixo do ponteiro no ângulo atual (usado durante o giro)
+function sorteioQuemEstaNoPonteiro() {
+    const total = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
+    // Ângulo do ponteiro (topo) em relação ao começo da roda
+    let rel = (-Math.PI / 2 - _roletaAngulo) % (Math.PI * 2);
+    if (rel < 0) rel += Math.PI * 2;
+    let acumulado = 0;
+    for (const p of _roletaParticipantes) {
+        acumulado += (p.cupons / total) * Math.PI * 2;
+        if (rel <= acumulado) return p.nome;
+    }
+    return _roletaParticipantes[0] ? _roletaParticipantes[0].nome : '';
+}
+
+// Tira o ganhador da roda (pra sortear 2º, 3º lugar sem repetir a mesma pessoa)
+function sorteioRemoverGanhador() {
+    if (!_roletaGanhador || _roletaGirando) return;
+    _roletaParticipantes = _roletaParticipantes.filter(p => p !== _roletaGanhador);
+    _roletaGanhador = null;
+    document.getElementById('sorteioRoletaResultado').classList.remove('revelado');
+    document.getElementById('sorteioRoletaGanhador').textContent = '—';
+    document.getElementById('sorteioRoletaDetalhe').textContent = 'Gire para sortear o próximo';
+    document.getElementById('sorteioRoletaCentro').textContent = 'GIRE';
+    document.getElementById('sorteioBtnRemover').style.display = 'none';
+    sorteioRoletaAtualizarInfo();
+    sorteioDesenharRoleta();
 }
 
 // Números do topo da aba: quantos clientes já receberam cupom e quantos cupons saíram.
