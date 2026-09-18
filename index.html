@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260918124341">
+    <meta name="app-build" content="20260918134123">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1934,6 +1934,16 @@ body.modo-claro .main-content {
             display: none;
         }
 
+        /* --- SORTEIO: ocupa a tela toda, sem o card de workspace em volta --- */
+        body:has(#menu-sorteio:not(.hidden)) .workspace-card {
+            max-width: 100% !important;
+            background: var(--bg-base) !important;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            padding: 6px 4px !important;
+        }
+
         /* --- CONFIGURAÇÕES: sem o card de workspace. A coluna de menu e o título da
            seção já dão o contexto, então o conteúdo ocupa a largura toda. --- */
         body:has(#menu-admin:not(.hidden)) .workspace-card {
@@ -2279,8 +2289,24 @@ body.modo-claro .main-content {
         }
         #menu-sorteio .st-save-btn:hover { filter: brightness(1.12); }
 
-        #menu-sorteio .st-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
-        @media (max-width: 900px) { #menu-sorteio .st-grid { grid-template-columns: 1fr; } }
+        #menu-sorteio .st-grid { display: block; }
+        /* Dash rápido do sorteio: quantos clientes já têm cupom e quantos cupons saíram */
+        #menu-sorteio .st-dash {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px; margin-bottom: 18px;
+        }
+        #menu-sorteio .st-dash-card {
+            background: var(--surface-1); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+        }
+        #menu-sorteio .st-dash-rot {
+            font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+            color: var(--text-muted); font-weight: 700;
+        }
+        #menu-sorteio .st-dash-num {
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.5rem; line-height: 1.1;
+        }
+        #menu-sorteio .st-dash-num.destaque { color: var(--st-dourado); }
 
         /* "Talão" principal: cantos retos à esquerda, borda pontilhada simulando destacável à direita */
         #menu-sorteio .st-ticket {
@@ -2326,7 +2352,6 @@ body.modo-claro .main-content {
         #menu-sorteio .st-btn-imprimir:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
         /* Painel lateral: reimpressão */
-        #menu-sorteio .st-side { display: flex; flex-direction: column; gap: 16px; }
         #menu-sorteio .st-card {
             background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px 20px;
         }
@@ -4124,7 +4149,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <div class="st-header">
                     <div>
                         <h2 style="display:flex;align-items:center;gap:8px;"><i data-lucide="ticket" style="width:20px;height:20px;vertical-align:-2px;"></i> Cupom de Sorteio</h2>
-                        <p>Cadastre o cliente, gere os cupons e imprima na hora. Cada geração fica salva e pode ser reimpressa depois.</p>
                     </div>
                     <div class="st-config">
                         <label>Valor por cupom (R$)</label>
@@ -4135,6 +4159,25 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     </div>
                 </div>
                 <p id="sorteioConfigStatus" style="margin:-14px 0 18px;"></p>
+
+                <div class="st-dash">
+                    <div class="st-dash-card">
+                        <span class="st-dash-rot">Clientes com cupom</span>
+                        <span class="st-dash-num" id="sorteioDashClientes">—</span>
+                    </div>
+                    <div class="st-dash-card">
+                        <span class="st-dash-rot">Cupons gerados</span>
+                        <span class="st-dash-num destaque" id="sorteioDashCupons">—</span>
+                    </div>
+                    <div class="st-dash-card">
+                        <span class="st-dash-rot">Cupons este mês</span>
+                        <span class="st-dash-num" id="sorteioDashMes">—</span>
+                    </div>
+                    <div class="st-dash-card">
+                        <span class="st-dash-rot">Média por cliente</span>
+                        <span class="st-dash-num" id="sorteioDashMedia">—</span>
+                    </div>
+                </div>
 
                 <div class="st-grid">
                     <div class="st-ticket">
@@ -4169,16 +4212,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                         </div>
                     </div>
 
-                    <div class="st-side">
-                        <div class="st-card">
-                            <p class="st-section-label" style="display:flex;align-items:center;gap:6px;"><i data-lucide="repeat" style="width:14px;height:14px;vertical-align:-2px;"></i> Reimprimir</p>
-                            <div class="st-field">
-                                <label>Nome do Cliente</label>
-                                <input type="text" id="sorteioReimprimirNome" placeholder="Ex: João da Silva">
-                            </div>
-                            <button id="sorteioBtnReimprimir" class="st-btn-outline" onclick="sorteioReimprimirCupom()" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="repeat" style="width:14px;height:14px;vertical-align:-2px;"></i> Buscar e Reimprimir</button>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="st-clientes-wrap">
@@ -12295,6 +12328,7 @@ async function sorteioCarregarClientes() {
             porCliente.set(chave, atual);
         });
         _sorteioClientesCompleta = Array.from(porCliente.values()).sort((a,b) => (b.ultimaDataISO||'').localeCompare(a.ultimaDataISO||''));
+        sorteioAtualizarDash(data || []);
         sorteioFiltrarClientes();
     } catch (e) {
         console.error('Erro ao carregar clientes do sorteio:', e);
@@ -12303,6 +12337,27 @@ async function sorteioCarregarClientes() {
     } finally {
         if (loading) loading.style.display = 'none';
     }
+}
+
+// Números do topo da aba: quantos clientes já receberam cupom e quantos cupons saíram.
+// Recebe os lotes crus (uma linha por geração, com a quantidade daquela vez).
+function sorteioAtualizarDash(lotes) {
+    const totalCupons = lotes.reduce((soma, l) => soma + (Number(l.quantidade) || 0), 0);
+    const totalClientes = _sorteioClientesCompleta.length;
+
+    const agora = new Date();
+    const mesAtual = agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0');
+    const cuponsMes = lotes
+        .filter(l => (l.criado_em || '').slice(0, 7) === mesAtual)
+        .reduce((soma, l) => soma + (Number(l.quantidade) || 0), 0);
+
+    const media = totalClientes ? (totalCupons / totalClientes) : 0;
+
+    const põe = (id, valor) => { const el = document.getElementById(id); if (el) el.textContent = valor; };
+    põe('sorteioDashClientes', totalClientes);
+    põe('sorteioDashCupons', totalCupons);
+    põe('sorteioDashMes', cuponsMes);
+    põe('sorteioDashMedia', media ? media.toFixed(1).replace('.', ',') : '—');
 }
 
 // Filtra a lista de clientes carregada pelo texto digitado na busca e renderiza a tabela
@@ -12648,11 +12703,10 @@ function sorteioUsarSugestao(nome, telefone, valorGasto) {
     if (ticket) ticket.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// Atalho usado pelo botão 🔁 da lista de clientes: preenche o campo de busca e reimprime direto
+// Reimpressão vem do botão de cada linha da lista de clientes (o card de busca separado
+// foi removido: a lista já tem o cliente na mão, era redundante digitar o nome de novo).
 function sorteioReimprimirPorNome(nome) {
-    const nomeInput = document.getElementById('sorteioReimprimirNome');
-    if (nomeInput) nomeInput.value = nome;
-    sorteioReimprimirCupom();
+    sorteioReimprimirCupom(nome);
 }
 
 // Valida o formulário, gera os N cupons (um número único por cupom, usado na impressão física),
@@ -12697,9 +12751,9 @@ async function sorteioGerar() {
 
 // Busca todos os lotes já gerados para o cliente digitado (tabela sorteio_lotes) e reimprime
 // todas as vias de cada lote encontrado, na ordem em que foram geradas.
-async function sorteioReimprimirCupom() {
-    const nome = (document.getElementById('sorteioReimprimirNome').value || '').trim();
-    if (!nome) { alert('Digite o nome do cliente para buscar.'); return; }
+async function sorteioReimprimirCupom(nomeCliente) {
+    const nome = (nomeCliente || '').trim();
+    if (!nome) { mostrarToast('Escolha um cliente na lista para reimprimir.', 'erro'); return; }
 
     try {
         let query = supabaseDB.from('sorteio_lotes').select('*').ilike('cliente', nome).order('criado_em', { ascending: true });
