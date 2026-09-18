@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260918134724">
+    <meta name="app-build" content="20260918135326">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -12436,21 +12436,26 @@ async function sorteioCarregarClientes() {
 // que tem, que é justamente a regra do sorteio: mais cupons, mais chance. O ganhador
 // é escolhido primeiro (sorteio ponderado) e a animação é calculada pra parar nele.
 // ------------------------------------------------------------------
-let _roletaParticipantes = [];
+let _roletaParticipantes = [];   // um item por CLIENTE (usado no texto e no "tirar ganhador")
+let _roletaFatias = [];          // um item por CUPOM, embaralhado — é isto que a roda desenha
 let _roletaAngulo = 0;
 let _roletaGirando = false;
 let _roletaGanhador = null;
+let _roletaLente = null;         // {x, y} do cursor quando a lupa está ativa
 
 const ROLETA_CORES = ['#c23a2e', '#d4af37', '#8f2318', '#b8942c', '#a32f25', '#e0b944'];
+const ROLETA_ZOOM = 4.5;
+const ROLETA_RAIO_LENTE = 92;
 
 function sorteioAbrirRoleta() {
-    // Parte da lista já carregada na aba, só com quem tem cupom
     _roletaParticipantes = (_sorteioClientesCompleta || [])
         .filter(c => (c.total || 0) > 0)
         .map(c => ({ nome: c.cliente, telefone: c.telefone, cupons: c.total }));
     _roletaGanhador = null;
     _roletaAngulo = 0;
     _roletaGirando = false;
+    _roletaLente = null;
+    sorteioMontarFatias();
 
     document.getElementById('sorteioRoletaGanhador').textContent = '—';
     document.getElementById('sorteioRoletaDetalhe').textContent = 'Gire a roleta para sortear';
@@ -12461,25 +12466,81 @@ function sorteioAbrirRoleta() {
     sorteioRoletaAtualizarInfo();
     document.getElementById('modalSorteioRoleta').classList.add('ativo');
     if (window.lucide) lucide.createIcons();
-    setTimeout(sorteioDesenharRoleta, 40);
+    setTimeout(() => { sorteioLigarLente(); sorteioDesenharRoleta(); }, 40);
+}
+
+// Cada CUPOM vira uma fatia própria, e as fatias são embaralhadas na roda. Quem tem 20
+// cupons fica com 20 fatias espalhadas, não com um pedação contínuo — a chance é a mesma,
+// mas parece (e é) um sorteio de bilhetes de verdade.
+function sorteioMontarFatias() {
+    const fatias = [];
+    _roletaParticipantes.forEach((p, idxCliente) => {
+        for (let i = 0; i < p.cupons; i++) fatias.push({ nome: p.nome, telefone: p.telefone, idxCliente });
+    });
+    // Embaralhamento Fisher-Yates
+    for (let i = fatias.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [fatias[i], fatias[j]] = [fatias[j], fatias[i]];
+    }
+    _roletaFatias = fatias;
 }
 
 function sorteioRoletaAtualizarInfo() {
-    const totalCupons = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
     const info = document.getElementById('sorteioRoletaInfo');
     const btn = document.getElementById('sorteioBtnGirar');
-    if (!_roletaParticipantes.length) {
+    if (!_roletaFatias.length) {
         info.textContent = 'Nenhum cliente com cupom para sortear.';
         btn.disabled = true;
     } else {
-        info.textContent = `${_roletaParticipantes.length} participante(s) · ${totalCupons} cupom(ns) concorrendo`;
+        info.textContent = `${_roletaParticipantes.length} participante(s) · ${_roletaFatias.length} cupom(ns) na roda · passe o mouse pra ampliar`;
         btn.disabled = false;
     }
 }
 
 function sorteioFecharRoleta() {
-    if (_roletaGirando) return; // não fecha no meio do giro
+    if (_roletaGirando) return;
     document.getElementById('modalSorteioRoleta').classList.remove('ativo');
+}
+
+// Desenha a roda inteira num contexto. "comNomes" só liga quando a fatia tem espessura
+// suficiente pro texto caber (é o caso dentro da lupa, onde tudo fica 4,5x maior).
+function sorteioDesenharRoda(ctx, meio, raio) {
+    const total = _roletaFatias.length;
+    if (!total) {
+        ctx.fillStyle = '#2a2a32';
+        ctx.beginPath(); ctx.arc(meio, meio, raio, 0, Math.PI * 2); ctx.fill();
+        return;
+    }
+    const fatia = (Math.PI * 2) / total;
+    const espessura = (Math.PI * 2 * raio) / total; // quanto cada fatia mede na borda
+    const comNomes = espessura >= 9;
+    const fonte = Math.max(9, Math.min(20, espessura * 0.72));
+
+    for (let i = 0; i < total; i++) {
+        const ang = _roletaAngulo + i * fatia;
+        ctx.beginPath();
+        ctx.moveTo(meio, meio);
+        ctx.arc(meio, meio, raio, ang, ang + fatia);
+        ctx.closePath();
+        ctx.fillStyle = ROLETA_CORES[_roletaFatias[i].idxCliente % ROLETA_CORES.length];
+        ctx.fill();
+        if (espessura > 4) { ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 1.5; ctx.stroke(); }
+
+        if (comNomes) {
+            ctx.save();
+            ctx.translate(meio, meio);
+            ctx.rotate(ang + fatia / 2);
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${fonte}px Inter, sans-serif`;
+            ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 3;
+            ctx.fillText(String(_roletaFatias[i].nome || '').slice(0, 16), raio - 12, 0);
+            ctx.restore();
+        }
+    }
+    ctx.beginPath(); ctx.arc(meio, meio, raio, 0, Math.PI * 2);
+    ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 6; ctx.stroke();
 }
 
 function sorteioDesenharRoleta() {
@@ -12488,63 +12549,87 @@ function sorteioDesenharRoleta() {
     const ctx = canvas.getContext('2d');
     const L = canvas.width, meio = L / 2, raio = meio - 8;
     ctx.clearRect(0, 0, L, L);
+    sorteioDesenharRoda(ctx, meio, raio);
 
-    if (!_roletaParticipantes.length) {
-        ctx.fillStyle = '#2a2a32';
-        ctx.beginPath(); ctx.arc(meio, meio, raio, 0, Math.PI * 2); ctx.fill();
-        return;
-    }
-
-    const totalCupons = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
-    // Com muita gente o nome não cabe na fatia; nesses casos fica só a cor, e o nome
-    // aparece no centro e no resultado.
-    const mostrarNomes = _roletaParticipantes.length <= 18;
-    let anguloAtual = _roletaAngulo;
-
-    _roletaParticipantes.forEach((p, i) => {
-        const fatia = (p.cupons / totalCupons) * Math.PI * 2;
+    // Lupa: redesenha a MESMA roda ampliada em volta do ponto do cursor, recortada num
+    // círculo. É o que as bibliotecas de magnifier fazem com imagem — aqui precisa ser
+    // no canvas, porque a roda muda a cada quadro enquanto gira.
+    if (_roletaLente && !_roletaGirando) {
+        const { x, y } = _roletaLente;
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(meio, meio);
-        ctx.arc(meio, meio, raio, anguloAtual, anguloAtual + fatia);
-        ctx.closePath();
-        ctx.fillStyle = ROLETA_CORES[i % ROLETA_CORES.length];
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 2; ctx.stroke();
-
-        if (mostrarNomes && fatia > 0.12) {
-            ctx.save();
-            ctx.translate(meio, meio);
-            ctx.rotate(anguloAtual + fatia / 2);
-            ctx.textAlign = 'right';
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 22px Inter, sans-serif';
-            ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 4;
-            const nome = String(p.nome || '').slice(0, 14);
-            ctx.fillText(nome, raio - 18, 8);
-            ctx.restore();
-        }
-        anguloAtual += fatia;
-    });
-
-    // Aro externo
-    ctx.beginPath(); ctx.arc(meio, meio, raio, 0, Math.PI * 2);
-    ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 6; ctx.stroke();
+        ctx.arc(x, y, ROLETA_RAIO_LENTE, 0, Math.PI * 2);
+        ctx.clip();
+        // Amplia mantendo o ponto sob o cursor no lugar
+        ctx.translate(x, y);
+        ctx.scale(ROLETA_ZOOM, ROLETA_ZOOM);
+        ctx.translate(-x, -y);
+        sorteioDesenharRoda(ctx, meio, raio);
+        ctx.restore();
+        // Aro da lupa
+        ctx.beginPath();
+        ctx.arc(x, y, ROLETA_RAIO_LENTE, 0, Math.PI * 2);
+        ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 4; ctx.stroke();
+        ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
 }
 
-// Sorteio ponderado: cada cupom é um bilhete, então quem tem 5 cupons tem 5x mais chance
+// Liga a lupa no canvas (uma vez só). Converte a posição do mouse pra coordenada interna
+// do canvas, que é maior que o tamanho exibido na tela.
+function sorteioLigarLente() {
+    const canvas = document.getElementById('sorteioRoletaCanvas');
+    if (!canvas || canvas.dataset.lente === '1') return;
+    canvas.dataset.lente = '1';
+
+    const posicao = e => {
+        const r = canvas.getBoundingClientRect();
+        const escala = canvas.width / r.width;
+        return { x: (e.clientX - r.left) * escala, y: (e.clientY - r.top) * escala };
+    };
+    const dentroDaRoda = p => {
+        const meio = canvas.width / 2;
+        return Math.hypot(p.x - meio, p.y - meio) <= meio - 8;
+    };
+
+    canvas.addEventListener('mousemove', e => {
+        if (_roletaGirando) return;
+        const p = posicao(e);
+        _roletaLente = dentroDaRoda(p) ? p : null;
+        canvas.style.cursor = _roletaLente ? 'zoom-in' : 'default';
+        const nome = _roletaLente ? sorteioNomeNoPonto(p) : null;
+        const centro = document.getElementById('sorteioRoletaCentro');
+        if (centro && !_roletaGanhador) centro.textContent = nome ? nome.slice(0, 14) : 'GIRE';
+        sorteioDesenharRoleta();
+    });
+    canvas.addEventListener('mouseleave', () => {
+        _roletaLente = null;
+        canvas.style.cursor = 'default';
+        const centro = document.getElementById('sorteioRoletaCentro');
+        if (centro && !_roletaGanhador) centro.textContent = 'GIRE';
+        sorteioDesenharRoleta();
+    });
+}
+
+// Qual fatia está embaixo de um ponto qualquer do canvas
+function sorteioNomeNoPonto(p) {
+    if (!_roletaFatias.length) return null;
+    const meio = document.getElementById('sorteioRoletaCanvas').width / 2;
+    let ang = Math.atan2(p.y - meio, p.x - meio) - _roletaAngulo;
+    ang = ((ang % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const idx = Math.floor(ang / ((Math.PI * 2) / _roletaFatias.length));
+    return _roletaFatias[Math.min(idx, _roletaFatias.length - 1)].nome;
+}
+
+// Sorteio: todas as fatias têm o mesmo tamanho, e cada cupom é uma fatia — então sortear
+// uma fatia ao acaso já dá a chance proporcional (quem tem 20 cupons ocupa 20 fatias).
 function sorteioEscolherGanhador() {
-    const total = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
-    let ponto = Math.random() * total;
-    for (let i = 0; i < _roletaParticipantes.length; i++) {
-        ponto -= _roletaParticipantes[i].cupons;
-        if (ponto <= 0) return i;
-    }
-    return _roletaParticipantes.length - 1;
+    return Math.floor(Math.random() * _roletaFatias.length);
 }
 
 function sorteioGirarRoleta() {
-    if (_roletaGirando || !_roletaParticipantes.length) return;
+    if (_roletaGirando || !_roletaFatias.length) return;
     _roletaGirando = true;
+    _roletaLente = null;
 
     const btn = document.getElementById('sorteioBtnGirar');
     btn.disabled = true;
@@ -12554,14 +12639,10 @@ function sorteioGirarRoleta() {
     document.getElementById('sorteioRoletaDetalhe').textContent = 'Girando...';
 
     const idx = sorteioEscolherGanhador();
-    const total = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
-
-    // Onde fica o meio da fatia do ganhador, e quanto girar pra ela parar no ponteiro (topo)
-    let inicio = 0;
-    for (let i = 0; i < idx; i++) inicio += (_roletaParticipantes[i].cupons / total) * Math.PI * 2;
-    const fatia = (_roletaParticipantes[idx].cupons / total) * Math.PI * 2;
-    const meioFatia = inicio + fatia / 2;
-    const alvo = (-Math.PI / 2) - meioFatia; // ponteiro fica em -90°
+    const total = _roletaFatias.length;
+    const fatia = (Math.PI * 2) / total;
+    const meioFatia = idx * fatia + fatia / 2;
+    const alvo = (-Math.PI / 2) - meioFatia;
 
     const voltas = 6 + Math.floor(Math.random() * 3);
     const anguloInicial = _roletaAngulo;
@@ -12571,23 +12652,24 @@ function sorteioGirarRoleta() {
 
     const animar = agora => {
         const t = Math.min(1, (agora - t0) / duracao);
-        const eased = 1 - Math.pow(1 - t, 4); // desacelera no fim, como roleta de verdade
+        const eased = 1 - Math.pow(1 - t, 4);
         _roletaAngulo = anguloInicial + (anguloFinal - anguloInicial) * eased;
         sorteioDesenharRoleta();
 
-        // Enquanto gira, o centro vai mostrando quem está passando pelo ponteiro
         if (t < 1) {
             const nomeAtual = sorteioQuemEstaNoPonteiro();
             document.getElementById('sorteioRoletaCentro').textContent = nomeAtual ? nomeAtual.slice(0, 12) : '';
             requestAnimationFrame(animar);
         } else {
             _roletaGirando = false;
-            _roletaGanhador = _roletaParticipantes[idx];
-            const chance = ((_roletaGanhador.cupons / total) * 100).toFixed(1).replace('.', ',');
+            const venceu = _roletaFatias[idx];
+            const cupons = _roletaFatias.filter(f => f.idxCliente === venceu.idxCliente).length;
+            _roletaGanhador = { nome: venceu.nome, telefone: venceu.telefone, idxCliente: venceu.idxCliente, cupons };
+            const chance = ((cupons / total) * 100).toFixed(1).replace('.', ',');
             document.getElementById('sorteioRoletaCentro').textContent = '🏆';
-            document.getElementById('sorteioRoletaGanhador').textContent = _roletaGanhador.nome;
+            document.getElementById('sorteioRoletaGanhador').textContent = venceu.nome;
             document.getElementById('sorteioRoletaDetalhe').textContent =
-                `${_roletaGanhador.cupons} cupom(ns) · ${chance}% de chance${_roletaGanhador.telefone ? ' · ' + _roletaGanhador.telefone : ''}`;
+                `${cupons} cupom(ns) · ${chance}% de chance${venceu.telefone ? ' · ' + venceu.telefone : ''}`;
             document.getElementById('sorteioRoletaResultado').classList.add('revelado');
             document.getElementById('sorteioBtnRemover').style.display = '';
             btn.disabled = false;
@@ -12598,25 +12680,21 @@ function sorteioGirarRoleta() {
     requestAnimationFrame(animar);
 }
 
-// Descobre qual fatia está embaixo do ponteiro no ângulo atual (usado durante o giro)
 function sorteioQuemEstaNoPonteiro() {
-    const total = _roletaParticipantes.reduce((s, p) => s + p.cupons, 0);
-    // Ângulo do ponteiro (topo) em relação ao começo da roda
+    if (!_roletaFatias.length) return '';
     let rel = (-Math.PI / 2 - _roletaAngulo) % (Math.PI * 2);
     if (rel < 0) rel += Math.PI * 2;
-    let acumulado = 0;
-    for (const p of _roletaParticipantes) {
-        acumulado += (p.cupons / total) * Math.PI * 2;
-        if (rel <= acumulado) return p.nome;
-    }
-    return _roletaParticipantes[0] ? _roletaParticipantes[0].nome : '';
+    const idx = Math.floor(rel / ((Math.PI * 2) / _roletaFatias.length));
+    return _roletaFatias[Math.min(idx, _roletaFatias.length - 1)].nome;
 }
 
 // Tira o ganhador da roda (pra sortear 2º, 3º lugar sem repetir a mesma pessoa)
 function sorteioRemoverGanhador() {
     if (!_roletaGanhador || _roletaGirando) return;
-    _roletaParticipantes = _roletaParticipantes.filter(p => p !== _roletaGanhador);
+    const alvo = _roletaGanhador.idxCliente;
+    _roletaParticipantes = _roletaParticipantes.filter((p, i) => i !== alvo);
     _roletaGanhador = null;
+    sorteioMontarFatias();
     document.getElementById('sorteioRoletaResultado').classList.remove('revelado');
     document.getElementById('sorteioRoletaGanhador').textContent = '—';
     document.getElementById('sorteioRoletaDetalhe').textContent = 'Gire para sortear o próximo';
