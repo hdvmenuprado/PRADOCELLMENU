@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260918160014">
+    <meta name="app-build" content="20260918160516">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2427,62 +2427,33 @@ body.modo-claro .main-content {
         .st-roleta-palco {
             position: relative; width: min(62vh, 88vw, 620px); margin: 10px auto; aspect-ratio: 1; flex-shrink: 0;
         }
-        /* Modo faixa: a roda é gigante e só a borda direita dela aparece. O palco vira um
-           retângulo largo, e a seta sai do topo pra lateral direita. */
+        /* Modo tambor: fica centralizado na tela, com as fatias projetadas em cilindro. */
         .st-roleta-palco.faixa {
-            width: min(94vw, 900px); aspect-ratio: 900 / 430; margin: 6px auto;
-        }
-        /* Fade nas bordas: é o que dá a impressão de tambor girando, com o resto da roda
-           "saindo de cena" em cima e embaixo, em vez de um pedaço cortado na unha.
-           Mesma técnica usada nos seletores tipo iOS (mask com gradiente). */
-        .st-roleta-palco.faixa #sorteioRoletaCanvas {
-            border-radius: 0;
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
-            mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
-            box-shadow: none;
-        }
-        /* Faixa de seleção no meio, alinhada com a seta */
-        .st-roleta-palco.faixa::before {
-            content: ''; position: absolute; left: 0; right: 0; top: 50%;
-            transform: translateY(-50%); height: 48px; pointer-events: none; z-index: 2;
-            border-top: 1px solid rgba(212,175,55,.55); border-bottom: 1px solid rgba(212,175,55,.55);
-            background: linear-gradient(90deg, rgba(212,175,55,.05), rgba(212,175,55,.14));
-        }
-        /* Brilho suave nas pontas, reforçando a curvatura */
-        .st-roleta-palco.faixa::after {
-            content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-            background: radial-gradient(ellipse at 100% 50%, transparent 55%, rgba(0,0,0,.45) 100%);
+            width: min(92vw, 640px); aspect-ratio: 640 / 520; margin: 4px auto;
         }
         .st-roleta-palco.faixa .st-roleta-centro { display: none; }
+        /* Fade em cima e embaixo: dá a impressão de que o resto do tambor continua
+           girando fora da tela (mesma técnica dos seletores de rolagem). */
+        .st-roleta-palco.faixa #sorteioRoletaCanvas {
+            border-radius: 0; box-shadow: none;
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+        }
+        /* Faixa de seleção no meio, onde o nome sorteado para */
+        .st-roleta-palco.faixa::before {
+            content: ''; position: absolute; left: 4%; right: 4%; top: 50%;
+            transform: translateY(-50%); height: 66px; pointer-events: none; z-index: 2;
+            border-top: 2px solid rgba(212,175,55,.75); border-bottom: 2px solid rgba(212,175,55,.75);
+            background: linear-gradient(180deg, rgba(212,175,55,.16), rgba(212,175,55,.04), rgba(212,175,55,.16));
+            box-shadow: 0 0 22px rgba(212,175,55,.25);
+        }
+        /* Seta apontando pra faixa do meio */
         .st-roleta-palco.faixa .st-roleta-ponteiro {
-            top: 50%; left: auto; right: -6px; transform: translateY(-50%);
-            border-left: 42px solid var(--st-vermelho); border-top: 20px solid transparent;
-            border-bottom: 20px solid transparent; border-right: none;
+            top: 50%; left: auto; right: -4px; transform: translateY(-50%); z-index: 5;
+            border-left: 30px solid var(--st-dourado); border-top: 17px solid transparent;
+            border-bottom: 17px solid transparent; border-right: none;
         }
-        .st-roleta-palco.faixa .st-roleta-ponteiro::after {
-            top: 50%; left: auto; right: -34px; transform: translateY(-50%);
-        }
-        #sorteioRoletaCanvas { width: 100%; height: 100%; display: block; border-radius: 50%; box-shadow: 0 0 0 6px #1f1f26, 0 12px 40px rgba(0,0,0,.5); }
-        body.modo-claro #sorteioRoletaCanvas { box-shadow: 0 0 0 6px #e8e8ee, 0 12px 40px rgba(0,0,0,.2); }
-        .st-roleta-ponteiro {
-            position: absolute; top: -18px; left: 50%; transform: translateX(-50%); z-index: 4;
-            width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent;
-            border-top: 42px solid var(--st-vermelho);
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,.6));
-        }
-        .st-roleta-ponteiro::after {
-            content: ''; position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-            width: 16px; height: 16px; border-radius: 50%; background: var(--st-vermelho);
-            border: 3px solid #fff2; box-shadow: 0 2px 6px rgba(0,0,0,.5);
-        }
-        .st-roleta-centro {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 2;
-            width: 30%; height: 30%; border-radius: 50%; background: #15151a; border: 3px solid var(--st-dourado);
-            display: flex; align-items: center; justify-content: center; text-align: center;
-            font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; color: var(--st-dourado);
-            padding: 6px; line-height: 1.15; word-break: break-word;
-        }
-        body.modo-claro .st-roleta-centro { background: #fff; }
+        .st-roleta-palco.faixa .st-roleta-ponteiro::after { display: none; }
 
         .st-roleta-resultado {
             margin-top: 18px; padding: 14px; border-radius: 12px; text-align: center;
@@ -12497,7 +12468,6 @@ const ROLETA_CORES = ['#c23a2e', '#d4af37', '#8f2318', '#b8942c', '#a32f25', '#e
 const ROLETA_ZOOM = 3.2;
 const ROLETA_MAX_FATIAS = 90;   // acima disso a roda vira gigante e mostra só um trecho
 const ROLETA_ESPESSURA_ALVO = 46;  // px que cada fatia deve ter pra o nome caber
-const ROLETA_PROFUNDIDADE = 215;   // o quanto a fatia avança pro meio da roda (modo faixa)
 let _roletaPorCupom = true;
 let _roletaModoFaixa = false;
 let _roletaPesoTotal = 0;
@@ -12563,7 +12533,7 @@ function sorteioAjustarPalco() {
     const canvas = document.getElementById('sorteioRoletaCanvas');
     if (!palco || !canvas) return;
     palco.classList.toggle('faixa', _roletaModoFaixa);
-    if (_roletaModoFaixa) { canvas.width = 900; canvas.height = 430; }
+    if (_roletaModoFaixa) { canvas.width = 640; canvas.height = 520; }
     else { canvas.width = 1100; canvas.height = 1100; }
 }
 
@@ -12596,9 +12566,67 @@ function sorteioGeometria() {
     if (!_roletaModoFaixa) {
         return { cx: L / 2, cy: A / 2, raio: Math.min(L, A) / 2 - 8, faixa: false };
     }
-    // Raio calculado pra cada fatia ficar com a espessura alvo
-    const raio = Math.max(900, (_roletaFatias.length * ROLETA_ESPESSURA_ALVO) / (Math.PI * 2));
-    return { cx: L - 60 - raio, cy: A / 2, raio, faixa: true };
+    // Tambor: o "raio" aqui é visual, não geométrico. O que dá a curva é a projeção
+    // (cada linha sobe/desce por sen do ângulo e encolhe por cos), igual aos seletores
+    // de rolagem do iOS — assim a curvatura aparece mesmo com centenas de cupons.
+    return { cx: L / 2, cy: A / 2, raio: A / 2 - 10, faixa: true };
+}
+
+// Quantos graus separam uma fatia da seguinte no tambor, e quantas aparecem de cada lado
+const TAMBOR_PASSO = 15 * Math.PI / 180;
+const TAMBOR_VISIVEIS = 6;
+
+function sorteioDesenharTambor(ctx, g) {
+    const total = _roletaFatias.length;
+    const sa = (Math.PI * 2) / total;                 // ângulo real de cada fatia
+    const posicao = (-_roletaAngulo) / sa - 0.5;      // fatia (fracionária) sob o ponteiro
+    const base = Math.floor(posicao);
+    const frac = posicao - base;
+    const L = ctx.canvas.width;
+    const alturaLinha = g.raio * TAMBOR_PASSO;
+
+    for (let k = -TAMBOR_VISIVEIS; k <= TAMBOR_VISIVEIS; k++) {
+        const ang = (k - frac) * TAMBOR_PASSO;
+        if (Math.abs(ang) > Math.PI / 2) continue;
+        const i = ((base + k) % total + total) % total;
+        const fatia = _roletaFatias[i];
+
+        const cos = Math.cos(ang);
+        const y = g.cy + g.raio * Math.sin(ang);
+        const alt = Math.max(1, alturaLinha * cos);
+        // Encolhe as pontas: é isso que faz parecer um cilindro visto de frente
+        const largura = L * (0.34 + 0.66 * cos);
+        const x = g.cx - largura / 2;
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.pow(cos, 1.5));
+        ctx.fillStyle = ROLETA_CORES[fatia.idxCliente % ROLETA_CORES.length];
+        // Cantos levemente arredondados acompanhando a curva
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x, y - alt / 2, largura, alt, Math.min(10, alt / 2));
+        else ctx.rect(x, y - alt / 2, largura, alt);
+        ctx.fill();
+        // Sombra interna nas pontas, reforçando o volume
+        const grad = ctx.createLinearGradient(x, 0, x + largura, 0);
+        grad.addColorStop(0, 'rgba(0,0,0,.45)');
+        grad.addColorStop(.18, 'rgba(0,0,0,0)');
+        grad.addColorStop(.82, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,.45)');
+        ctx.fillStyle = grad; ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+        if (alt >= 13) {
+            const fonte = Math.max(11, Math.min(30, alt * 0.56));
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${fonte}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,.75)'; ctx.shadowBlur = 5;
+            const limite = Math.max(8, Math.floor((largura - 40) / (fonte * 0.56)));
+            ctx.fillText(String(fatia.nome || '').slice(0, limite), g.cx, y);
+        }
+        ctx.restore();
+    }
 }
 
 function sorteioDesenharRoda(ctx, g) {
@@ -12608,32 +12636,15 @@ function sorteioDesenharRoda(ctx, g) {
         ctx.beginPath(); ctx.arc(g.cx, g.cy, g.raio, 0, Math.PI * 2); ctx.fill();
         return;
     }
-    // No modo faixa só vale desenhar as fatias que aparecem na tela
-    let de = 0, ate = total;
-    if (g.faixa) {
-        const meioAng = Math.asin(Math.min(1, (ctx.canvas.height / 2 + 40) / g.raio));
-        const passo = (Math.PI * 2) / total;
-        const centro = ((-_roletaAngulo % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        de = Math.floor((centro - meioAng) / passo) - 1;
-        ate = Math.ceil((centro + meioAng) / passo) + 1;
-    }
+    if (g.faixa) { sorteioDesenharTambor(ctx, g); return; }
 
-    for (let k = de; k < ate; k++) {
-        const i = ((k % total) + total) % total;
+    for (let i = 0; i < total; i++) {
         const lim = _roletaLimites[i];
-        const ang = _roletaAngulo + lim.ini + Math.floor(k / total) * Math.PI * 2;
+        const ang = _roletaAngulo + lim.ini;
         const tamanho = lim.fim - lim.ini;
-        // No modo faixa a fatia é um anel curto (vai da borda só um pouco pro meio), em vez
-        // de uma cunha que chega até o centro — é o que dá a aparência de tambor girando.
         ctx.beginPath();
-        if (g.faixa) {
-            const rInt = g.raio - ROLETA_PROFUNDIDADE;
-            ctx.arc(g.cx, g.cy, g.raio, ang, ang + tamanho);
-            ctx.arc(g.cx, g.cy, rInt, ang + tamanho, ang, true);
-        } else {
-            ctx.moveTo(g.cx, g.cy);
-            ctx.arc(g.cx, g.cy, g.raio, ang, ang + tamanho);
-        }
+        ctx.moveTo(g.cx, g.cy);
+        ctx.arc(g.cx, g.cy, g.raio, ang, ang + tamanho);
         ctx.closePath();
         ctx.fillStyle = ROLETA_CORES[_roletaFatias[i].idxCliente % ROLETA_CORES.length];
         ctx.fill();
@@ -12645,23 +12656,17 @@ function sorteioDesenharRoda(ctx, g) {
             ctx.save();
             ctx.translate(g.cx, g.cy);
             ctx.rotate(ang + tamanho / 2);
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
             ctx.fillStyle = '#fff';
             ctx.font = `bold ${fonte}px Inter, sans-serif`;
             ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 4;
-            const comprimento = g.faixa ? ROLETA_PROFUNDIDADE - 26 : g.raio - 20;
-            const limite = Math.max(8, Math.floor(comprimento / (fonte * 0.54)));
+            const limite = Math.max(8, Math.floor((g.raio - 20) / (fonte * 0.54)));
             ctx.fillText(String(_roletaFatias[i].nome || '').slice(0, limite), g.raio - 18, 0);
             ctx.restore();
         }
     }
     ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.arc(g.cx, g.cy, g.raio, 0, Math.PI * 2); ctx.stroke();
-    if (g.faixa) {
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(g.cx, g.cy, g.raio - ROLETA_PROFUNDIDADE, 0, Math.PI * 2); ctx.stroke();
-    }
 }
 
 function sorteioDesenharRoleta() {
