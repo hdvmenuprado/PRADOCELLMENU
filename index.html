@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260918155344">
+    <meta name="app-build" content="20260918160014">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2430,9 +2430,29 @@ body.modo-claro .main-content {
         /* Modo faixa: a roda é gigante e só a borda direita dela aparece. O palco vira um
            retângulo largo, e a seta sai do topo pra lateral direita. */
         .st-roleta-palco.faixa {
-            width: min(94vw, 900px); aspect-ratio: 900 / 560; margin: 6px auto;
+            width: min(94vw, 900px); aspect-ratio: 900 / 430; margin: 6px auto;
         }
-        .st-roleta-palco.faixa #sorteioRoletaCanvas { border-radius: 14px; }
+        /* Fade nas bordas: é o que dá a impressão de tambor girando, com o resto da roda
+           "saindo de cena" em cima e embaixo, em vez de um pedaço cortado na unha.
+           Mesma técnica usada nos seletores tipo iOS (mask com gradiente). */
+        .st-roleta-palco.faixa #sorteioRoletaCanvas {
+            border-radius: 0;
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+            box-shadow: none;
+        }
+        /* Faixa de seleção no meio, alinhada com a seta */
+        .st-roleta-palco.faixa::before {
+            content: ''; position: absolute; left: 0; right: 0; top: 50%;
+            transform: translateY(-50%); height: 48px; pointer-events: none; z-index: 2;
+            border-top: 1px solid rgba(212,175,55,.55); border-bottom: 1px solid rgba(212,175,55,.55);
+            background: linear-gradient(90deg, rgba(212,175,55,.05), rgba(212,175,55,.14));
+        }
+        /* Brilho suave nas pontas, reforçando a curvatura */
+        .st-roleta-palco.faixa::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+            background: radial-gradient(ellipse at 100% 50%, transparent 55%, rgba(0,0,0,.45) 100%);
+        }
         .st-roleta-palco.faixa .st-roleta-centro { display: none; }
         .st-roleta-palco.faixa .st-roleta-ponteiro {
             top: 50%; left: auto; right: -6px; transform: translateY(-50%);
@@ -12476,7 +12496,8 @@ let _roletaLente = null;         // {x, y} do cursor quando a lupa está ativa
 const ROLETA_CORES = ['#c23a2e', '#d4af37', '#8f2318', '#b8942c', '#a32f25', '#e0b944'];
 const ROLETA_ZOOM = 3.2;
 const ROLETA_MAX_FATIAS = 90;   // acima disso a roda vira gigante e mostra só um trecho
-const ROLETA_ESPESSURA_ALVO = 26;  // px que cada fatia deve ter pra o nome caber
+const ROLETA_ESPESSURA_ALVO = 46;  // px que cada fatia deve ter pra o nome caber
+const ROLETA_PROFUNDIDADE = 215;   // o quanto a fatia avança pro meio da roda (modo faixa)
 let _roletaPorCupom = true;
 let _roletaModoFaixa = false;
 let _roletaPesoTotal = 0;
@@ -12542,7 +12563,7 @@ function sorteioAjustarPalco() {
     const canvas = document.getElementById('sorteioRoletaCanvas');
     if (!palco || !canvas) return;
     palco.classList.toggle('faixa', _roletaModoFaixa);
-    if (_roletaModoFaixa) { canvas.width = 900; canvas.height = 560; }
+    if (_roletaModoFaixa) { canvas.width = 900; canvas.height = 430; }
     else { canvas.width = 1100; canvas.height = 1100; }
 }
 
@@ -12602,9 +12623,17 @@ function sorteioDesenharRoda(ctx, g) {
         const lim = _roletaLimites[i];
         const ang = _roletaAngulo + lim.ini + Math.floor(k / total) * Math.PI * 2;
         const tamanho = lim.fim - lim.ini;
+        // No modo faixa a fatia é um anel curto (vai da borda só um pouco pro meio), em vez
+        // de uma cunha que chega até o centro — é o que dá a aparência de tambor girando.
         ctx.beginPath();
-        ctx.moveTo(g.cx, g.cy);
-        ctx.arc(g.cx, g.cy, g.raio, ang, ang + tamanho);
+        if (g.faixa) {
+            const rInt = g.raio - ROLETA_PROFUNDIDADE;
+            ctx.arc(g.cx, g.cy, g.raio, ang, ang + tamanho);
+            ctx.arc(g.cx, g.cy, rInt, ang + tamanho, ang, true);
+        } else {
+            ctx.moveTo(g.cx, g.cy);
+            ctx.arc(g.cx, g.cy, g.raio, ang, ang + tamanho);
+        }
         ctx.closePath();
         ctx.fillStyle = ROLETA_CORES[_roletaFatias[i].idxCliente % ROLETA_CORES.length];
         ctx.fill();
@@ -12621,15 +12650,18 @@ function sorteioDesenharRoda(ctx, g) {
             ctx.fillStyle = '#fff';
             ctx.font = `bold ${fonte}px Inter, sans-serif`;
             ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 4;
-            const comprimento = g.faixa ? 330 : g.raio - 20;
+            const comprimento = g.faixa ? ROLETA_PROFUNDIDADE - 26 : g.raio - 20;
             const limite = Math.max(8, Math.floor(comprimento / (fonte * 0.54)));
-            ctx.fillText(String(_roletaFatias[i].nome || '').slice(0, limite), g.raio - 16, 0);
+            ctx.fillText(String(_roletaFatias[i].nome || '').slice(0, limite), g.raio - 18, 0);
             ctx.restore();
         }
     }
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.raio, 0, Math.PI * 2);
-    ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 7; ctx.stroke();
+    ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(g.cx, g.cy, g.raio, 0, Math.PI * 2); ctx.stroke();
+    if (g.faixa) {
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(g.cx, g.cy, g.raio - ROLETA_PROFUNDIDADE, 0, Math.PI * 2); ctx.stroke();
+    }
 }
 
 function sorteioDesenharRoleta() {
