@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260918160516">
+    <meta name="app-build" content="20260919150108">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -11440,37 +11440,25 @@ async function osConfirmarReabrir() {
 // do que funcionava (ou não) antes do reparo, pra evitar discussão na entrega.
 // ------------------------------------------------------------------
 const OS_CHECKLIST_ITENS = [
-    { grupo: 'Geral', itens: [
-        { id: 'liga', nome: 'Liga / dá imagem' },
-        { id: 'carrega', nome: 'Carrega (conector)' },
-        { id: 'bateria', nome: 'Bateria segura carga' },
-    ]},
-    { grupo: 'Tela', itens: [
-        { id: 'imagem', nome: 'Imagem sem manchas ou linhas' },
-        { id: 'touch', nome: 'Touch responde em toda a tela' },
-        { id: 'vidro', nome: 'Vidro sem trincos' },
-    ]},
-    { grupo: 'Câmeras e biometria', itens: [
-        { id: 'cam_tras', nome: 'Câmera traseira' },
-        { id: 'cam_front', nome: 'Câmera frontal' },
+    { grupo: 'Funcionamento', itens: [
+        { id: 'tela', nome: 'Tela' },
+        { id: 'touch', nome: 'Touch' },
+        { id: 'carregamento', nome: 'Carregamento' },
+        { id: 'bateria', nome: 'Bateria' },
+        { id: 'audio', nome: 'Alto-falantes e microfones' },
         { id: 'biometria', nome: 'Face ID / Touch ID' },
     ]},
-    { grupo: 'Áudio', itens: [
-        { id: 'alto_falante', nome: 'Alto-falante (música)' },
-        { id: 'auricular', nome: 'Auricular (chamada)' },
-        { id: 'microfone', nome: 'Microfone' },
-        { id: 'vibracao', nome: 'Vibração' },
-    ]},
-    { grupo: 'Conectividade e botões', itens: [
+    { grupo: 'Conectividade', itens: [
         { id: 'wifi', nome: 'Wi-Fi' },
-        { id: 'chip', nome: 'Chip / rede móvel' },
-        { id: 'botoes', nome: 'Botões (power e volume)' },
-        { id: 'sensores', nome: 'Sensor de proximidade' },
+        { id: 'rede4g', nome: 'Rede 4G' },
     ]},
-    { grupo: 'Estrutura', itens: [
-        { id: 'carcaca', nome: 'Carcaça sem amassados' },
-        { id: 'tampa', nome: 'Tampa traseira íntegra' },
-        { id: 'oxidacao', nome: 'Sem sinal de água / oxidação' },
+    { grupo: 'Estado do aparelho', itens: [
+        { id: 'carcaca', nome: 'Carcaça intacta (sem amassados ou tampa quebrada)' },
+        { id: 'umidade', nome: 'Sem sinal de umidade' },
+    ]},
+    { grupo: 'Veio junto', itens: [
+        { id: 'chip', nome: 'Chip' },
+        { id: 'capinha', nome: 'Capinha' },
     ]},
 ];
 
