@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260919150108">
+    <meta name="app-build" content="20260919152955">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1578,6 +1578,13 @@ body.modo-claro .main-content {
         }
         .os-tag-chk.com-defeito { background:rgba(239,68,68,0.14); color:#ef4444; border-color:rgba(239,68,68,0.45); }
         .os-tag-chk:hover { filter:brightness(1.3); }
+        /* Cliente aprovou o orçamento pelo site — fica na mesma linha da data, junto das
+           outras tags, pra não aumentar a altura da linha da O.S. */
+        .os-tag-aprov {
+            display:inline-block; vertical-align:1px; margin-left:3px;
+            background:rgba(46,204,113,.18); color:#2ecc71; border:1px solid rgba(46,204,113,.5);
+            font-weight:700; font-size:9px; padding:0 4px; border-radius:3px; letter-spacing:.3px;
+        }
         .os-hist-item {
             background: var(--surface-1); border:1px solid var(--border-color); border-left:3px solid #e67e22;
             border-radius:9px; padding:12px 14px; margin-bottom:10px;
@@ -10122,6 +10129,7 @@ function osDoBanco(row) {
         checklistObs: row.checklist_obs,
         checklistEm: row.checklist_em,
         checklistPor: row.checklist_por,
+        aprovadoEm: row.aprovado_em,
         historicoRetornos: Array.isArray(row.historico_retornos) ? row.historico_retornos : [],
         garantiaAte: row.garantia_ate,
         lojaId: row.loja_id,
@@ -10314,7 +10322,7 @@ function osCriarLinha(os) {
     tr.innerHTML = `
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);">
             ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:var(--text-muted);font-style:italic;">sem código</span>'}
-            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}${os.retornos > 0 ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>` : ''}${(() => { const r = osChkResumo(os); return r ? ` <span class="os-tag-chk ${r.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${r.falhas ? ' — ' + r.falhas + ' falha(s)' : ' — tudo ok'}">CHK${r.falhas ? ' ' + r.falhas : ''}</span>` : ''; })()}</div>
+            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}${os.retornos > 0 ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>` : ''}${(() => { const r = osChkResumo(os); return r ? ` <span class="os-tag-chk ${r.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${r.falhas ? ' — ' + r.falhas + ' falha(s)' : ' — tudo ok'}">CHK${r.falhas ? ' ' + r.falhas : ''}</span>` : ''; })()}${os.aprovadoEm ? ` <span class="os-tag-aprov" title="Cliente aprovou o orçamento pelo site em ${new Date(os.aprovadoEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}">APROV</span>` : ''}</div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
             <input type="text" class="osClienteNomeInput" placeholder="Nome do cliente"
@@ -10470,6 +10478,9 @@ function osAtualizarLinha(tr, os, forcarTudo) {
                 : '')
             + (rChk
                 ? ` <span class="os-tag-chk ${rChk.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${rChk.falhas ? ' — ' + rChk.falhas + ' falha(s)' : ' — tudo ok'}">CHK${rChk.falhas ? ' ' + rChk.falhas : ''}</span>`
+                : '')
+            + (os.aprovadoEm
+                ? ` <span class="os-tag-aprov" title="Cliente aprovou o orçamento pelo site em ${new Date(os.aprovadoEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}">APROV</span>`
                 : '');
     }
 
