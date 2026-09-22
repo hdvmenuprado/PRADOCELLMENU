@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260922202645">
+    <meta name="app-build" content="20260922203817">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1584,6 +1584,14 @@ body.modo-claro .main-content {
            outras tags, pra não aumentar a altura da linha da O.S. */
         /* Resposta do cliente pelo site, embaixo do seletor de status. Fica vazia (e sem
            ocupar altura) quando ele ainda não respondeu. */
+        .osDataEntrada { color:var(--text-muted); font-size:10px; margin-top:2px; }
+        .osTagsLinha { margin-top:2px; line-height:1; }
+        .osTagsLinha:empty { display:none; }
+        .osTagsLinha .os-tag-retorno, .osTagsLinha .os-tag-chk { margin-left:0; margin-right:3px; }
+        /* Retirada e fim da garantia, embaixo do status (some quando não foi retirado) */
+        .osRetiradaInfo { font-size:9px; color:var(--text-muted); line-height:1.3; margin-top:1px; white-space:nowrap; }
+        .osRetiradaInfo:empty { display:none; }
+        .osRetiradaInfo.vencida { color:#ef4444; }
         .osRespostaCliente { font-size:9px; font-weight:700; letter-spacing:.2px; line-height:1.3; }
         .osRespostaCliente:empty { display:none; }
         .osRespostaCliente.aprovado { color:#2ecc71; }
@@ -10134,6 +10142,7 @@ function osDoBanco(row) {
         checklistPor: row.checklist_por,
         aprovadoEm: row.aprovado_em,
         recusadoEm: row.recusado_em,
+        retiradoEm: row.retirado_em,
         historicoRetornos: Array.isArray(row.historico_retornos) ? row.historico_retornos : [],
         garantiaAte: row.garantia_ate,
         lojaId: row.loja_id,
@@ -10324,9 +10333,10 @@ function osCriarLinha(os) {
     const tr = document.createElement('tr');
     osPreencherDatasetLinha(tr, os);
     tr.innerHTML = `
-        <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);">
+        <td class="osCelulaCodigo" style="padding:4px 6px;border-bottom:1px solid var(--border-color);font-size:11px;white-space:nowrap;color:var(--text-main);vertical-align:top;">
             ${os.codigo ? `<span class="os-codigo-badge" title="${os.codigo}">${os.codigo}</span>` : '<span style="color:var(--text-muted);font-style:italic;">sem código</span>'}
-            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">${data}${os.retornos > 0 ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>` : ''}${(() => { const r = osChkResumo(os); return r ? ` <span class="os-tag-chk ${r.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${r.falhas ? ' — ' + r.falhas + ' falha(s)' : ' — tudo ok'}">CHK${r.falhas ? ' ' + r.falhas : ''}</span>` : ''; })()}</div>
+            <div class="osDataEntrada"></div>
+            <div class="osTagsLinha"></div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);max-width:110px;">
             <input type="text" class="osClienteNomeInput" placeholder="Nome do cliente"
@@ -10391,6 +10401,7 @@ function osCriarLinha(os) {
                 ${opts.map(s=>`<option value="${s}">${s}</option>`).join('')}
             </select>
             <div class="osRespostaCliente"></div>
+            <div class="osRetiradaInfo"></div>
         </td>
         <td style="padding:4px 6px;border-bottom:1px solid var(--border-color);text-align:center;white-space:nowrap;">
             <button onclick="osGerarCupom(this)" title="Cupom de finalização (entrega do aparelho)" style="background:none;border:none;color:#a78bfa;cursor:pointer;padding:2px 4px;border-radius:4px;display:inline-flex;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></button>
@@ -10472,17 +10483,24 @@ function osAtualizarLinha(tr, os, forcarTudo) {
     const data = osFormatarData(os.data||'');
     const badge = tr.querySelector('.os-codigo-badge');
     if (badge) { badge.textContent = os.codigo; badge.title = os.codigo; }
-    const dataEl = tr.querySelector('td:first-child > div');
-    // A tag de retorno mora dentro dessa mesma div, então aqui tem que reescrever as duas
-    // coisas juntas — usar textContent apagaria a tag a cada auto-refresh da lista.
+    // Primeira célula: data + hora de entrada numa linha, tags na de baixo. Fica alinhada
+    // no topo, então as 3 linhas cabem na altura que a célula do cliente já ocupa (nome,
+    // telefone e origem) — as tags não empurram nada.
+    const dataEl = tr.querySelector('.osDataEntrada');
     if (dataEl) {
+        const hora = osFormatarHoraEntrada(os.criadoEm);
+        dataEl.textContent = data + (hora ? ' · ' + hora : '');
+        dataEl.title = 'Entrada' + (hora ? ' em ' + data + ' às ' + hora : '');
+    }
+    const tagsEl = tr.querySelector('.osTagsLinha');
+    if (tagsEl) {
         const rChk = osChkResumo(os);
-        dataEl.innerHTML = data
-            + ((os.retornos > 0)
-                ? ` <span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>`
+        tagsEl.innerHTML =
+            ((os.retornos > 0)
+                ? `<span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>`
                 : '')
             + (rChk
-                ? ` <span class="os-tag-chk ${rChk.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${rChk.falhas ? ' — ' + rChk.falhas + ' falha(s)' : ' — tudo ok'}">CHK${rChk.falhas ? ' ' + rChk.falhas : ''}</span>`
+                ? `<span class="os-tag-chk ${rChk.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${rChk.falhas ? ' — ' + rChk.falhas + ' falha(s)' : ' — tudo ok'}">CHK${rChk.falhas ? ' ' + rChk.falhas : ''}</span>`
                 : '');
     }
 
@@ -10524,6 +10542,27 @@ function osAtualizarLinha(tr, os, forcarTudo) {
             respostaEl.className = 'osRespostaCliente';
             respostaEl.textContent = '';
             respostaEl.title = '';
+        }
+    }
+
+    // Retirada e fim da garantia: só aparece quando o aparelho já saiu da loja
+    const retEl = tr.querySelector('.osRetiradaInfo');
+    if (retEl) {
+        if (os.status === 'Aparelho retirado') {
+            const fim = osGarantiaValidaAte(os);
+            const partes = [];
+            if (os.retiradoEm) partes.push('ret. ' + new Date(os.retiradoEm).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+            const dias = (os.garantiaDias === undefined || os.garantiaDias === null || os.garantiaDias === '') ? 90 : parseInt(os.garantiaDias, 10);
+            if (!dias) partes.push('sem garantia');
+            else if (fim) partes.push('gar. até ' + fim.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }));
+            retEl.textContent = partes.join(' · ');
+            retEl.className = 'osRetiradaInfo' + (fim && fim < new Date() ? ' vencida' : '');
+            retEl.title = (os.retiradoEm ? 'Retirado em ' + new Date(os.retiradoEm).toLocaleString('pt-BR') + '. ' : '')
+                + (fim && dias ? 'Garantia até ' + fim.toLocaleDateString('pt-BR') + (fim < new Date() ? ' (vencida)' : '') : '');
+        } else {
+            retEl.textContent = '';
+            retEl.className = 'osRetiradaInfo';
+            retEl.title = '';
         }
     }
 
@@ -10795,8 +10834,26 @@ function osApiPost(dados) {
         }
 
         if (acao === 'ATUALIZAR_STATUS') {
+            const mudancas = { status: dados.status };
+            // Virou "Aparelho retirado": registra quando saiu e congela até quando vai a
+            // garantia, contando a partir da retirada. Se a garantia já estava congelada
+            // (O.S. que voltou em garantia), mantém a data original — ela não reinicia.
+            if (dados.status === 'Aparelho retirado') {
+                const agora = new Date();
+                mudancas.retirado_em = agora.toISOString();
+                const os = _osListaCompleta.find(o => o.codigo === dados.codigo);
+                if (os && !os.garantiaAte) {
+                    const dias = (os.garantiaDias === undefined || os.garantiaDias === null || os.garantiaDias === '') ? 90 : parseInt(os.garantiaDias, 10);
+                    if (dias > 0) {
+                        const fim = new Date(agora);
+                        fim.setDate(fim.getDate() + dias);
+                        mudancas.garantia_ate = fim.toISOString().slice(0, 10);
+                    }
+                }
+                if (os) { os.retiradoEm = mudancas.retirado_em; if (mudancas.garantia_ate) os.garantiaAte = mudancas.garantia_ate; }
+            }
             const { error } = await supabaseDB.from('ordens_servico')
-                .update({ status: dados.status }).eq('codigo', dados.codigo);
+                .update(mudancas).eq('codigo', dados.codigo);
             if (error) throw new Error(error.message);
             return { ok: true };
         }
@@ -11370,7 +11427,8 @@ function osGarantiaValidaAte(os) {
     if (os.garantiaAte) return new Date(os.garantiaAte + 'T23:59:59');
     const dias = (os.garantiaDias === undefined || os.garantiaDias === null || os.garantiaDias === '') ? 90 : parseInt(os.garantiaDias, 10);
     if (!dias) return null;
-    const base = os.data ? new Date(os.data + 'T23:59:59') : new Date(os.criadoEm || Date.now());
+    // A garantia começa na retirada; sem ela registrada (O.S. antigas), cai na data de entrada
+    const base = os.retiradoEm ? new Date(os.retiradoEm) : (os.data ? new Date(os.data + 'T23:59:59') : new Date(os.criadoEm || Date.now()));
     base.setDate(base.getDate() + dias);
     return base;
 }
