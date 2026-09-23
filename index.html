@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260922203817">
+    <meta name="app-build" content="20260923130431">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -10143,6 +10143,7 @@ function osDoBanco(row) {
         aprovadoEm: row.aprovado_em,
         recusadoEm: row.recusado_em,
         retiradoEm: row.retirado_em,
+        reabertoEm: row.reaberto_em,
         historicoRetornos: Array.isArray(row.historico_retornos) ? row.historico_retornos : [],
         garantiaAte: row.garantia_ate,
         lojaId: row.loja_id,
@@ -10214,7 +10215,9 @@ async function osBuscarLista(escopo) {
         const inicioMes = agora.getFullYear() + '-' + String(agora.getMonth()+1).padStart(2,'0') + '-01';
         const proxMesData = new Date(agora.getFullYear(), agora.getMonth()+1, 1);
         const fimMes = proxMesData.toISOString().slice(0,10);
-        query = query.gte('data', inicioMes).lt('data', fimMes);
+        // Entra quem foi aberto no mês OU reaberto em garantia no mês — senão uma O.S. de
+        // meses atrás que voltou hoje ficaria escondida e ninguém veria que precisa de atenção.
+        query = query.or(`and(data.gte.${inicioMes},data.lt.${fimMes}),and(reaberto_em.gte.${inicioMes},reaberto_em.lt.${fimMes})`);
     }
     const filtroLoja = lojaIdParaFiltro();
     if (filtroLoja) query = query.eq('loja_id', filtroLoja);
@@ -10497,7 +10500,7 @@ function osAtualizarLinha(tr, os, forcarTudo) {
         const rChk = osChkResumo(os);
         tagsEl.innerHTML =
             ((os.retornos > 0)
-                ? `<span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x — clique para ver o histórico">RET ${os.retornos}</span>`
+                ? `<span class="os-tag-retorno" onclick="osVerHistoricoRetornos(this)" title="Voltou em garantia ${os.retornos}x${os.reabertoEm ? ' — última vez em ' + osFormatarData(os.reabertoEm) : ''}. Clique para ver o histórico">RET ${os.retornos}</span>`
                 : '')
             + (rChk
                 ? `<span class="os-tag-chk ${rChk.falhas ? 'com-defeito' : ''}" onclick="osAbrirChecklistPelaTag(this)" title="Checklist preenchido${rChk.falhas ? ' — ' + rChk.falhas + ' falha(s)' : ' — tudo ok'}">CHK${rChk.falhas ? ' ' + rChk.falhas : ''}</span>`
@@ -11463,7 +11466,7 @@ function osReabrirEmGarantia(tr) {
     } else {
         const dias = Math.ceil((validaAte - hoje) / 86400000);
         aviso.style.cssText = 'border-radius:8px;padding:10px 12px;margin:14px 0;font-size:12px;line-height:1.55;background:rgba(46,204,113,0.1);border:1px dashed #2ecc71;';
-        aviso.innerHTML = `Garantia <b>válida até ${validaAte.toLocaleDateString('pt-BR')}</b> (faltam ${dias} dia(s)). O prazo não reinicia.<br>A data de entrada passa a ser hoje e o status volta pra <b>Orçando</b>.`;
+        aviso.innerHTML = `Garantia <b>válida até ${validaAte.toLocaleDateString('pt-BR')}</b> (faltam ${dias} dia(s)). O prazo não reinicia.<br>O status volta pra <b>Orçando</b>. A data de entrada e o valor continuam no mês original (não afeta faturamento nem comissão).`;
     }
 
     document.getElementById('osReabrirMotivo').value = '';
@@ -11502,7 +11505,11 @@ async function osConfirmarReabrir() {
     const historico = [...(os.historicoRetornos || []), entrada];
     const hojeISO = new Date().toISOString().slice(0, 10);
 
-    const mudancas = { data: hojeISO, status: 'Orçando', retornos: proximo, historico_retornos: historico };
+    // A "data" da O.S. NÃO muda no retorno: ela é a data financeira, que define o mês do
+    // faturamento e da comissão de mão de obra. Se mudasse, o valor sairia do mês em que o
+    // serviço foi feito e cairia no mês do retorno, bagunçando os dois meses. A data da
+    // reabertura vai num campo próprio (reaberto_em).
+    const mudancas = { reaberto_em: hojeISO, status: 'Orçando', retornos: proximo, historico_retornos: historico };
     // Congela a data de fim da garantia na primeira reabertura, pra que as próximas
     // (e o cupom) continuem contando do prazo original em vez de recomeçar.
     if (!os.garantiaAte && validaAte) mudancas.garantia_ate = validaAte.toISOString().slice(0, 10);
@@ -11512,7 +11519,7 @@ async function osConfirmarReabrir() {
             supabaseDB.from('ordens_servico').update(mudancas).eq('codigo', os.codigo));
         if (error) throw new Error(error.message);
 
-        os.data = hojeISO; os.status = 'Orçando'; os.retornos = proximo; os.historicoRetornos = historico;
+        os.reabertoEm = hojeISO; os.status = 'Orçando'; os.retornos = proximo; os.historicoRetornos = historico;
         if (mudancas.garantia_ate) os.garantiaAte = mudancas.garantia_ate;
 
         osFecharReabrir();
