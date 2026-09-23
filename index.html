@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260923130431">
+    <meta name="app-build" content="20260923132700">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1584,6 +1584,21 @@ body.modo-claro .main-content {
            outras tags, pra não aumentar a altura da linha da O.S. */
         /* Resposta do cliente pelo site, embaixo do seletor de status. Fica vazia (e sem
            ocupar altura) quando ele ainda não respondeu. */
+        /* Abas da lista de O.S.: todas x reabertas em garantia */
+        .os-abas-lista { display:flex; gap:4px; margin-bottom:8px; border-bottom:1px solid var(--border-color); }
+        .os-aba-lista {
+            background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+            padding:8px 14px; font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer;
+            font-family:'Inter',sans-serif; display:inline-flex; align-items:center; gap:7px;
+        }
+        .os-aba-lista:hover { color:var(--text-main); }
+        .os-aba-lista.ativa { color:var(--primary); border-bottom-color:var(--primary); }
+        .os-aba-contador {
+            min-width:18px; height:18px; padding:0 5px; border-radius:9px; font-size:10px; font-weight:700;
+            display:inline-flex; align-items:center; justify-content:center;
+            background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border-color);
+        }
+        .os-aba-contador.tem { background:rgba(230,126,34,.18); color:#e67e22; border-color:rgba(230,126,34,.5); }
         .osDataEntrada { color:var(--text-muted); font-size:10px; margin-top:2px; }
         .osTagsLinha { margin-top:2px; line-height:1; }
         .osTagsLinha:empty { display:none; }
@@ -4169,6 +4184,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     </div>
 
                     <!-- FILTROS -->
+                    <div class="os-abas-lista">
+                        <button type="button" id="osAbaTodas" class="os-aba-lista ativa" onclick="osSelecionarAbaLista(false)">Todas as O.S.</button>
+                        <button type="button" id="osAbaReabertas" class="os-aba-lista" onclick="osSelecionarAbaLista(true)">Reabertas <span class="os-aba-contador" id="osContadorReabertas">0</span></button>
+                    </div>
                     <div class="ep-panel" style="padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                         <input type="text" id="osPesquisa" placeholder="Pesquisar..." oninput="osFiltrarTabela()" style="flex:1 1 140px;min-width:100px;padding:8px 10px;border-radius:6px;border:1px solid var(--border-color);background:var(--surface-2);color:var(--text-main);font-size:12px;box-sizing:border-box;">
                         <button id="osBtnEscopo" onclick="osToggleEscopo()" class="ep-btn" style="flex:0 0 auto;padding:8px 10px;font-size:11px;display:inline-flex;align-items:center;gap:5px;" title="Clique para alternar entre pesquisar no mês atual ou em todos os meses"><i data-lucide="calendar" style="width:13px;height:13px;"></i> Mês Atual</button>
@@ -10210,14 +10229,14 @@ async function medirPromise(nomeApi, promessaFn) {
 // e a loja (a própria, ou a escolhida no seletor da Gestão — "todas" se nenhuma)
 async function osBuscarLista(escopo) {
     let query = supabaseDB.from('ordens_servico').select('*').order('data', { ascending: false }).order('criado_em', { ascending: false });
-    if (escopo === 'mes') {
+    if (escopo === 'reabertos') {
+        query = query.gt('retornos', 0).neq('status', 'Aparelho retirado').order('reaberto_em', { ascending: false });
+    } else if (escopo === 'mes') {
         const agora = new Date();
         const inicioMes = agora.getFullYear() + '-' + String(agora.getMonth()+1).padStart(2,'0') + '-01';
         const proxMesData = new Date(agora.getFullYear(), agora.getMonth()+1, 1);
         const fimMes = proxMesData.toISOString().slice(0,10);
-        // Entra quem foi aberto no mês OU reaberto em garantia no mês — senão uma O.S. de
-        // meses atrás que voltou hoje ficaria escondida e ninguém veria que precisa de atenção.
-        query = query.or(`and(data.gte.${inicioMes},data.lt.${fimMes}),and(reaberto_em.gte.${inicioMes},reaberto_em.lt.${fimMes})`);
+        query = query.gte('data', inicioMes).lt('data', fimMes);
     }
     const filtroLoja = lojaIdParaFiltro();
     if (filtroLoja) query = query.eq('loja_id', filtroLoja);
@@ -10672,7 +10691,47 @@ let _osEscopoBusca = 'mes';
 // (pode ser um mês passado, que não está nos dados já carregados) ou "Todos os Meses";
 // 'mes' (só o mês atual, o caso comum) caso contrário. Ver doGet no backend: por padrão
 // ele só devolve o mês atual, pra manter o polling contínuo sempre leve.
+// Aba "Reabertas": mostra só as O.S. que voltaram em garantia e ainda não foram entregues
+// de novo — de qualquer mês, porque um retorno do mês passado que continua na bancada
+// também precisa aparecer.
+let _osModoReabertos = false;
+
+function osSelecionarAbaLista(reabertas) {
+    _osModoReabertos = !!reabertas;
+    document.getElementById('osAbaTodas').classList.toggle('ativa', !_osModoReabertos);
+    document.getElementById('osAbaReabertas').classList.toggle('ativa', _osModoReabertos);
+    osCarregar();
+}
+
+// Reaberta "em andamento": voltou em garantia e ainda não foi entregue de novo.
+// Mesma regra usada no banco pela aba e pelo contador.
+function osEstaReaberta(os) {
+    return (os.retornos || 0) > 0 && os.status !== 'Aparelho retirado';
+}
+
+// Quantas O.S. estão reabertas agora (voltaram e ainda não saíram de novo).
+// Consulta própria, pra o número não depender do mês que está carregado na tela.
+async function osAtualizarContadorReabertas() {
+    const el = document.getElementById('osContadorReabertas');
+    if (!el) return;
+    try {
+        let q = supabaseDB.from('ordens_servico')
+            .select('codigo', { count: 'exact', head: true })
+            .gt('retornos', 0)
+            .neq('status', 'Aparelho retirado');
+        const filtroLoja = lojaIdParaFiltro();
+        if (filtroLoja) q = q.eq('loja_id', filtroLoja);
+        const { count, error } = await q;
+        if (error) throw error;
+        el.textContent = count || 0;
+        el.classList.toggle('tem', (count || 0) > 0);
+    } catch (e) {
+        console.error('Contador de reabertas:', e);
+    }
+}
+
 function osEscopoParaBackend() {
+    if (_osModoReabertos) return 'reabertos';
     const mesEspecificoEl = document.getElementById('osFiltroMesEspecifico');
     const mesEspecifico = mesEspecificoEl ? mesEspecificoEl.value : '';
     return (mesEspecifico || _osEscopoBusca === 'todos') ? 'todos' : 'mes';
@@ -10728,7 +10787,10 @@ function osFiltrarTabela() {
     let resultado = _osListaCompleta;
     let descricaoEscopo = '';
 
-    if (mesEspecifico) {
+    if (_osModoReabertos) {
+        // A lista já veio filtrada do banco (reabertas e não entregues, de qualquer mês)
+        descricaoEscopo = 'reabertas em andamento';
+    } else if (mesEspecifico) {
         resultado = resultado.filter(os => osExtrairAnoMes(os.data) === mesEspecifico);
         descricaoEscopo = `mês selecionado (<b>${osFormatarAnoMes(mesEspecifico)}</b>)`;
     } else if (_osEscopoBusca === 'mes') {
@@ -10740,6 +10802,13 @@ function osFiltrarTabela() {
         descricaoEscopo = 'mês atual';
     } else {
         descricaoEscopo = 'todos os meses';
+    }
+
+    // O.S. que voltou em garantia e ainda está na bancada fica SÓ na aba "Reabertas".
+    // Na lista normal ela entraria na soma do rodapé (peça, mão de obra e total) e
+    // inflaria o mês. Depois de entregue de novo, volta pra cá, no mês original dela.
+    if (!_osModoReabertos) {
+        resultado = resultado.filter(os => !osEstaReaberta(os));
     }
 
     if (statusFiltro) {
@@ -10949,6 +11018,7 @@ function osCarregar() {
         _osListaCompleta = lista; // já vem do Supabase ordenada (mais nova primeiro)
         osPopularFiltroMes();
         osFiltrarTabela();
+        osAtualizarContadorReabertas();
         // Só marca como "visto" DEPOIS que renderizou com sucesso — se osFiltrarTabela()
         // acima lançar um erro (ex: dado estranho numa linha), a gente nunca chega aqui,
         // e o hash antigo continua valendo. Assim a próxima tentativa não pensa "nada mudou"
@@ -10984,6 +11054,7 @@ function osAutoRefreshSilencioso() {
         const scrollPos = mainContent ? mainContent.scrollTop : 0;
         osFiltrarTabela(); // respeita a busca/filtro que o usuário já estiver usando
         if (mainContent) mainContent.scrollTop = scrollPos;
+        osAtualizarContadorReabertas();
         // Só marca como "visto" DEPOIS de renderizar com sucesso (ver comentário em
         // osCarregar). Antes, essa linha rodava ANTES do render — se o render falhasse
         // no meio (erro silencioso, sem log nenhum), a tela ficava travada pra sempre
