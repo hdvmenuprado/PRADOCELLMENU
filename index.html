@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260923132700">
+    <meta name="app-build" content="20260929134520">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1991,6 +1991,106 @@ body.modo-claro .main-content {
             font-size: 1.15rem; letter-spacing: 1px; margin-bottom: 18px;
         }
 
+
+        /* ---------------- TAREFAS ----------------
+           Visual propositalmente simples: cores sólidas, sem brilho nem transparência. */
+        body:has(#menu-tarefas:not(.hidden)) .workspace-card {
+            max-width: 1000px !important; background: #17171b !important;
+            backdrop-filter: none !important; box-shadow: none !important;
+            border: 1px solid #2a2a31 !important;
+        }
+        body.modo-claro:has(#menu-tarefas:not(.hidden)) .workspace-card { background: #ffffff !important; border-color: #e2e2e6 !important; }
+        #menu-tarefas .tf-cabecalho { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+        #menu-tarefas .tf-cabecalho h2 { margin:0; font-size:1.2rem; }
+        .tf-so-gestao { display:none !important; }
+        body.perfil-gestao .tf-so-gestao { display:inline-flex !important; }
+        body.perfil-gestao select.tf-so-gestao { display:inline-block !important; }
+
+        .tf-btn-principal {
+            background:#d4af37; color:#1a1a1a; border:none; border-radius:6px; padding:9px 16px;
+            font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; align-items:center; gap:6px;
+        }
+        .tf-btn-principal:hover { background:#c49f2c; }
+        .tf-btn-principal:disabled { opacity:.6; cursor:not-allowed; }
+        .tf-btn-secundario {
+            background:#26262d; color:#d8d8dc; border:1px solid #34343c; border-radius:6px; padding:9px 16px;
+            font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;
+        }
+        body.modo-claro .tf-btn-secundario { background:#f1f1f3; color:#333; border-color:#d6d6db; }
+
+        .tf-abas { display:flex; align-items:center; gap:4px; border-bottom:1px solid #2a2a31; margin-bottom:16px; }
+        body.modo-claro .tf-abas { border-color:#e2e2e6; }
+        .tf-aba {
+            background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+            padding:9px 14px; font-size:13px; font-weight:600; color:#8a8a92; cursor:pointer; font-family:'Inter',sans-serif;
+        }
+        .tf-aba span { font-size:11px; background:#26262d; color:#aaa; padding:1px 7px; border-radius:10px; margin-left:4px; }
+        body.modo-claro .tf-aba span { background:#ececef; color:#666; }
+        .tf-aba.ativa { color:#d4af37; border-bottom-color:#d4af37; }
+        #tfFiltroPerfil {
+            margin-left:auto; padding:6px 9px; border-radius:6px; border:1px solid #34343c;
+            background:#1f1f25; color:#d8d8dc; font-size:12px; width:auto;
+        }
+        body.modo-claro #tfFiltroPerfil { background:#fff; color:#333; border-color:#d6d6db; }
+
+        .tf-lista { display:flex; flex-direction:column; gap:10px; }
+        .tf-vazio { text-align:center; color:#8a8a92; padding:40px 0; font-size:13px; }
+        .tf-card {
+            background:#1f1f25; border:1px solid #2c2c33; border-left:4px solid #3a3a42;
+            border-radius:8px; padding:14px 16px;
+        }
+        body.modo-claro .tf-card { background:#fafafb; border-color:#e2e2e6; border-left-color:#c9c9cf; }
+        .tf-card.vencida { border-left-color:#d64545; }
+        .tf-card.hoje { border-left-color:#e08a2e; }
+        .tf-card.finalizada { opacity:.85; border-left-color:#3a9a62; }
+        .tf-card-topo { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+        .tf-titulo { font-size:14.5px; font-weight:700; color:var(--text-main); line-height:1.35; }
+        .tf-descricao { font-size:13px; color:#a9a9b0; margin-top:6px; white-space:pre-wrap; line-height:1.5; }
+        body.modo-claro .tf-descricao { color:#555; }
+        .tf-meta { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px; font-size:11.5px; color:#8a8a92; }
+        .tf-prazo.vencida { color:#e05a5a; font-weight:700; }
+        .tf-prazo.hoje { color:#e08a2e; font-weight:700; }
+        .tf-destino { background:#26262d; color:#b8b8bf; padding:1px 8px; border-radius:4px; font-size:11px; }
+        body.modo-claro .tf-destino { background:#ececef; color:#555; }
+        .tf-finalizou { color:#4fb37a; font-weight:600; }
+        .tf-card-acoes { display:flex; gap:6px; flex-shrink:0; }
+        .tf-btn-finalizar {
+            background:#2d7a4f; color:#fff; border:none; border-radius:6px; padding:7px 12px;
+            font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; white-space:nowrap;
+        }
+        .tf-btn-finalizar:hover { background:#256641; }
+        .tf-btn-excluir {
+            background:none; color:#c05050; border:1px solid #4a2d2d; border-radius:6px; padding:7px 10px;
+            font-size:12px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;
+        }
+        .tf-btn-excluir:hover { background:#3a2323; }
+        body.modo-claro .tf-btn-excluir { border-color:#e3b9b9; }
+        body.modo-claro .tf-btn-excluir:hover { background:#fbeaea; }
+
+        .tf-modal { width:520px; max-width:94vw; text-align:left; padding:24px; background:#1b1b20 !important; border:1px solid #2c2c33; backdrop-filter:none !important; }
+        body.modo-claro .tf-modal { background:#fff !important; border-color:#e2e2e6; }
+        .tf-modal-pequeno { width:400px; }
+        .tf-modal h3 { margin:0 0 16px; font-size:1.05rem; color:var(--text-main); text-transform:none; letter-spacing:normal; }
+        .tf-modal label { display:block; font-size:12px; font-weight:600; color:#9a9aa2; margin:12px 0 5px; }
+        .tf-modal input, .tf-modal textarea, .tf-modal select {
+            width:100%; box-sizing:border-box; padding:9px 11px; border-radius:6px; border:1px solid #34343c;
+            background:#141418; color:var(--text-main); font-size:13.5px; font-family:'Inter',sans-serif;
+        }
+        body.modo-claro .tf-modal input, body.modo-claro .tf-modal textarea, body.modo-claro .tf-modal select { background:#fff; border-color:#d6d6db; }
+        .tf-modal textarea { resize:vertical; min-height:80px; }
+        .tf-linha { display:flex; gap:12px; }
+        .tf-linha > div { flex:1; }
+        .tf-modal-acoes { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
+        .tf-finalizar-titulo { margin:0; font-size:13.5px; color:#b8b8bf; font-weight:600; }
+
+        /* Número de tarefas pendentes ao lado de "Tarefas" no menu */
+        .tf-badge-menu {
+            margin-left:auto; min-width:18px; height:18px; padding:0 5px; border-radius:9px;
+            background:#d64545; color:#fff; font-size:10px; font-weight:700;
+            display:none; align-items:center; justify-content:center;
+        }
+        .tf-badge-menu.tem { display:inline-flex; }
+
         /* --- O.S. TELA CHEIA --- */
         body:has(#menu-os:not(.hidden)) .main-content {
             padding: 0 !important;
@@ -2799,6 +2899,7 @@ body.modo-claro .main-content {
             <button class="nav-btn" id="tab-estoquepecas" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('estoquepecas', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></span><span class="nav-label">Estoque Peças</span></button>
             <button class="nav-btn" id="tab-os" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('os', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2.12 2.12 0 0 0 3 3l6-6a4 4 0 0 0 5.4-5.4l-2.1 2.1a1 1 0 0 1-1.4 0l-1.6-1.6a1 1 0 0 1 0-1.4Z"/></svg></span><span class="nav-label">O.S.</span></button>
             <button class="nav-btn" id="tab-sorteio" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('sorteio', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg></span><span class="nav-label">Cupom Sorteio</span></button>
+            <button class="nav-btn" id="tab-tarefas" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('tarefas', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="nav-label">Tarefas</span><span class="tf-badge-menu" id="tfBadgeMenu"></span></button>
             <button class="nav-btn" id="tab-clientes" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('clientes', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="nav-label">Clientes</span></button>
             <button class="nav-btn" id="tab-dashboard" data-perfis="gestao" onclick="mudarAba('dashboard', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nav-label">Dashboard</span></button>
             <button class="nav-btn" id="tab-perdasgarantia" data-perfis="gestao" onclick="mudarAba('perdasgarantia', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></span><span class="nav-label">Perdas em Garantia</span></button>
@@ -4264,6 +4365,69 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 </div>
             </div>
 
+
+            <div id="menu-tarefas" class="modulo-aba hidden">
+                <div class="tf-cabecalho">
+                    <h2>Tarefas</h2>
+                    <button type="button" class="tf-btn-principal tf-so-gestao" onclick="tfAbrirNova()">+ Nova tarefa</button>
+                </div>
+
+                <div class="tf-abas">
+                    <button type="button" class="tf-aba ativa" data-tf="abertas" onclick="tfMudarLista('abertas', this)">Pendentes <span id="tfContAbertas">0</span></button>
+                    <button type="button" class="tf-aba" data-tf="finalizadas" onclick="tfMudarLista('finalizadas', this)">Finalizadas <span id="tfContFinalizadas">0</span></button>
+                    <select id="tfFiltroPerfil" class="tf-so-gestao" onchange="tfRenderizar()" title="Ver tarefas de qual perfil">
+                        <option value="">Todos os perfis</option>
+                        <option value="loja_norte">Loja Norte</option>
+                        <option value="loja_sul">Loja Sul</option>
+                        <option value="gestao">Gestão</option>
+                    </select>
+                </div>
+
+                <div id="tfLista" class="tf-lista"><div class="tf-vazio">Carregando...</div></div>
+            </div>
+
+            <div class="modal-overlay" id="modalTfNova">
+                <div class="modal-box tf-modal">
+                    <h3>Nova tarefa</h3>
+                    <label>Título</label>
+                    <input type="text" id="tfNovaTitulo" maxlength="120" placeholder="Ex.: Organizar estoque de películas">
+                    <label>Descrição</label>
+                    <textarea id="tfNovaDescricao" rows="4" placeholder="Detalhes do que precisa ser feito"></textarea>
+                    <div class="tf-linha">
+                        <div>
+                            <label>Prazo de entrega</label>
+                            <input type="date" id="tfNovaPrazo">
+                        </div>
+                        <div>
+                            <label>Aparece para</label>
+                            <select id="tfNovaPerfil">
+                                <option value="todos">Todos os perfis</option>
+                                <option value="loja_norte">Loja Norte</option>
+                                <option value="loja_sul">Loja Sul</option>
+                                <option value="gestao">Gestão</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="tf-modal-acoes">
+                        <button type="button" class="tf-btn-secundario" onclick="tfFecharModal('modalTfNova')">Cancelar</button>
+                        <button type="button" class="tf-btn-principal" id="tfBtnPublicar" onclick="tfPublicar()">Publicar tarefa</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modalTfFinalizar">
+                <div class="modal-box tf-modal tf-modal-pequeno">
+                    <h3>Finalizar tarefa</h3>
+                    <p id="tfFinalizarTitulo" class="tf-finalizar-titulo"></p>
+                    <label>Tarefa finalizada por:</label>
+                    <input type="text" id="tfFinalizarNome" list="tfListaFuncionarios" placeholder="Seu nome" maxlength="60">
+                    <datalist id="tfListaFuncionarios"></datalist>
+                    <div class="tf-modal-acoes">
+                        <button type="button" class="tf-btn-secundario" onclick="tfFecharModal('modalTfFinalizar')">Cancelar</button>
+                        <button type="button" class="tf-btn-principal" id="tfBtnConfirmarFinalizar" onclick="tfConfirmarFinalizar()">Finalizar</button>
+                    </div>
+                </div>
+            </div>
 
             <div id="menu-sorteio" class="modulo-aba hidden">
                 <div class="st-header">
@@ -6383,6 +6547,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         // Some valores em R$ (custos, totais, valor de venda) na tela pra quem não é
         // Gestão — Loja Norte/Sul continuam vendo quantidades, status etc. normalmente.
         document.body.classList.toggle('perfil-gestao', perfil === 'gestao');
+        // Número de tarefas pendentes no menu, já no login do perfil
+        if (typeof tfAtualizarBadge === 'function') setTimeout(tfAtualizarBadge, 300);
 
         const labelPerfil = document.getElementById('labelPerfilAtual');
         if (labelPerfil) labelPerfil.textContent = PERFIL_NOME_LABEL[perfil] || 'Trocar Usuário';
@@ -6490,6 +6656,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         else { avalDesacelerarSincronia(); }
         if (idAba === 'crm') crmCarregar();
         if (idAba === 'sorteio') { sorteioCarregarConfig(); sorteioCarregarClientes(); }
+        if (idAba === 'tarefas') { tfCarregar(); }
         if (idAba === 'clientes') clientesCarregar();
         if (idAba === 'dashboard') dashboardCarregar();
         if (idAba === 'perdasgarantia') pgIniciar();
@@ -9899,7 +10066,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -13059,6 +13226,213 @@ function sorteioRenderizarClientes(lista) {
 // Guarda as compras "cruas" (uma linha por venda/O.S.) em _sorteioSugComprasCruas pra poder
 // refiltrar por mês sem precisar buscar tudo de novo no Supabase.
 // ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// TAREFAS — a Gestão publica tarefas pra um perfil (ou pra todos), cada perfil vê as
+// suas e marca como finalizada informando quem fez. Só a Gestão publica e exclui.
+// ------------------------------------------------------------------
+let _tfTarefas = [];
+let _tfLista = 'abertas';
+let _tfFinalizarId = null;
+
+const TF_PERFIS = { todos: 'Todos os perfis', loja_norte: 'Loja Norte', loja_sul: 'Loja Sul', gestao: 'Gestão' };
+
+function tfEhGestao() { return typeof PERFIL_ATUAL !== 'undefined' && PERFIL_ATUAL === 'gestao'; }
+
+// Data de hoje no fuso local (YYYY-MM-DD), pra comparar com o prazo sem erro de fuso
+function tfHojeISO() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+async function tfCarregar() {
+    const lista = document.getElementById('tfLista');
+    if (lista && !_tfTarefas.length) lista.innerHTML = '<div class="tf-vazio">Carregando...</div>';
+    try {
+        let q = supabaseDB.from('tarefas').select('*').order('criada_em', { ascending: false }).limit(300);
+        // Cada loja vê as tarefas dela e as que foram pra todos; a Gestão vê tudo
+        if (!tfEhGestao() && typeof PERFIL_ATUAL !== 'undefined' && PERFIL_ATUAL) {
+            q = q.in('perfil_destino', ['todos', PERFIL_ATUAL]);
+        }
+        const { data, error } = await medirPromise('Tarefas', () => q);
+        if (error) throw new Error(error.message);
+        _tfTarefas = data || [];
+        tfRenderizar();
+        tfAtualizarBadge();
+    } catch (e) {
+        console.error('Erro ao carregar tarefas:', e);
+        if (lista) lista.innerHTML = '<div class="tf-vazio">Não foi possível carregar as tarefas.</div>';
+    }
+}
+
+function tfMudarLista(qual, btn) {
+    _tfLista = qual;
+    document.querySelectorAll('#menu-tarefas .tf-aba').forEach(b => b.classList.toggle('ativa', b === btn));
+    tfRenderizar();
+}
+
+function tfRenderizar() {
+    const lista = document.getElementById('tfLista');
+    if (!lista) return;
+    const filtroPerfil = tfEhGestao() ? (document.getElementById('tfFiltroPerfil').value || '') : '';
+    const visiveis = _tfTarefas.filter(t => !filtroPerfil || t.perfil_destino === filtroPerfil || t.perfil_destino === 'todos');
+
+    const abertas = visiveis.filter(t => !t.finalizada_em)
+        // prazo mais próximo primeiro; sem prazo vai pro fim
+        .sort((a, b) => (a.prazo || '9999-12-31').localeCompare(b.prazo || '9999-12-31'));
+    const finalizadas = visiveis.filter(t => t.finalizada_em)
+        .sort((a, b) => (b.finalizada_em || '').localeCompare(a.finalizada_em || ''));
+
+    document.getElementById('tfContAbertas').textContent = abertas.length;
+    document.getElementById('tfContFinalizadas').textContent = finalizadas.length;
+
+    const itens = _tfLista === 'abertas' ? abertas : finalizadas;
+    if (!itens.length) {
+        lista.innerHTML = `<div class="tf-vazio">${_tfLista === 'abertas' ? 'Nenhuma tarefa pendente.' : 'Nenhuma tarefa finalizada ainda.'}</div>`;
+        return;
+    }
+
+    const hoje = tfHojeISO();
+    lista.innerHTML = itens.map(t => {
+        let situacao = '';
+        let textoPrazo = 'Sem prazo';
+        if (t.prazo) {
+            textoPrazo = 'Prazo: ' + osFormatarData(t.prazo);
+            if (!t.finalizada_em) {
+                if (t.prazo < hoje) { situacao = 'vencida'; textoPrazo += ' (atrasada)'; }
+                else if (t.prazo === hoje) { situacao = 'hoje'; textoPrazo += ' (hoje)'; }
+            }
+        }
+        const finalizou = t.finalizada_em
+            ? `<span class="tf-finalizou">✓ Finalizada por ${escapeHTML(t.finalizada_por || '—')} em ${new Date(t.finalizada_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>`
+            : '';
+        const acoes = [];
+        if (!t.finalizada_em) acoes.push(`<button type="button" class="tf-btn-finalizar" onclick="tfAbrirFinalizar('${t.id}')">Finalizar tarefa</button>`);
+        if (tfEhGestao()) acoes.push(`<button type="button" class="tf-btn-excluir" onclick="tfExcluir('${t.id}')">Excluir</button>`);
+
+        return `
+            <div class="tf-card ${t.finalizada_em ? 'finalizada' : situacao}">
+                <div class="tf-card-topo">
+                    <div class="tf-titulo">${escapeHTML(t.titulo)}</div>
+                    <div class="tf-card-acoes">${acoes.join('')}</div>
+                </div>
+                ${t.descricao ? `<div class="tf-descricao">${escapeHTML(t.descricao)}</div>` : ''}
+                <div class="tf-meta">
+                    <span class="tf-prazo ${situacao}">${textoPrazo}</span>
+                    <span class="tf-destino">${TF_PERFIS[t.perfil_destino] || t.perfil_destino}</span>
+                    ${finalizou}
+                </div>
+            </div>`;
+    }).join('');
+}
+
+// Número vermelho ao lado de "Tarefas" no menu: pendentes pro perfil atual
+async function tfAtualizarBadge() {
+    const el = document.getElementById('tfBadgeMenu');
+    if (!el || typeof PERFIL_ATUAL === 'undefined' || !PERFIL_ATUAL) return;
+    try {
+        let q = supabaseDB.from('tarefas').select('id', { count: 'exact', head: true }).is('finalizada_em', null);
+        if (!tfEhGestao()) q = q.in('perfil_destino', ['todos', PERFIL_ATUAL]);
+        const { count, error } = await q;
+        if (error) throw error;
+        el.textContent = count > 99 ? '99+' : (count || '');
+        el.classList.toggle('tem', (count || 0) > 0);
+    } catch (e) { console.error('Badge de tarefas:', e); }
+}
+
+function tfFecharModal(id) {
+    document.getElementById(id).classList.remove('ativo');
+}
+
+function tfAbrirNova() {
+    if (!tfEhGestao()) return;
+    document.getElementById('tfNovaTitulo').value = '';
+    document.getElementById('tfNovaDescricao').value = '';
+    document.getElementById('tfNovaPrazo').value = '';
+    document.getElementById('tfNovaPerfil').value = 'todos';
+    document.getElementById('modalTfNova').classList.add('ativo');
+    setTimeout(() => document.getElementById('tfNovaTitulo').focus(), 60);
+}
+
+async function tfPublicar() {
+    if (!tfEhGestao()) return;
+    const titulo = document.getElementById('tfNovaTitulo').value.trim();
+    if (!titulo) { mostrarToast('Dê um título pra tarefa.', 'erro'); return; }
+    const btn = document.getElementById('tfBtnPublicar');
+    btn.disabled = true;
+    try {
+        const { error } = await supabaseDB.from('tarefas').insert({
+            titulo,
+            descricao: document.getElementById('tfNovaDescricao').value.trim() || null,
+            prazo: document.getElementById('tfNovaPrazo').value || null,
+            perfil_destino: document.getElementById('tfNovaPerfil').value || 'todos'
+        });
+        if (error) throw new Error(error.message);
+        tfFecharModal('modalTfNova');
+        mostrarToast('Tarefa publicada!');
+        tfCarregar();
+    } catch (e) {
+        mostrarToast('Não deu pra publicar: ' + e.message, 'erro');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function tfExcluir(id) {
+    if (!tfEhGestao()) return;
+    const t = _tfTarefas.find(x => x.id === id);
+    if (!confirm(`Excluir a tarefa "${t ? t.titulo : ''}"? Isso não pode ser desfeito.`)) return;
+    try {
+        const { error } = await supabaseDB.from('tarefas').delete().eq('id', id);
+        if (error) throw new Error(error.message);
+        mostrarToast('Tarefa excluída.');
+        tfCarregar();
+    } catch (e) {
+        mostrarToast('Não deu pra excluir: ' + e.message, 'erro');
+    }
+}
+
+// Abre a janelinha "Tarefa finalizada por:". Sugere os funcionários cadastrados da loja,
+// mas aceita qualquer nome digitado.
+async function tfAbrirFinalizar(id) {
+    const t = _tfTarefas.find(x => x.id === id);
+    if (!t) return;
+    _tfFinalizarId = id;
+    document.getElementById('tfFinalizarTitulo').textContent = t.titulo;
+    document.getElementById('tfFinalizarNome').value = '';
+    document.getElementById('modalTfFinalizar').classList.add('ativo');
+    setTimeout(() => document.getElementById('tfFinalizarNome').focus(), 60);
+
+    try {
+        let q = supabaseDB.from('vendedores').select('nome').eq('ativo', true).order('nome');
+        const lojaId = lojaIdParaGravar();
+        if (lojaId) q = q.eq('loja_id', lojaId);
+        const { data } = await q;
+        const nomes = [...new Set((data || []).map(v => v.nome))];
+        document.getElementById('tfListaFuncionarios').innerHTML = nomes.map(n => `<option value="${escapeHTML(n)}">`).join('');
+    } catch (e) { /* sem sugestão, digita o nome mesmo */ }
+}
+
+async function tfConfirmarFinalizar() {
+    const nome = document.getElementById('tfFinalizarNome').value.trim();
+    if (!nome) { mostrarToast('Informe quem finalizou a tarefa.', 'erro'); return; }
+    const btn = document.getElementById('tfBtnConfirmarFinalizar');
+    btn.disabled = true;
+    try {
+        const { error } = await supabaseDB.from('tarefas')
+            .update({ finalizada_em: new Date().toISOString(), finalizada_por: nome })
+            .eq('id', _tfFinalizarId)
+            .is('finalizada_em', null); // não sobrescreve se alguém já finalizou antes
+        if (error) throw new Error(error.message);
+        tfFecharModal('modalTfFinalizar');
+        mostrarToast('Tarefa finalizada!');
+        tfCarregar();
+    } catch (e) {
+        mostrarToast('Não deu pra finalizar: ' + e.message, 'erro');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 function sorteioSoDigitos(v) { return String(v || '').replace(/\D/g, ''); }
 
 // Telefone vira chave pelos ÚLTIMOS 8 DÍGITOS. É o pedaço que não muda: ignora DDD,
