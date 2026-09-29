@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260929134520">
+    <meta name="app-build" content="20260929212316">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2090,6 +2090,42 @@ body.modo-claro .main-content {
             display:none; align-items:center; justify-content:center;
         }
         .tf-badge-menu.tem { display:inline-flex; }
+
+
+        /* Estoque compartilhado: etiqueta da loja em cada peça + transferência */
+        .ep-tag-loja {
+            display:inline-block; font-size:9.5px; font-weight:700; padding:1px 6px; border-radius:4px;
+            margin-left:6px; vertical-align:1px; background:#2a2a31; color:#b8b8bf; letter-spacing:.3px;
+        }
+        .ep-tag-loja.norte { background:#1e3a5c; color:#8cc4ff; }
+        .ep-tag-loja.sul { background:#4a3514; color:#f4c46a; }
+        body.modo-claro .ep-tag-loja.norte { background:#dbeafe; color:#1d4ed8; }
+        body.modo-claro .ep-tag-loja.sul { background:#fef3c7; color:#92400e; }
+        .ep-btn-transf {
+            margin-left:5px; background:none; border:1px solid var(--border-color); color:var(--text-muted);
+            border-radius:4px; padding:0 6px; font-size:11px; cursor:pointer; line-height:1.5; vertical-align:1px;
+        }
+        .ep-btn-transf:hover { color:var(--primary); border-color:var(--primary); }
+        .ep-transf-box { width:400px; max-width:92vw; text-align:left; padding:22px; background:#1b1b20 !important; border:1px solid #2c2c33; backdrop-filter:none !important; }
+        body.modo-claro .ep-transf-box { background:#fff !important; border-color:#e2e2e6; }
+        .ep-transf-box h3 { margin:0 0 6px; font-size:1.02rem; text-transform:none; letter-spacing:normal; color:var(--text-main); }
+        .ep-transf-nome { margin:0 0 14px; font-size:13px; font-weight:600; color:var(--text-muted); }
+        .ep-transf-rota { display:flex; align-items:flex-end; gap:12px; margin-bottom:12px; }
+        .ep-transf-rota > div { display:flex; flex-direction:column; gap:5px; flex:1; }
+        .ep-transf-rota .rot { font-size:11px; font-weight:600; color:#9a9aa2; }
+        .ep-transf-rota .seta { font-size:18px; color:var(--text-muted); padding-bottom:6px; }
+        .ep-transf-rota .ep-tag-loja { margin-left:0; font-size:12px; padding:6px 10px; align-self:flex-start; }
+        .ep-transf-box label { display:block; font-size:11px; font-weight:600; color:#9a9aa2; margin-bottom:5px; }
+        .ep-transf-box select, .ep-transf-box input {
+            width:100%; box-sizing:border-box; padding:8px 10px; border-radius:6px; border:1px solid #34343c;
+            background:#141418; color:var(--text-main); font-size:13.5px;
+        }
+        body.modo-claro .ep-transf-box select, body.modo-claro .ep-transf-box input { background:#fff; border-color:#d6d6db; }
+        .ep-transf-acoes { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+        .ep-transf-cancelar { background:#26262d; color:#d8d8dc; border:1px solid #34343c; border-radius:6px; padding:8px 14px; font-size:13px; cursor:pointer; }
+        body.modo-claro .ep-transf-cancelar { background:#f1f1f3; color:#333; border-color:#d6d6db; }
+        .ep-transf-ok { background:#d4af37; color:#1a1a1a; border:none; border-radius:6px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; }
+        .ep-transf-ok:disabled { opacity:.6; }
 
         /* --- O.S. TELA CHEIA --- */
         body:has(#menu-os:not(.hidden)) .main-content {
@@ -5198,6 +5234,24 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     </div>
 </div>
 
+<div class="modal-overlay" id="modalEpTransferir">
+    <div class="modal-box ep-transf-box">
+        <h3>Transferir peça</h3>
+        <p id="epTransfNome" class="ep-transf-nome"></p>
+        <div class="ep-transf-rota">
+            <div><span class="rot">Sai de</span><span id="epTransfOrigem"></span></div>
+            <span class="seta">→</span>
+            <div><span class="rot">Vai para</span><select id="epTransfDestino"></select></div>
+        </div>
+        <label>Quantidade <span id="epTransfDisp"></span></label>
+        <input type="number" id="epTransfQtd" min="1" step="1" value="1">
+        <div class="ep-transf-acoes">
+            <button type="button" class="ep-transf-cancelar" onclick="epFecharTransferencia()">Cancelar</button>
+            <button type="button" class="ep-transf-ok" id="epTransfBtn" onclick="epConfirmarTransferencia()">Transferir</button>
+        </div>
+    </div>
+</div>
+
 <div id="pdfGarantiaLoading" aria-live="assertive" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);">
     <div style="width:min(330px,calc(100vw - 40px));padding:26px 24px;border:1px solid #d4af37;border-radius:14px;background:#1b1b1f;color:#fff;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.45);">
         <div style="width:34px;height:34px;margin:0 auto 15px;border:3px solid rgba(212,175,55,.25);border-top-color:#d4af37;border-radius:50%;animation:pdfGarantiaGirar .8s linear infinite;"></div>
@@ -6717,7 +6771,83 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
 
         // Registra uma movimentação no histórico (não trava a ação principal se falhar)
-        async function epRegistrarMovimentacao(modeloNome, categoriaNome, tipo, quantidade, custoUnitario, origemAvulso){
+        // ------------------------------------------------------------------
+        // ESTOQUE COMPARTILHADO ENTRE LOJAS
+        // As duas lojas enxergam o estoque inteiro; cada linha mostra de qual loja é a peça.
+        // Mexer na quantidade altera a linha daquela loja, e o histórico registra a loja
+        // onde a peça está — não a loja de quem clicou.
+        // ------------------------------------------------------------------
+        function epNomeLoja(lojaId){
+            const l = (typeof LOJAS_CACHE !== 'undefined' ? LOJAS_CACHE : []).find(x => x.id === lojaId);
+            return l ? l.nome.replace(/^Loja\s+/i, '') : '—';
+        }
+        function epTagLoja(lojaId){
+            const nome = epNomeLoja(lojaId);
+            const classe = /sul/i.test(nome) ? 'sul' : (/norte/i.test(nome) ? 'norte' : '');
+            return `<span class="ep-tag-loja ${classe}">${nome}</span>`;
+        }
+        // Minha loja = onde entram as peças novas (a do perfil logado; na Gestão, a escolhida no seletor)
+        function epMinhaLoja(){ return lojaIdParaGravar(); }
+
+        // Guarda os dados de cada linha que pode ser transferida, pelo id. O botão só leva
+        // o id no onclick — nome de peça com aspas quebraria o atributo se fosse junto.
+        const _epTransfItens = {};
+        function epBotaoTransferir(tabela, it, nome){
+            if (!(it.quantidade > 0)) return '';
+            _epTransfItens[it.id] = { tabela, id: it.id, nome, lojaId: it.loja_id, quantidade: it.quantidade };
+            return ` <button class="ep-btn-transf" title="Transferir pra outra loja" onclick="epAbrirTransferencia('${it.id}')">⇄</button>`;
+        }
+
+        let _epTransfAtual = null;
+        window.epAbrirTransferencia = function(id){
+            const t = _epTransfItens[id];
+            if (!t) return;
+            _epTransfAtual = t;
+            const outras = (typeof LOJAS_CACHE !== 'undefined' ? LOJAS_CACHE : []).filter(l => l.id !== t.lojaId);
+            if (!outras.length){ epMostrarToast('Não há outra loja pra transferir.', true); return; }
+            document.getElementById('epTransfNome').textContent = t.nome;
+            document.getElementById('epTransfOrigem').innerHTML = epTagLoja(t.lojaId);
+            document.getElementById('epTransfDestino').innerHTML = outras.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
+            document.getElementById('epTransfDisp').textContent = `(tem ${t.quantidade})`;
+            const qtd = document.getElementById('epTransfQtd');
+            qtd.max = t.quantidade; qtd.value = 1;
+            document.getElementById('modalEpTransferir').classList.add('ativo');
+            setTimeout(() => qtd.select(), 60);
+        };
+
+        window.epFecharTransferencia = function(){
+            document.getElementById('modalEpTransferir').classList.remove('ativo');
+        };
+
+        window.epConfirmarTransferencia = async function(){
+            const t = _epTransfAtual;
+            if (!t) return;
+            const qtd = parseInt(document.getElementById('epTransfQtd').value, 10);
+            const destino = document.getElementById('epTransfDestino').value;
+            if (!qtd || qtd < 1){ epMostrarToast('Informe a quantidade.', true); return; }
+            if (qtd > t.quantidade){ epMostrarToast(`Só tem ${t.quantidade} dessa peça.`, true); return; }
+            const btn = document.getElementById('epTransfBtn');
+            btn.disabled = true;
+            try {
+                // Tudo numa transação só no banco: tira da origem, soma no destino e registra
+                const { data, error } = await supabaseDB.rpc('transferir_estoque', {
+                    p_tabela: t.tabela, p_id: t.id, p_qtd: qtd, p_loja_destino: destino
+                }).maybeSingle();
+                if (error) throw new Error(error.message);
+                if (!data || !data.ok) throw new Error((data && data.mensagem) || 'Não foi possível transferir.');
+                epFecharTransferencia();
+                epMostrarToast(`${qtd} un. transferida(s) para ${epNomeLoja(destino)}.`);
+                if (t.tabela === 'android'){ epCarregarItensAndroid(); epCarregarDashboardAndroid(); }
+                else if (t.tabela === 'laptop'){ epCarregarItensLaptop(); epCarregarDashboardLaptop(); }
+                else { epCarregarItensDoModelo(); epCarregarDashboard(); }
+            } catch(e){
+                epMostrarToast(e.message || 'Erro ao transferir', true);
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        async function epRegistrarMovimentacao(modeloNome, categoriaNome, tipo, quantidade, custoUnitario, origemAvulso, lojaIdDaPeca){
             const custo = Number(custoUnitario) || 0;
             try {
                 await medirPromise('Estoque Peças', () => supabaseDB.from('estoque_movimentacoes').insert({
@@ -6727,7 +6857,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     quantidade: quantidade,
                     custo_unitario: custo,
                     valor_total: custo * quantidade,
-                    loja_id: lojaIdParaGravar(),
+                    loja_id: lojaIdDaPeca || lojaIdParaGravar(),
                     origem_avulso: origemAvulso || null
                 }));
             } catch(e) { console.error('Falha ao registrar movimentação:', e); }
@@ -6852,21 +6982,24 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         // ------------------------------------------------------------------
         async function epCarregarItensDoModelo(){
             const tbody = document.getElementById('epItensLinhas');
-            const filtroLoja = lojaIdParaFiltro();
-            if (!filtroLoja){
-                tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Escolha uma loja no seletor à esquerda pra ver/editar o estoque.</td></tr>';
-                return;
-            }
             tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Carregando...</td></tr>';
             try {
+                // Traz o modelo nas duas lojas. Cada loja tem uma linha por categoria; a da
+                // outra loja só aparece quando tem peça, pra não duplicar a lista com zeros.
                 const { data, error } = await medirPromise('Estoque Peças', () =>
                     supabaseDB.from('estoque_itens')
-                        .select('id, quantidade, custo_unitario, estoque_categorias(id, nome)')
-                        .eq('modelo_id', modeloAtualId)
-                        .eq('loja_id', filtroLoja)
-                        .order('estoque_categorias(nome)', { ascending: true }));
+                        .select('id, quantidade, custo_unitario, loja_id, estoque_categorias(id, nome)')
+                        .eq('modelo_id', modeloAtualId));
                 if (error) throw new Error(error.message);
-                epRenderizarItens(data || []);
+                const minha = epMinhaLoja();
+                const visiveis = (data || [])
+                    .filter(it => !minha || it.loja_id === minha || (it.quantidade || 0) > 0)
+                    .sort((a, b) => {
+                        const ca = a.estoque_categorias ? a.estoque_categorias.nome : '';
+                        const cb = b.estoque_categorias ? b.estoque_categorias.nome : '';
+                        return ca.localeCompare(cb) || epNomeLoja(a.loja_id).localeCompare(epNomeLoja(b.loja_id));
+                    });
+                epRenderizarItens(visiveis);
             } catch(e){
                 tbody.innerHTML = '<tr><td colspan="4" class="ep-empty" style="color:#f87171;">Erro ao carregar itens.</td></tr>';
                 epMostrarToast(e.message || 'Erro ao carregar itens', true);
@@ -6895,7 +7028,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><span class="ep-nivel ${epNivelClasse(it.quantidade)}"></span>${categoriaNome}</td>
+                    <td><span class="ep-nivel ${epNivelClasse(it.quantidade)}"></span>${categoriaNome} ${epTagLoja(it.loja_id)}${epBotaoTransferir('iphone', it, modeloAtualNome + ' · ' + categoriaNome)}</td>
                     <td>
                         <div class="ep-qtd-wrap">
                             <button class="epBtnMenos ep-step-btn minus">–</button>
@@ -6931,7 +7064,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     estado.timerSalvar = setTimeout(() => {
                         if (estado.salvando) return;
                         estado.salvando = true;
-                        epSalvarItem(it.id, categoriaNome, qtdInput, custoInput, estado).finally(() => { estado.salvando = false; });
+                        epSalvarItem(it.id, categoriaNome, qtdInput, custoInput, estado, it.loja_id).finally(() => { estado.salvando = false; });
                     }, 400);
                 }
 
@@ -6962,7 +7095,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             });
         }
 
-        async function epSalvarItem(itemId, categoriaNome, qtdInput, custoInput, estado){
+        async function epSalvarItem(itemId, categoriaNome, qtdInput, custoInput, estado, lojaIdDaPeca){
             const novaQuantidade = Math.max(0, parseInt(qtdInput.value) || 0);
             const novoCusto = Math.max(0, parseFloat(custoInput.value) || 0);
             const quantidadeAnterior = estado.quantidade; // último valor confirmado no banco
@@ -6980,7 +7113,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 estado.custo = novoCusto;
                 const diff = novaQuantidade - quantidadeAnterior;
                 if (diff !== 0){
-                    epRegistrarMovimentacao(modeloAtualNome, categoriaNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto);
+                    epRegistrarMovimentacao(modeloAtualNome, categoriaNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto, null, lojaIdDaPeca);
                 }
                 epCarregarDashboard();
             } catch(e){
@@ -7003,8 +7136,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 return;
             }
             tbody.innerHTML = lista.map(mov => {
-                const isEntrada = mov.tipo === 'Entrada';
-                const itemLabel = (contexto === 'android' || contexto === 'laptop') ? mov.categoria_nome : ((mov.modelo_nome||'') + ' · ' + mov.categoria_nome);
+                const isEntrada = mov.tipo === 'Entrada' || mov.tipo === 'Transf. entrada';
+                const itemLabel = ((contexto === 'android' || contexto === 'laptop') ? mov.categoria_nome : ((mov.modelo_nome||'') + ' · ' + mov.categoria_nome)) + ' ' + epTagLoja(mov.loja_id);
                 return `<tr>
                     <td class="ep-mono" style="color:var(--text-muted);font-size:11px;white-space:nowrap;font-weight:500;">${epFormatarDataHistorico(mov.criado_em)}</td>
                     <td>${itemLabel}</td>
@@ -7026,8 +7159,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 } else {
                     query = query.not('modelo_nome', 'is', null);
                 }
-                const filtroLoja = lojaIdParaFiltro();
-                if (filtroLoja) query = query.eq('loja_id', filtroLoja);
                 const { data, error } = await medirPromise('Estoque Peças', () => query);
                 if (error) throw new Error(error.message);
                 epRenderizarHistorico(tbody, data || [], contexto);
@@ -7045,10 +7176,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
 
         async function epCarregarDashboard(){
-            const filtroLoja = lojaIdParaFiltro(); // null = soma Todas as lojas (só acontece na Gestão)
+            // Estoque é compartilhado entre as lojas: os totais somam as duas
             try {
                 let query = supabaseDB.from('estoque_itens').select('quantidade, custo_unitario');
-                if (filtroLoja) query = query.eq('loja_id', filtroLoja);
                 const { data, error } = await medirPromise('Estoque Peças', () => query);
                 if (error) throw new Error(error.message);
                 const totalPecas = (data||[]).reduce((s, it) => s + (it.quantidade||0), 0);
@@ -7066,7 +7196,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     .select('tipo, valor_total')
                     .not('modelo_nome', 'is', null)
                     .gte('criado_em', epInicioMesISO());
-                if (filtroLoja) queryMov = queryMov.eq('loja_id', filtroLoja);
                 const { data: movs, error: errMov } = await medirPromise('Estoque Peças', () => queryMov);
                 if (errMov) throw new Error(errMov.message);
                 const entradas = (movs||[]).filter(m => m.tipo === 'Entrada').reduce((s,m) => s + (m.valor_total||0), 0);
@@ -7088,8 +7217,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         async function epCarregarDashboardAndroid(){
             try {
                 let query = supabaseDB.from('estoque_android').select('quantidade, custo_unitario');
-                const filtroLoja = lojaIdParaFiltro();
-                if (filtroLoja) query = query.eq('loja_id', filtroLoja);
                 const { data, error } = await medirPromise('Estoque Peças', () => query);
                 if (error) throw new Error(error.message);
                 const totalItens = (data||[]).reduce((s, it) => s + (it.quantidade||0), 0);
@@ -7108,11 +7235,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         async function epCarregarItensAndroid(){
             const busca = document.getElementById('epAndroidBuscaInput').value.trim();
             const tbody = document.getElementById('epAndroidLinhas');
-            const filtroLoja = lojaIdParaFiltro();
-            if (!filtroLoja){
-                tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Escolha uma loja no seletor à esquerda pra ver/editar o estoque.</td></tr>';
-                return;
-            }
             if (!busca){
                 tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Digite algo na busca acima pra ver as peças cadastradas.</td></tr>';
                 return;
@@ -7120,9 +7242,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Carregando...</td></tr>';
             try {
                 const { data, error } = await medirPromise('Estoque Peças', () =>
-                    supabaseDB.from('estoque_android').select('*').eq('loja_id', filtroLoja).ilike('item', '%' + busca + '%').order('item', { ascending: true }));
+                    supabaseDB.from('estoque_android').select('*').ilike('item', '%' + busca + '%').order('item', { ascending: true }));
                 if (error) throw new Error(error.message);
-                epRenderizarItensAndroid(data || []);
+                const minha = epMinhaLoja();
+                epRenderizarItensAndroid((data || []).filter(it => !minha || it.loja_id === minha || (it.quantidade || 0) > 0));
             } catch(e){
                 tbody.innerHTML = '<tr><td colspan="4" class="ep-empty" style="color:#f87171;">Erro ao carregar peças.</td></tr>';
             }
@@ -7142,7 +7265,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><span class="ep-nivel ${epNivelClasse(it.quantidade)}"></span>${it.item}</td>
+                    <td><span class="ep-nivel ${epNivelClasse(it.quantidade)}"></span>${it.item} ${epTagLoja(it.loja_id)}${epBotaoTransferir('android', it, it.item)}</td>
                     <td>
                         <div class="ep-qtd-wrap">
                             <button class="epBtnMenos ep-step-btn minus">–</button>
@@ -7176,7 +7299,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     estado.timerSalvar = setTimeout(() => {
                         if (estado.salvando) return;
                         estado.salvando = true;
-                        epSalvarItemAndroid(it.id, it.item, qtdInput, custoInput, estado).finally(() => { estado.salvando = false; });
+                        epSalvarItemAndroid(it.id, it.item, qtdInput, custoInput, estado, it.loja_id).finally(() => { estado.salvando = false; });
                     }, 400);
                 }
 
@@ -7204,7 +7327,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             });
         }
 
-        async function epSalvarItemAndroid(itemId, itemNome, qtdInput, custoInput, estado){
+        async function epSalvarItemAndroid(itemId, itemNome, qtdInput, custoInput, estado, lojaIdDaPeca){
             const novaQuantidade = Math.max(0, parseInt(qtdInput.value) || 0);
             const novoCusto = Math.max(0, parseFloat(custoInput.value) || 0);
             const quantidadeAnterior = estado.quantidade;
@@ -7219,7 +7342,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 estado.quantidade = novaQuantidade;
                 estado.custo = novoCusto;
                 const diff = novaQuantidade - quantidadeAnterior;
-                if (diff !== 0) epRegistrarMovimentacao(null, itemNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto, 'android');
+                if (diff !== 0) epRegistrarMovimentacao(null, itemNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto, 'android', lojaIdDaPeca);
                 epCarregarDashboardAndroid();
             } catch(e){
                 epMostrarToast(e.message || 'Erro ao salvar peça', true);
@@ -7236,7 +7359,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             if (!item){ epMostrarToast('Digite o nome da peça.', true); return; }
             if (isNaN(quantidade) || quantidade < 0){ epMostrarToast('Quantidade inválida.', true); return; }
             if (isNaN(custo) || custo < 0){ epMostrarToast('Informe um custo válido.', true); return; }
-            const filtroLoja = lojaIdParaFiltro();
+            const filtroLoja = epMinhaLoja(); // peça nova entra na loja de quem está cadastrando
             if (!filtroLoja){ epMostrarToast('Escolha uma loja no seletor à esquerda antes de cadastrar.', true); return; }
 
             const btn = document.getElementById('epBtnCadastrarAndroid');
@@ -7265,8 +7388,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         async function epCarregarDashboardLaptop(){
             try {
                 let query = supabaseDB.from('estoque_laptop').select('quantidade, custo_unitario');
-                const filtroLoja = lojaIdParaFiltro();
-                if (filtroLoja) query = query.eq('loja_id', filtroLoja);
                 const { data, error } = await medirPromise('Estoque Peças', () => query);
                 if (error) throw new Error(error.message);
                 const totalItens = (data||[]).reduce((s, it) => s + (it.quantidade||0), 0);
@@ -7285,11 +7406,6 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         async function epCarregarItensLaptop(){
             const busca = document.getElementById('epLaptopBuscaInput').value.trim();
             const tbody = document.getElementById('epLaptopLinhas');
-            const filtroLoja = lojaIdParaFiltro();
-            if (!filtroLoja){
-                tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Escolha uma loja no seletor à esquerda pra ver/editar o estoque.</td></tr>';
-                return;
-            }
             if (!busca){
                 tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Digite algo na busca acima pra ver as peças cadastradas.</td></tr>';
                 return;
@@ -7297,9 +7413,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Carregando...</td></tr>';
             try {
                 const { data, error } = await medirPromise('Estoque Peças', () =>
-                    supabaseDB.from('estoque_laptop').select('*').eq('loja_id', filtroLoja).ilike('item', '%' + busca + '%').order('item', { ascending: true }));
+                    supabaseDB.from('estoque_laptop').select('*').ilike('item', '%' + busca + '%').order('item', { ascending: true }));
                 if (error) throw new Error(error.message);
-                epRenderizarItensLaptop(data || []);
+                const minha = epMinhaLoja();
+                epRenderizarItensLaptop((data || []).filter(it => !minha || it.loja_id === minha || (it.quantidade || 0) > 0));
             } catch(e){
                 tbody.innerHTML = '<tr><td colspan="4" class="ep-empty" style="color:#f87171;">Erro ao carregar peças.</td></tr>';
             }
@@ -7317,7 +7434,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><span class="ep-nivel ${epNivelClasse(it.quantidade)}"></span>${it.item}</td>
+                    <td><span class="ep-nivel ${epNivelClasse(it.quantidade)}"></span>${it.item} ${epTagLoja(it.loja_id)}${epBotaoTransferir('laptop', it, it.item)}</td>
                     <td>
                         <div class="ep-qtd-wrap">
                             <button class="epBtnMenos ep-step-btn minus">–</button>
@@ -7349,7 +7466,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     estado.timerSalvar = setTimeout(() => {
                         if (estado.salvando) return;
                         estado.salvando = true;
-                        epSalvarItemLaptop(it.id, it.item, qtdInput, custoInput, estado).finally(() => { estado.salvando = false; });
+                        epSalvarItemLaptop(it.id, it.item, qtdInput, custoInput, estado, it.loja_id).finally(() => { estado.salvando = false; });
                     }, 400);
                 }
 
@@ -7375,7 +7492,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             });
         }
 
-        async function epSalvarItemLaptop(itemId, itemNome, qtdInput, custoInput, estado){
+        async function epSalvarItemLaptop(itemId, itemNome, qtdInput, custoInput, estado, lojaIdDaPeca){
             const novaQuantidade = Math.max(0, parseInt(qtdInput.value) || 0);
             const novoCusto = Math.max(0, parseFloat(custoInput.value) || 0);
             const quantidadeAnterior = estado.quantidade;
@@ -7390,7 +7507,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 estado.quantidade = novaQuantidade;
                 estado.custo = novoCusto;
                 const diff = novaQuantidade - quantidadeAnterior;
-                if (diff !== 0) epRegistrarMovimentacao(null, itemNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto, 'laptop');
+                if (diff !== 0) epRegistrarMovimentacao(null, itemNome, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), novoCusto, 'laptop', lojaIdDaPeca);
                 epCarregarDashboardLaptop();
             } catch(e){
                 epMostrarToast(e.message || 'Erro ao salvar peça', true);
@@ -7407,7 +7524,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             if (!item){ epMostrarToast('Digite o nome da peça.', true); return; }
             if (isNaN(quantidade) || quantidade < 0){ epMostrarToast('Quantidade inválida.', true); return; }
             if (isNaN(custo) || custo < 0){ epMostrarToast('Informe um custo válido.', true); return; }
-            const filtroLoja = lojaIdParaFiltro();
+            const filtroLoja = epMinhaLoja(); // peça nova entra na loja de quem está cadastrando
             if (!filtroLoja){ epMostrarToast('Escolha uma loja no seletor à esquerda antes de cadastrar.', true); return; }
 
             const btn = document.getElementById('epBtnCadastrarLaptop');
@@ -7445,23 +7562,16 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         async function epCalcularSugestoes(){
             const tbody = document.getElementById('epSugestaoLinhas');
             if (!tbody) return;
-            const filtroLoja = lojaIdParaFiltro();
-            if (!filtroLoja){
-                tbody.innerHTML = '<tr><td colspan="7" class="ep-empty">Escolha uma loja no seletor à esquerda pra calcular as sugestões.</td></tr>';
-                document.getElementById('epSugResumo').style.display = 'none';
-                return;
-            }
             tbody.innerHTML = '<tr><td colspan="7" class="ep-empty">Analisando o histórico...</td></tr>';
 
             try {
                 // 1) Todo o histórico de saídas (o que realmente foi consumido)
+                // Estoque compartilhado: analisa o consumo e o saldo das duas lojas juntas
                 let qMov = supabaseDB.from('estoque_movimentacoes')
-                    .select('modelo_nome, categoria_nome, tipo, quantidade, custo_unitario, criado_em, origem_avulso')
-                    .eq('loja_id', filtroLoja);
+                    .select('modelo_nome, categoria_nome, tipo, quantidade, custo_unitario, criado_em, origem_avulso');
                 // 2) Estoque atual, com os nomes de modelo/categoria pra casar com o histórico
                 let qItens = supabaseDB.from('estoque_itens')
-                    .select('quantidade, custo_unitario, estoque_modelos(nome), estoque_categorias(nome)')
-                    .eq('loja_id', filtroLoja);
+                    .select('quantidade, custo_unitario, estoque_modelos(nome), estoque_categorias(nome)');
 
                 const [{ data: movs, error: eMov }, { data: itens, error: eItens }] = await Promise.all([
                     medirPromise('Estoque Sugestão (movs)', () => qMov),
@@ -10066,7 +10176,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (window.epFecharTransferencia) epFecharTransferencia(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
