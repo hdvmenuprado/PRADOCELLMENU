@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260929212316">
+    <meta name="app-build" content="20260929225101">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2838,6 +2838,7 @@ body.modo-claro .main-content {
     </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="thinking-orbs.js" defer></script>
 </head>
 <body>
 <script>
@@ -2902,7 +2903,7 @@ body.modo-claro .main-content {
 
 <div id="telaBoasVindas" class="tela-boas-vindas">
     <div class="bv-spinner" id="bvSpinner">
-        <div class="bv-spinner-anel"></div>
+        <canvas data-orb="breathing" data-orb-tamanho="96" aria-label="Carregando"></canvas>
         <div class="bv-spinner-texto">Carregando...</div>
     </div>
     <div class="bv-frase" id="bvFrase"></div>
@@ -2978,7 +2979,7 @@ body.modo-claro .main-content {
                 <h2>Avaliação de iPhones</h2>
 
                 <div id="avalCarregandoBox" style="display:flex; align-items:center; gap:8px; background: rgba(37,99,235,0.10); border: 1px solid rgba(37,99,235,0.35); border-radius: 12px; padding: 10px 14px; margin-bottom: 18px; font-size: 12.5px; color: #2563eb;">
-                    <span class="spinner" style="width:13px;height:13px;border:2px solid rgba(37,99,235,0.3);border-top-color:#2563eb;border-radius:50%;display:inline-block;animation:girar 0.7s linear infinite;"></span>
+                    <canvas data-orb="connecting" data-orb-tamanho="20" aria-label="Sincronizando" style="flex-shrink:0;"></canvas>
                     <span>Sincronizando valores de avaliação com a planilha...</span>
                 </div>
                 <style>@keyframes girar { to { transform: rotate(360deg); } }</style>
@@ -3161,7 +3162,7 @@ body.modo-claro .main-content {
                     <!-- BUSCA + CADASTRO -->
                     <div style="display:flex;align-items:center;gap:10px;max-width:1300px;margin-bottom:12px;flex-wrap:wrap;">
                         <input type="text" id="crmPesquisa" placeholder="Pesquisar por nome, CPF ou telefone..." oninput="crmFiltrarTabela()" class="ep-search" style="flex:1;min-width:220px;margin-bottom:0;">
-                        <span id="crmLoadingStatus" style="display:none;font-size:12px;color:var(--primary);font-weight:600;white-space:nowrap;">Carregando da nuvem...</span>
+                        <span id="crmLoadingStatus" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--primary);font-weight:600;white-space:nowrap;"><canvas data-orb="searching" data-orb-tamanho="20" aria-label="Carregando"></canvas>Carregando da nuvem...</span>
                         <button class="ep-btn" onclick="crmAbrirModalCadastro()" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> Cadastrar Cliente</button>
                     </div>
 
@@ -4538,7 +4539,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     <div class="st-clientes-head">
                         <h3 style="display:flex;align-items:center;gap:8px;"><i data-lucide="book-open" style="width:16px;height:16px;vertical-align:-2px;"></i> Clientes Cadastrados</h3>
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <span id="sorteioClientesLoadingStatus" style="display:none;">Carregando...</span>
+                            <span id="sorteioClientesLoadingStatus" style="display:none;align-items:center;gap:6px;"><canvas data-orb="searching" data-orb-tamanho="20" aria-label="Carregando"></canvas>Carregando...</span>
                             <button type="button" class="st-btn-sugestao" onclick="sorteioAbrirModalSugestoes()"><i data-lucide="sparkles" style="width:13px;height:13px;"></i> Sugestão de Clientes</button>
                             <button type="button" class="st-btn-sortear" onclick="sorteioAbrirRoleta()"><i data-lucide="trophy" style="width:13px;height:13px;"></i> Realizar Sorteio</button>
                         </div>
@@ -5254,7 +5255,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
 <div id="pdfGarantiaLoading" aria-live="assertive" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);">
     <div style="width:min(330px,calc(100vw - 40px));padding:26px 24px;border:1px solid #d4af37;border-radius:14px;background:#1b1b1f;color:#fff;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.45);">
-        <div style="width:34px;height:34px;margin:0 auto 15px;border:3px solid rgba(212,175,55,.25);border-top-color:#d4af37;border-radius:50%;animation:pdfGarantiaGirar .8s linear infinite;"></div>
+        <canvas data-orb="composing" data-orb-tamanho="64" data-orb-tema="escuro" aria-label="Gerando documento" style="display:block;margin:0 auto 14px;"></canvas>
         <strong style="display:block;font-size:16px;">Gerando termo de garantia</strong>
         <span style="display:block;margin-top:7px;color:#c6c4bf;font-size:13px;line-height:1.4;">Aguarde, o download abrirá automaticamente. Não clique novamente.</span>
     </div>
@@ -9170,7 +9171,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     async function crmCarregar() {
         const loading = document.getElementById('crmLoadingStatus');
-        if (loading) loading.style.display = 'block';
+        if (loading) loading.style.display = 'inline-flex';
         try {
             let query = supabaseDB.from('crm_clientes').select('*').order('criado_em', { ascending: false });
             const filtroLoja = lojaIdParaFiltro();
@@ -12853,7 +12854,7 @@ let _sorteioClientesCompleta = [];
 async function sorteioCarregarClientes() {
     const tbody = document.getElementById('sorteioClientesLinhas');
     const loading = document.getElementById('sorteioClientesLoadingStatus');
-    if (loading) loading.style.display = 'inline';
+    if (loading) loading.style.display = 'inline-flex';
     try {
         await carregarLojas();
         let query = supabaseDB.from('sorteio_lotes').select('*').order('criado_em', { ascending: false });
