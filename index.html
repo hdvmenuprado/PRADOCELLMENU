@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20260929225101">
+    <meta name="app-build" content="20260930120415">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -315,53 +315,9 @@
         }
 
         /* ==========================================
-           FEIXES DE LUZ AMBIENTES — flutuam devagar por cima de
-           tudo (sidebar e fundo), em ângulos e velocidades diferentes,
-           pra dar sensação de "sistema vivo". Puramente decorativo:
-           não recebe clique e não atrapalha o uso.
-           ========================================== */
-        #feixesGlobais {
-            position: fixed;
-            inset: 0;
-            z-index: 15;
-            overflow: hidden;
-            pointer-events: none;
-            mix-blend-mode: screen;
-        }
-        .feixe {
-            position: absolute;
-            top: -35%;
-            background: linear-gradient(180deg,
-                transparent 0%,
-                rgba(212,175,55,0) 12%,
-                rgba(212,175,55,0.55) 45%,
-                rgba(255,248,220,0.9) 50%,
-                rgba(212,175,55,0.55) 55%,
-                rgba(212,175,55,0) 88%,
-                transparent 100%);
-            filter: blur(0.6px);
-            opacity: 0;
-            animation-name: feixe-desliza;
-            animation-timing-function: linear;
-            animation-iteration-count: infinite;
-        }
-        @keyframes feixe-desliza {
-            0%   { transform: translateY(-10%) rotate(var(--ang, 10deg)); opacity: 0; }
-            10%  { opacity: var(--op, 0.5); }
-            50%  { opacity: var(--op, 0.5); }
-            92%  { opacity: 0; }
-            100% { transform: translateY(160%) rotate(var(--ang, 10deg)); opacity: 0; }
-        }
-        body.modo-claro #feixesGlobais { display: none; }
-        @media (prefers-reduced-motion: reduce) {
-            #feixesGlobais { display: none; }
-        }
-
-        /* ==========================================
            MODO LEVE — desliga animações CSS, desfoques e sombras pesadas,
            pra rodar melhor em aparelhos com pouca RAM/GPU.
            ========================================== */
-        body.modo-leve #feixesGlobais { display: none !important; }
         body.modo-leve *,
         body.modo-leve *::before,
         body.modo-leve *::after {
@@ -2839,27 +2795,28 @@ body.modo-claro .main-content {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="thinking-orbs.js" defer></script>
+    <script src="logo-orbe.js" defer></script>
 </head>
 <body>
 <script>
     // Aplica o Modo Leve (menos gráficos) o quanto antes, pra não piscar
     // as animações por uma fração de segundo antes de desativar.
     try { if (localStorage.getItem('modoLevePrado') === '1') document.body.classList.add('modo-leve'); } catch(e){}
+    // Logo do menu em orbe: os pontinhos giram como esfera e de tempos em tempos formam
+    // a logo. Se o script não carregar, a imagem normal continua no lugar.
+    document.addEventListener('DOMContentLoaded', function () {
+        var canvas = document.getElementById('brandLogoOrbe');
+        var img = document.getElementById('brandLogoImg');
+        if (!canvas || !window.LogoOrbe) return;
+        var pequeno = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        window.LogoOrbe.criar(canvas, { src: 'logo.png', tamanho: pequeno ? 38 : 90, pontos: pequeno ? 240 : 520 });
+        canvas.style.display = 'inline-block';
+        if (img) img.style.display = 'none';
+    });
     // Mesma lógica pro Modo Claro — aplica antes da página desenhar, pra não
     // piscar o tema escuro por uma fração de segundo antes de trocar pro claro.
     try { if (localStorage.getItem('modoClaroPrado') === '1') document.body.classList.add('modo-claro'); } catch(e){}
 </script>
-
-<div id="feixesGlobais" aria-hidden="true">
-    <div class="feixe" style="left:4%;   width:2px; height:75vh; --ang:14deg;  --op:0.55; animation-duration:21s; animation-delay:-3s;"></div>
-    <div class="feixe" style="left:14%;  width:1px; height:60vh; --ang:-9deg;  --op:0.35; animation-duration:26s; animation-delay:-15s;"></div>
-    <div class="feixe" style="left:27%;  width:2px; height:85vh; --ang:19deg;  --op:0.45; animation-duration:33s; animation-delay:-8s;"></div>
-    <div class="feixe" style="left:41%;  width:1px; height:55vh; --ang:-15deg; --op:0.3;  animation-duration:19s; animation-delay:-11s;"></div>
-    <div class="feixe" style="left:58%;  width:2px; height:70vh; --ang:8deg;   --op:0.5;  animation-duration:29s; animation-delay:-1s;"></div>
-    <div class="feixe" style="left:71%;  width:1px; height:65vh; --ang:-12deg; --op:0.35; animation-duration:24s; animation-delay:-19s;"></div>
-    <div class="feixe" style="left:83%;  width:2px; height:80vh; --ang:17deg;  --op:0.5;  animation-duration:31s; animation-delay:-6s;"></div>
-    <div class="feixe" style="left:93%;  width:1px; height:50vh; --ang:-6deg;  --op:0.3;  animation-duration:23s; animation-delay:-14s;"></div>
-</div>
 
 <div id="telaLogin" class="tela-login" style="display:none;">
     <form class="login-box" onsubmit="fazerLogin(event)">
@@ -2914,7 +2871,8 @@ body.modo-claro .main-content {
     <aside class="sidebar">
         <div class="brand-box">
             <div class="brand-logo-wrap" style="position:relative; display:inline-block;">
-                <img src="logo.png" alt="Logo Prado Cell" class="brand-logo" onerror="this.style.display='none'" onclick="ovoSeisSete()" style="cursor:pointer;">
+                <img src="logo.png" alt="Logo Prado Cell" class="brand-logo" id="brandLogoImg" onerror="this.style.display='none'" onclick="ovoSeisSete()" style="cursor:pointer;">
+                <canvas id="brandLogoOrbe" class="brand-logo-orbe" onclick="ovoSeisSete()" role="img" aria-label="Logo Prado Cell" style="display:none;cursor:pointer;"></canvas>
                 <button id="btnMenuGrafico" onclick="toggleMenuGrafico(event)" aria-label="Opções de desempenho" style="position:absolute; top:-2px; right:-16px; background:none; border:none; color:var(--text-muted); opacity:0.3; font-size:15px; cursor:pointer; padding:5px; line-height:1; transition:opacity 0.2s ease; display:inline-flex;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.3'"><i data-lucide="more-vertical" style="width:15px;height:15px;"></i></button>
                 <div id="menuGrafico" style="display:none; position:absolute; top:22px; right:-16px; z-index:50; background:var(--bg-card, #1a1d24); border:1px solid var(--border-color); border-radius:10px; padding:10px 12px; min-width:180px; box-shadow:0 8px 24px rgba(0,0,0,0.5); text-align:left;">
                     <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted); cursor:pointer; user-select:none;">
@@ -10349,7 +10307,7 @@ async function fazerLogout() {
 
 // ==========================================
 // MODO LEVE (menos gráficos) — pra quem tem pouca RAM/GPU no aparelho.
-// Desliga as animações CSS (LED, feixes de luz, etc.) e outros efeitos
+// Desliga as animações CSS (LED, etc.) e outros efeitos
 // pesados (blur, sombra). Fica salvo no navegador da pessoa.
 // ==========================================
 function toggleMenuGrafico(event) {
