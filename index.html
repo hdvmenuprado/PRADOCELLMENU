@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261001204601">
+    <meta name="app-build" content="20261001205222">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2564,6 +2564,25 @@ body.modo-claro .main-content {
         }
         #menu-sorteio .st-btn-sortear:hover { filter: brightness(1.1); }
 
+        /* Apagar todos os participantes do sorteio (só Gestão) */
+        .st-btn-apagar-todos { display:none; background:none; border:1px solid #6b2a24; color:#e06a5e; border-radius:7px;
+            cursor:pointer; font-size:12.5px; font-weight:700; padding:7px 12px; align-items:center; gap:6px; }
+        body.perfil-gestao .st-btn-apagar-todos { display:inline-flex; }
+        .st-btn-apagar-todos:hover { background:#3a1916; }
+        .st-apagar-box { width:440px; max-width:94vw; text-align:left; padding:24px; background:#1b1b20 !important; border:1px solid #4a2522; backdrop-filter:none !important; }
+        body.modo-claro .st-apagar-box { background:#fff !important; border-color:#f0c4bf; }
+        .st-apagar-box h3 { margin:0 0 12px; font-size:1.05rem; color:#e06a5e; text-transform:none; letter-spacing:normal; display:flex; align-items:center; gap:8px; }
+        .st-apagar-resumo { margin:0 0 10px; font-size:14px; color:var(--text-main); line-height:1.5; }
+        .st-apagar-nota { margin:0 0 16px; font-size:12.5px; color:var(--text-muted); line-height:1.55; }
+        .st-apagar-box label { display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+        .st-apagar-box input { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:6px; border:1px solid #34343c; background:#141418; color:var(--text-main); font-size:14px; letter-spacing:1px; }
+        body.modo-claro .st-apagar-box input { background:#fff; border-color:#d6d6db; }
+        .st-apagar-acoes { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+        .st-apagar-cancelar { background:#26262d; color:#d8d8dc; border:1px solid #34343c; border-radius:6px; padding:9px 14px; font-size:13px; cursor:pointer; }
+        body.modo-claro .st-apagar-cancelar { background:#f1f1f3; color:#333; border-color:#d6d6db; }
+        .st-apagar-ok { background:#b3362b; color:#fff; border:none; border-radius:6px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; }
+        .st-apagar-ok:disabled { opacity:.4; cursor:not-allowed; }
+
         /* ---------------- SORTEIO EM ORBE ----------------
            Tela cheia; cada ponto da orbe é um cupom. Desenho em sorteio-orbe.js. */
         #sorteioOrbeModal { position:fixed; inset:0; z-index:9000; display:none;
@@ -4491,6 +4510,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                             <span id="sorteioClientesLoadingStatus" style="display:none;align-items:center;gap:6px;"><canvas data-orb="searching" data-orb-tamanho="20" aria-label="Carregando"></canvas>Carregando...</span>
                             <button type="button" class="st-btn-sugestao" onclick="sorteioAbrirModalSugestoes()"><i data-lucide="sparkles" style="width:13px;height:13px;"></i> Sugestão de Clientes</button>
                             <button type="button" class="st-btn-sortear" onclick="sorteioAbrirRoleta()"><i data-lucide="trophy" style="width:13px;height:13px;"></i> Realizar Sorteio</button>
+                            <button type="button" class="st-btn-apagar-todos" onclick="sorteioAbrirApagarTodos()" title="Apagar todos os participantes (só Gestão)"><i data-lucide="trash-2" style="width:13px;height:13px;"></i> Apagar todos</button>
                         </div>
                     </div>
                     <input type="text" id="sorteioPesquisaClientes" placeholder="Pesquisar cliente..." oninput="sorteioFiltrarClientes()">
@@ -4509,6 +4529,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                                 <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;font-style:italic;">Abra esta aba para carregar os clientes cadastrados.</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="modalSorteioApagar">
+                <div class="modal-box st-apagar-box">
+                    <h3><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> Apagar todos os participantes</h3>
+                    <p class="st-apagar-resumo" id="sorteioApagarResumo">—</p>
+                    <p class="st-apagar-nota">Antes de apagar, o sistema baixa uma planilha com todos os participantes e cupons, pra você guardar. Depois disso <b>não tem como desfazer</b>.</p>
+                    <label for="sorteioApagarConfirma">Pra confirmar, digite <b>APAGAR</b></label>
+                    <input type="text" id="sorteioApagarConfirma" autocomplete="off" placeholder="APAGAR">
+                    <div class="st-apagar-acoes">
+                        <button type="button" class="st-apagar-cancelar" onclick="sorteioFecharApagarTodos()">Cancelar</button>
+                        <button type="button" class="st-apagar-ok" id="sorteioApagarBtn" onclick="sorteioConfirmarApagarTodos()" disabled>Baixar cópia e apagar</button>
                     </div>
                 </div>
             </div>
@@ -10254,7 +10288,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (window.epFecharTransferencia) epFecharTransferencia(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (window.epFecharTransferencia) epFecharTransferencia(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); sorteioFecharApagarTodos(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
@@ -12973,6 +13007,81 @@ async function sorteioCarregarClientes() {
 // ------------------------------------------------------------------
 let _sorteioOrbe = null;
 let _sorteioOrbeTicker = 0;
+
+// ------------------------------------------------------------------
+// APAGAR TODOS OS PARTICIPANTES — pra começar uma campanha nova do zero. Só a Gestão vê
+// o botão. Respeita o filtro de loja: com uma loja escolhida apaga só os dela; em
+// "Todas as lojas" apaga tudo. Antes de apagar, baixa uma planilha (CSV) de segurança.
+// ------------------------------------------------------------------
+function sorteioAbrirApagarTodos() {
+    if (typeof PERFIL_ATUAL === 'undefined' || PERFIL_ATUAL !== 'gestao') return;
+    const clientes = (_sorteioClientesCompleta || []).length;
+    const cupons = (_sorteioClientesCompleta || []).reduce((s, c) => s + (Number(c.total) || 0), 0);
+    const loja = lojaIdParaFiltro();
+    const ondeTxt = loja ? `da <b>${escapeHTML((LOJAS_CACHE.find(l => l.id === loja) || {}).nome || 'loja selecionada')}</b>` : 'de <b>todas as lojas</b>';
+    document.getElementById('sorteioApagarResumo').innerHTML = clientes
+        ? `Isso vai apagar <b>${clientes} participante(s)</b> e <b>${cupons} cupom(ns)</b> ${ondeTxt}.`
+        : 'Não há participantes pra apagar.';
+    const inp = document.getElementById('sorteioApagarConfirma');
+    inp.value = '';
+    document.getElementById('sorteioApagarBtn').disabled = true;
+    inp.oninput = () => { document.getElementById('sorteioApagarBtn').disabled = !(inp.value.trim().toUpperCase() === 'APAGAR' && clientes > 0); };
+    document.getElementById('modalSorteioApagar').classList.add('ativo');
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => inp.focus(), 60);
+}
+
+function sorteioFecharApagarTodos() {
+    const m = document.getElementById('modalSorteioApagar');
+    if (m) m.classList.remove('ativo');
+}
+
+async function sorteioConfirmarApagarTodos() {
+    if (typeof PERFIL_ATUAL === 'undefined' || PERFIL_ATUAL !== 'gestao') return;
+    if (document.getElementById('sorteioApagarConfirma').value.trim().toUpperCase() !== 'APAGAR') return;
+    const btn = document.getElementById('sorteioApagarBtn');
+    btn.disabled = true; btn.textContent = 'Baixando cópia...';
+    const loja = lojaIdParaFiltro();
+    try {
+        // 1) Cópia de segurança: busca os lotes crus (com número de lote e data) e baixa em CSV
+        let q = supabaseDB.from('sorteio_lotes').select('*').order('criado_em', { ascending: true });
+        if (loja) q = q.eq('loja_id', loja);
+        const { data: lotes, error: e1 } = await q;
+        if (e1) throw new Error(e1.message);
+        if (!lotes || !lotes.length) { mostrarToast('Não há participantes pra apagar.', 'erro'); sorteioFecharApagarTodos(); return; }
+
+        const nomeLoja = id => ((LOJAS_CACHE || []).find(l => l.id === id) || {}).nome || '';
+        const celula = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+        const linhas = [['Data', 'Lote', 'Cliente', 'Telefone', 'Valor gasto', 'Cupons', 'Loja'].map(celula).join(';')]
+            .concat(lotes.map(l => [
+                l.criado_em ? new Date(l.criado_em).toLocaleString('pt-BR') : '', l.lote, l.cliente, l.telefone,
+                String(l.valor_gasto ?? '').replace('.', ','), l.quantidade, nomeLoja(l.loja_id)
+            ].map(celula).join(';')));
+        // BOM no começo pro Excel abrir os acentos certinho
+        const blob = new Blob(['\ufeff' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `sorteio-participantes-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+
+        // 2) Apaga
+        btn.textContent = 'Apagando...';
+        let d = supabaseDB.from('sorteio_lotes').delete();
+        d = loja ? d.eq('loja_id', loja) : d.not('id', 'is', null);
+        const { error: e2 } = await d;
+        if (e2) throw new Error(e2.message);
+
+        sorteioFecharApagarTodos();
+        mostrarToast(`${lotes.length} registro(s) apagados. A cópia foi baixada.`);
+        sorteioCarregarClientes();
+    } catch (e) {
+        mostrarToast('Não deu pra apagar: ' + e.message, 'erro');
+    } finally {
+        btn.textContent = 'Baixar cópia e apagar';
+        btn.disabled = true;
+    }
+}
 
 function sorteioOrbeParticipantes() {
     return (_sorteioClientesCompleta || [])
