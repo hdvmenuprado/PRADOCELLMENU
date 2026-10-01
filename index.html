@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261001145341">
+    <meta name="app-build" content="20261001194453">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2082,6 +2082,39 @@ body.modo-claro .main-content {
         body.modo-claro .ep-transf-cancelar { background:#f1f1f3; color:#333; border-color:#d6d6db; }
         .ep-transf-ok { background:#d4af37; color:#1a1a1a; border:none; border-radius:6px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; }
         .ep-transf-ok:disabled { opacity:.6; }
+
+
+        /* Puxar pré-cadastro feito pelo cliente (modal de Cadastro de Vendas) */
+        .crm-precad-barra { margin-bottom:14px; }
+        .crm-precad-btn {
+            width:100%; display:flex; align-items:center; gap:8px; padding:10px 13px; border-radius:8px; cursor:pointer;
+            background:#1f1f25; border:1px dashed #4a4130; color:#d4af37; font-size:13px; font-weight:600; font-family:'Inter',sans-serif;
+        }
+        .crm-precad-btn:hover { border-color:#d4af37; background:#23221c; }
+        body.modo-claro .crm-precad-btn { background:#fffaf0; border-color:#d9c48a; color:#8a6d12; }
+        .crm-precad-qtd { margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:10px; font-size:11px; font-weight:700;
+            display:none; align-items:center; justify-content:center; background:#d4af37; color:#1a1204; }
+        .crm-precad-qtd.tem { display:inline-flex; }
+        .crm-precad-lista { margin-top:6px; border:1px solid #2c2c33; border-radius:8px; background:#18181d; max-height:240px; overflow-y:auto; }
+        body.modo-claro .crm-precad-lista { background:#fff; border-color:#e2e2e6; }
+        .crm-precad-item {
+            width:100%; display:grid; grid-template-columns:1fr auto; gap:2px 10px; text-align:left; padding:10px 13px;
+            background:none; border:none; border-bottom:1px solid #26262d; cursor:pointer; font-family:'Inter',sans-serif;
+        }
+        .crm-precad-item:last-child { border-bottom:none; }
+        .crm-precad-item:hover { background:#222228; }
+        body.modo-claro .crm-precad-item { border-color:#eee; }
+        body.modo-claro .crm-precad-item:hover { background:#f6f6f8; }
+        .crm-precad-item .nome { font-size:13.5px; font-weight:600; color:var(--text-main); }
+        .crm-precad-item .hora { grid-row:1 / span 2; grid-column:2; align-self:center; font-size:12px; color:var(--text-muted); }
+        .crm-precad-item .info { font-size:12px; color:var(--text-muted); }
+        .crm-precad-vazio { padding:14px; text-align:center; font-size:12.5px; color:var(--text-muted); }
+        .crm-precad-usado {
+            margin-top:6px; align-items:center; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:8px;
+            background:#16261c; border:1px solid #2d5a3d; color:#7fd6a0; font-size:12.5px;
+        }
+        body.modo-claro .crm-precad-usado { background:#ecf8f0; border-color:#a9dcbb; color:#1f7a44; }
+        .crm-precad-usado button { background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-size:12px; }
 
         /* --- O.S. TELA CHEIA --- */
         body:has(#menu-os:not(.hidden)) .main-content {
@@ -4740,7 +4773,17 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         <div id="crmAvisoReimpressao" style="display:none;background:rgba(212,175,55,0.12);border:1px solid var(--primary);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:var(--text-main);align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
             <span style="display:inline-flex;align-items:center;gap:6px;"><i data-lucide="refresh-cw" style="width:13px;height:13px;vertical-align:-2px;"></i> Reimprimindo termo de garantia — o cadastro será <strong>atualizado</strong>, não duplicado.</span>
         </div>
+        <div id="crmPreCadBarra" class="crm-precad-barra">
+            <button type="button" class="crm-precad-btn" onclick="crmPreCadAlternar()">
+                <i data-lucide="download" style="width:14px;height:14px;"></i>
+                Puxar cadastro feito pelo cliente
+                <span class="crm-precad-qtd" id="crmPreCadQtd"></span>
+            </button>
+            <div id="crmPreCadLista" class="crm-precad-lista" style="display:none;"></div>
+            <div id="crmPreCadUsado" class="crm-precad-usado" style="display:none;"></div>
+        </div>
         <input type="hidden" id="crmId" value="">
+        <input type="hidden" id="crmPreCadId" value="">
         <div class="form-grid-3">
             <div class="form-group full-width">
                 <label>Nome do Cliente</label>
@@ -9330,8 +9373,107 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
 
 
+    // ------------------------------------------------------------------
+    // PRÉ-CADASTRO FEITO PELO CLIENTE
+    // O cliente preenche os dados dele no celular (consultastatus/cadastro.html) e o
+    // vendedor puxa pra cá. Só aparecem os de hoje que ainda não viraram cadastro.
+    // ------------------------------------------------------------------
+    let _crmPreCadastros = [];
+
+    function crmPreCadHojeISO() {
+        const d = new Date(); d.setHours(0, 0, 0, 0);
+        return d.toISOString();
+    }
+
+    async function crmPreCadCarregar() {
+        const qtd = document.getElementById('crmPreCadQtd');
+        try {
+            let q = supabaseDB.from('pre_cadastros').select('*')
+                .is('usado_em', null)
+                .gte('criado_em', crmPreCadHojeISO())
+                .order('criado_em', { ascending: false });
+            // Cada loja vê os da sua loja e os que chegaram sem loja (link sem ?loja=)
+            const loja = lojaIdParaFiltro();
+            if (loja) q = q.or(`loja_id.eq.${loja},loja_id.is.null`);
+            const { data, error } = await q;
+            if (error) throw new Error(error.message);
+            _crmPreCadastros = data || [];
+        } catch (e) {
+            console.error('Pré-cadastros:', e);
+            _crmPreCadastros = [];
+        }
+        if (qtd) { qtd.textContent = _crmPreCadastros.length || ''; qtd.classList.toggle('tem', _crmPreCadastros.length > 0); }
+        crmPreCadRenderizar();
+    }
+
+    function crmPreCadRenderizar() {
+        const lista = document.getElementById('crmPreCadLista');
+        if (!lista) return;
+        if (!_crmPreCadastros.length) {
+            lista.innerHTML = '<div class="crm-precad-vazio">Nenhum cadastro recebido hoje.</div>';
+            return;
+        }
+        lista.innerHTML = _crmPreCadastros.map(p => {
+            const hora = new Date(p.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            return `<button type="button" class="crm-precad-item" onclick="crmPreCadUsar('${p.id}')">
+                <span class="nome">${escapeHTML(p.nome)}</span>
+                <span class="info">${escapeHTML(p.telefone || '')}${p.aparelho_troca ? ' · troca: ' + escapeHTML(p.aparelho_troca) : ''}</span>
+                <span class="hora">${hora}</span>
+            </button>`;
+        }).join('');
+    }
+
+    function crmPreCadAlternar() {
+        const lista = document.getElementById('crmPreCadLista');
+        const abrir = lista.style.display === 'none';
+        lista.style.display = abrir ? 'block' : 'none';
+        if (abrir) crmPreCadCarregar();
+    }
+
+    // Preenche o formulário com o que o cliente digitou. Só os campos dele: valores,
+    // pagamento, IMEI, vendedor e garantia continuam sendo da loja.
+    function crmPreCadUsar(id) {
+        const p = _crmPreCadastros.find(x => x.id === id);
+        if (!p) return;
+        const por = (campo, valor) => { const el = document.getElementById(campo); if (el && valor) el.value = valor; };
+        por('crmNome', p.nome);
+        por('crmCpf', p.cpf);
+        por('crmTelefone', p.telefone);
+        por('crmEndereco', p.endereco);
+        por('crmNascimento', p.nascimento);
+        por('crmOrigem', p.origem);
+        por('crmAparelhoTroca', p.aparelho_troca);
+        document.getElementById('crmPreCadId').value = p.id;
+        document.getElementById('crmPreCadLista').style.display = 'none';
+        const usado = document.getElementById('crmPreCadUsado');
+        usado.style.display = 'flex';
+        usado.innerHTML = `<span>✓ Dados de <b>${escapeHTML(p.nome)}</b> puxados. Complete a parte da venda.</span>
+            <button type="button" onclick="crmPreCadDesfazer()">desfazer</button>`;
+        mostrarToast('Dados do cliente preenchidos!');
+    }
+
+    function crmPreCadDesfazer() {
+        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmOrigem', 'crmAparelhoTroca']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        document.getElementById('crmPreCadId').value = '';
+        document.getElementById('crmPreCadUsado').style.display = 'none';
+    }
+
+    // Depois de salvar a venda, o pré-cadastro sai da lista (fica ligado ao cadastro)
+    async function crmPreCadMarcarUsado(preId, crmId) {
+        if (!preId) return;
+        try {
+            await supabaseDB.from('pre_cadastros')
+                .update({ usado_em: new Date().toISOString(), usado_crm_id: crmId || null })
+                .eq('id', preId);
+        } catch (e) { console.error('Marcar pré-cadastro usado:', e); }
+    }
+
     function crmAbrirModalCadastro(vendedorPreSelecionado) {
         crmResetarFormulario();
+        // Barra de pré-cadastro só faz sentido em cadastro novo
+        document.getElementById('crmPreCadBarra').style.display = '';
+        crmPreCadCarregar();
         const dc = document.getElementById('crmDataCompra');
         if (dc && !dc.value) dc.valueAsDate = new Date();
         vendedoresPopularSelect('crmVendedor', vendedorPreSelecionado || '');
@@ -9346,6 +9488,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     function crmResetarFormulario() {
         document.getElementById('crmId').value = '';
+        const preId = document.getElementById('crmPreCadId'); if (preId) preId.value = '';
+        const usado = document.getElementById('crmPreCadUsado'); if (usado) usado.style.display = 'none';
+        const lista = document.getElementById('crmPreCadLista'); if (lista) lista.style.display = 'none';
         ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmOrigem', 'crmAparelhoTroca', 'crmImei', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho', 'crmValorPagamento1', 'crmValorPagamento2'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
@@ -9387,6 +9532,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmTituloForm').innerText = 'Editando Cliente: ' + (c.nome || '');
         document.getElementById('crmBtnSalvar').innerText = 'Atualizar Cliente';
         document.getElementById('crmBtnEmitirGarantia').innerText = 'Salvar e Emitir Termo de Garantia';
+        // Editando cliente que já existe: não oferece puxar pré-cadastro
+        document.getElementById('crmPreCadBarra').style.display = 'none';
         document.getElementById('modalCrmCadastro').classList.add('ativo');
     }
 
@@ -9511,10 +9658,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 resultado = await supabaseDB.from('crm_clientes').update(linha).eq('id', id);
             } else {
                 linha.loja_id = lojaIdParaGravar();
-                resultado = await supabaseDB.from('crm_clientes').insert(linha);
+                resultado = await supabaseDB.from('crm_clientes').insert(linha).select('id').single();
             }
             const { error } = resultado;
             if (error) throw new Error(error.message);
+            if (!id) await crmPreCadMarcarUsado(document.getElementById('crmPreCadId').value, resultado.data && resultado.data.id);
             mostrarToast(id ? 'Cliente atualizado!' : 'Cliente cadastrado!');
             crmFecharModalCadastro();
             setTimeout(crmCarregar, 600);
