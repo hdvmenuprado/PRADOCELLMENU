@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261001194453">
+    <meta name="app-build" content="20261001204601">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2115,6 +2115,9 @@ body.modo-claro .main-content {
         }
         body.modo-claro .crm-precad-usado { background:#ecf8f0; border-color:#a9dcbb; color:#1f7a44; }
         .crm-precad-usado button { background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-size:12px; }
+        /* Valores que vieram do cliente: destaque até o vendedor mexer no campo */
+        .crm-conferir { border-color:#e0a52e !important; box-shadow:0 0 0 2px rgba(224,165,46,.25) !important; background:#2a2312 !important; }
+        body.modo-claro .crm-conferir { background:#fff8e6 !important; }
 
         /* --- O.S. TELA CHEIA --- */
         body:has(#menu-os:not(.hidden)) .main-content {
@@ -9379,6 +9382,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // vendedor puxa pra cá. Só aparecem os de hoje que ainda não viraram cadastro.
     // ------------------------------------------------------------------
     let _crmPreCadastros = [];
+    const CRM_CAMPOS_CONFERIR = ['crmProduto', 'crmValorAparelho', 'crmFormaPagamento', 'crmValorPagamento1'];
+    function crmLimparConferir() {
+        CRM_CAMPOS_CONFERIR.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('crm-conferir'); });
+    }
 
     function crmPreCadHojeISO() {
         const d = new Date(); d.setHours(0, 0, 0, 0);
@@ -9417,7 +9424,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const hora = new Date(p.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             return `<button type="button" class="crm-precad-item" onclick="crmPreCadUsar('${p.id}')">
                 <span class="nome">${escapeHTML(p.nome)}</span>
-                <span class="info">${escapeHTML(p.telefone || '')}${p.aparelho_troca ? ' · troca: ' + escapeHTML(p.aparelho_troca) : ''}</span>
+                <span class="info">${escapeHTML(p.telefone || '')}${p.produto ? ' · ' + escapeHTML(p.produto) : ''}${p.valor_aparelho != null ? ' · ' + Number(p.valor_aparelho).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''}</span>
                 <span class="hora">${hora}</span>
             </button>`;
         }).join('');
@@ -9443,17 +9450,29 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         por('crmNascimento', p.nascimento);
         por('crmOrigem', p.origem);
         por('crmAparelhoTroca', p.aparelho_troca);
+        por('crmProduto', p.produto);
+        por('crmFormaPagamento', p.forma_pagamento);
+        if (p.valor_aparelho != null) document.getElementById('crmValorAparelho').value = Number(p.valor_aparelho).toFixed(2);
+        if (p.valor_pago != null) document.getElementById('crmValorPagamento1').value = Number(p.valor_pago).toFixed(2);
+        // Valores digitados pelo cliente vão pro faturamento e pras comissões: chegam
+        // destacados pra o vendedor conferir antes de salvar
+        CRM_CAMPOS_CONFERIR.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.value) el.classList.add('crm-conferir');
+        });
         document.getElementById('crmPreCadId').value = p.id;
         document.getElementById('crmPreCadLista').style.display = 'none';
         const usado = document.getElementById('crmPreCadUsado');
         usado.style.display = 'flex';
-        usado.innerHTML = `<span>✓ Dados de <b>${escapeHTML(p.nome)}</b> puxados. Complete a parte da venda.</span>
+        usado.innerHTML = `<span>✓ Dados de <b>${escapeHTML(p.nome)}</b> puxados. <b>Confira os valores</b> destacados antes de salvar.</span>
             <button type="button" onclick="crmPreCadDesfazer()">desfazer</button>`;
         mostrarToast('Dados do cliente preenchidos!');
     }
 
     function crmPreCadDesfazer() {
-        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmOrigem', 'crmAparelhoTroca']
+        crmLimparConferir();
+        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmOrigem', 'crmAparelhoTroca',
+         'crmProduto', 'crmValorAparelho', 'crmFormaPagamento', 'crmValorPagamento1']
             .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         document.getElementById('crmPreCadId').value = '';
         document.getElementById('crmPreCadUsado').style.display = 'none';
@@ -9468,6 +9487,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 .eq('id', preId);
         } catch (e) { console.error('Marcar pré-cadastro usado:', e); }
     }
+
+    document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('crm-conferir')) e.target.classList.remove('crm-conferir'); });
+    document.addEventListener('change', e => { if (e.target.classList && e.target.classList.contains('crm-conferir')) e.target.classList.remove('crm-conferir'); });
 
     function crmAbrirModalCadastro(vendedorPreSelecionado) {
         crmResetarFormulario();
@@ -9489,6 +9511,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     function crmResetarFormulario() {
         document.getElementById('crmId').value = '';
         const preId = document.getElementById('crmPreCadId'); if (preId) preId.value = '';
+        if (typeof crmLimparConferir === 'function') crmLimparConferir();
         const usado = document.getElementById('crmPreCadUsado'); if (usado) usado.style.display = 'none';
         const lista = document.getElementById('crmPreCadLista'); if (lista) lista.style.display = 'none';
         ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmOrigem', 'crmAparelhoTroca', 'crmImei', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho', 'crmValorPagamento1', 'crmValorPagamento2'].forEach(id => {
