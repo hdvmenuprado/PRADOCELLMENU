@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261001205222">
+    <meta name="app-build" content="20261002122613">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2115,6 +2115,30 @@ body.modo-claro .main-content {
         }
         body.modo-claro .crm-precad-usado { background:#ecf8f0; border-color:#a9dcbb; color:#1f7a44; }
         .crm-precad-usado button { background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-size:12px; }
+        /* QR do cadastro pro cliente */
+        .crm-btn-qr { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; padding:0;
+            background:none; border:1px solid var(--border-color); border-radius:8px; color:var(--text-muted); cursor:pointer; }
+        .crm-btn-qr:hover { color:var(--primary); border-color:var(--primary); }
+        .crm-precad-qr { display:inline-flex; align-items:center; gap:5px; margin-top:6px; background:none; border:none; padding:2px 0;
+            color:var(--text-muted); font-size:11.5px; cursor:pointer; text-decoration:underline; }
+        .crm-precad-qr:hover { color:var(--primary); }
+        .crm-qr-tela { position:fixed; inset:0; z-index:9500; display:none; align-items:center; justify-content:center;
+            background:#0b0b0d; padding:20px; }
+        .crm-qr-tela.aberta { display:flex; }
+        .crm-qr-cartao { position:relative; background:#ffffff; color:#111; border-radius:20px; padding:34px 40px 30px;
+            text-align:center; max-width:95vw; max-height:95vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+        .crm-qr-fechar { position:absolute; top:12px; right:14px; background:none; border:none; font-size:20px; color:#999; cursor:pointer; }
+        .crm-qr-fechar:hover { color:#333; }
+        .crm-qr-marca { font-size:13px; font-weight:800; letter-spacing:3px; color:#a6841e; }
+        .crm-qr-titulo { font-size:30px; font-weight:800; margin:6px 0 4px; }
+        .crm-qr-sub { font-size:16px; color:#555; margin-bottom:18px; }
+        .crm-qr-codigos { display:flex; gap:28px; justify-content:center; flex-wrap:wrap; }
+        .crm-qr-item { display:flex; flex-direction:column; align-items:center; gap:8px; }
+        .crm-qr-item img { width:min(62vh, 78vw, 380px); height:auto; image-rendering:pixelated; border:4px solid #d4af37; border-radius:14px; }
+        .crm-qr-codigos:has(.crm-qr-item + .crm-qr-item) img { width:min(42vh, 40vw, 300px); }
+        .crm-qr-item span { font-size:14px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#a6841e; }
+        .crm-qr-rodape { margin-top:18px; font-size:14px; color:#666; }
+
         /* Valores que vieram do cliente: destaque até o vendedor mexer no campo */
         .crm-conferir { border-color:#e0a52e !important; box-shadow:0 0 0 2px rgba(224,165,46,.25) !important; background:#2a2312 !important; }
         body.modo-claro .crm-conferir { background:#fff8e6 !important; }
@@ -3132,6 +3156,7 @@ body.modo-claro .main-content {
                         <input type="text" id="crmPesquisa" placeholder="Pesquisar por nome, CPF ou telefone..." oninput="crmFiltrarTabela()" class="ep-search" style="flex:1;min-width:220px;margin-bottom:0;">
                         <span id="crmLoadingStatus" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--primary);font-weight:600;white-space:nowrap;"><canvas data-orb="searching" data-orb-tamanho="20" aria-label="Carregando"></canvas>Carregando da nuvem...</span>
                         <button class="ep-btn" onclick="crmAbrirModalCadastro()" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> Cadastrar Cliente</button>
+                        <button type="button" class="crm-btn-qr" onclick="crmMostrarQrCliente()" title="Mostrar QR code do cadastro pro cliente"><i data-lucide="qr-code" style="width:15px;height:15px;"></i></button>
                     </div>
 
                     <!-- TABELA -->
@@ -4816,6 +4841,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 Puxar cadastro feito pelo cliente
                 <span class="crm-precad-qtd" id="crmPreCadQtd"></span>
             </button>
+            <button type="button" class="crm-precad-qr" onclick="crmMostrarQrCliente()" title="Mostrar QR code pro cliente"><i data-lucide="qr-code" style="width:13px;height:13px;"></i> mostrar QR pro cliente</button>
             <div id="crmPreCadLista" class="crm-precad-lista" style="display:none;"></div>
             <div id="crmPreCadUsado" class="crm-precad-usado" style="display:none;"></div>
         </div>
@@ -5187,6 +5213,17 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             <button onclick="osFecharHistoricoRetornos()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;line-height:1;display:inline-flex;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
         </div>
         <div id="osHistRetornosLista" style="margin-top:16px;"></div>
+    </div>
+</div>
+
+<div id="crmQrTela" class="crm-qr-tela" onclick="if (event.target === this) crmFecharQrCliente()">
+    <div class="crm-qr-cartao">
+        <button type="button" class="crm-qr-fechar" onclick="crmFecharQrCliente()" title="Fechar">✕</button>
+        <div class="crm-qr-marca">PRADO CELULARES</div>
+        <div class="crm-qr-titulo">Faça seu cadastro</div>
+        <div class="crm-qr-sub">Aponte a câmera do celular</div>
+        <div class="crm-qr-codigos" id="crmQrCodigos"></div>
+        <div class="crm-qr-rodape">Leva menos de 1 minuto. Depois é só avisar o vendedor.</div>
     </div>
 </div>
 
@@ -9415,6 +9452,26 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // O cliente preenche os dados dele no celular (consultastatus/cadastro.html) e o
     // vendedor puxa pra cá. Só aparecem os de hoje que ainda não viraram cadastro.
     // ------------------------------------------------------------------
+    // QR do formulário de cadastro: cada perfil de loja mostra o QR da sua loja (assim o
+    // cadastro já cai na loja certa). A Gestão vê o da loja selecionada, ou os dois.
+    function crmMostrarQrCliente() {
+        const loja = lojaIdParaGravar();
+        const nome = loja ? ((LOJAS_CACHE || []).find(l => l.id === loja) || {}).nome || '' : '';
+        const slugs = /sul/i.test(nome) ? ['sul'] : /norte/i.test(nome) ? ['norte'] : ['norte', 'sul'];
+        document.getElementById('crmQrCodigos').innerHTML = slugs.map(sl => `
+            <div class="crm-qr-item">
+                <img src="qr-cadastro-${sl}.png" alt="QR code do cadastro — Loja ${sl === 'sul' ? 'Sul' : 'Norte'}">
+                ${slugs.length > 1 ? `<span>Loja ${sl === 'sul' ? 'Sul' : 'Norte'}</span>` : ''}
+            </div>`).join('');
+        document.getElementById('crmQrTela').classList.add('aberta');
+    }
+    function crmFecharQrCliente() {
+        const t = document.getElementById('crmQrTela');
+        if (t) t.classList.remove('aberta');
+        // Quem acabou de preencher já aparece na lista
+        if (document.getElementById('modalCrmCadastro').classList.contains('ativo')) crmPreCadCarregar();
+    }
+
     let _crmPreCadastros = [];
     const CRM_CAMPOS_CONFERIR = ['crmProduto', 'crmValorAparelho', 'crmFormaPagamento', 'crmValorPagamento1'];
     function crmLimparConferir() {
@@ -10288,7 +10345,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (window.epFecharTransferencia) epFecharTransferencia(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); sorteioFecharApagarTodos(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (typeof crmFecharQrCliente === 'function') crmFecharQrCliente(); if (window.epFecharTransferencia) epFecharTransferencia(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); sorteioFecharApagarTodos(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
