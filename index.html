@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261002122613">
+    <meta name="app-build" content="20261006175156">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2143,6 +2143,36 @@ body.modo-claro .main-content {
         .crm-conferir { border-color:#e0a52e !important; box-shadow:0 0 0 2px rgba(224,165,46,.25) !important; background:#2a2312 !important; }
         body.modo-claro .crm-conferir { background:#fff8e6 !important; }
 
+        /* Histórico de alterações (Configurações) */
+        .hist-filtros { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+        .hist-filtros input, .hist-filtros select {
+            padding:8px 11px; border-radius:7px; border:1px solid var(--border-color);
+            background:var(--surface-2); color:var(--text-main); font-size:12.5px; font-family:'Inter',sans-serif;
+        }
+        .hist-filtros input { flex:1 1 230px; }
+        .hist-lista { display:flex; flex-direction:column; gap:6px; }
+        .hist-vazio { text-align:center; color:var(--text-muted); font-size:13px; padding:30px 0; }
+        .hist-item {
+            display:grid; grid-template-columns:86px 1fr auto; gap:4px 12px; align-items:start;
+            background:#1b1b20; border:1px solid #2a2a31; border-left:3px solid #5a7fa8;
+            border-radius:8px; padding:10px 13px;
+        }
+        body.modo-claro .hist-item { background:#fafafb; border-color:#e2e2e6; }
+        .hist-item.criou { border-left-color:#2d7a4f; }
+        .hist-item.excluiu { border-left-color:#b3362b; }
+        .hist-acao { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#7ba3cc; }
+        .hist-item.criou .hist-acao { color:#4fb37a; }
+        .hist-item.excluiu .hist-acao { color:#e06a5e; }
+        .hist-rotulo { font-size:13.5px; font-weight:600; color:var(--text-main); }
+        .hist-quando { grid-row:1 / span 2; grid-column:3; font-size:11px; color:var(--text-muted); white-space:nowrap; text-align:right; }
+        .hist-resumo { grid-column:2; font-size:12px; color:var(--text-muted); line-height:1.5; word-break:break-word; }
+        .hist-area { display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px;
+            background:#26262d; color:#b8b8bf; margin-left:7px; vertical-align:1px; }
+        body.modo-claro .hist-area { background:#ececef; color:#555; }
+        .hist-mais { width:100%; margin-top:10px; padding:10px; border-radius:8px; cursor:pointer;
+            background:var(--surface-1); border:1px solid var(--border-color); color:var(--text-main); font-size:12.5px; font-family:'Inter',sans-serif; }
+        .hist-mais:hover { border-color:var(--primary); color:var(--primary); }
+
         /* --- O.S. TELA CHEIA --- */
         body:has(#menu-os:not(.hidden)) .main-content {
             padding: 0 !important;
@@ -2961,6 +2991,7 @@ body.modo-claro .main-content {
             <button class="config-item" data-sec="avaliacao" onclick="mostrarConfig('avaliacao', this)"><i data-lucide="smartphone" style="width:14px;height:14px;"></i> Valores de avaliação</button>
             <button class="config-item" data-sec="documentos" onclick="mostrarConfig('documentos', this)"><i data-lucide="printer" style="width:14px;height:14px;"></i> Documentos e cupons</button>
             <button class="config-item" data-sec="backup" onclick="mostrarConfig('backup', this)"><i data-lucide="shield-check" style="width:14px;height:14px;"></i> Backup e restauração</button>
+            <button class="config-item" data-sec="historico" onclick="mostrarConfig('historico', this)"><i data-lucide="history" style="width:14px;height:14px;"></i> Histórico de alterações</button>
         </nav>
     </aside>
 
@@ -3892,6 +3923,32 @@ body.modo-claro .main-content {
                         <button class="action-btn" onclick="backupAbrirModal('backup')" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 12px 20px; font-size: 12px; flex:1; min-width:200px; display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="download" style="width:13px;height:13px;vertical-align:-2px;"></i> Baixar Backup</button>
                         <button class="action-btn secondary-btn" onclick="backupAbrirModal('restaurar')" style="padding: 12px 20px; font-size: 12px; flex:1; min-width:200px; display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="upload" style="width:13px;height:13px;vertical-align:-2px;"></i> Restaurar Backup</button>
                     </div>
+                </div>
+
+                <div class="admin-section config-sec" data-config="historico" style="border-color:#5a7fa8;">
+                    <h3 class="sub-title" style="color:#7ba3cc;"><i data-lucide="history" style="width:13px;height:13px;vertical-align:-2px;"></i> Histórico de alterações</h3>
+                    <div class="hist-filtros">
+                        <input type="search" id="histBusca" placeholder="Buscar por nome, código, peça..." oninput="histAgendarBusca()">
+                        <select id="histArea" onchange="histCarregar(true)">
+                            <option value="">Todas as áreas</option>
+                            <option>Cadastro de Vendas</option>
+                            <option>O.S.</option>
+                            <option>Estoque</option>
+                            <option>Serviços</option>
+                            <option>Funcionários</option>
+                            <option>Avaliação</option>
+                        </select>
+                        <select id="histPeriodo" onchange="histCarregar(true)">
+                            <option value="1">Hoje</option>
+                            <option value="7" selected>7 dias</option>
+                            <option value="30">30 dias</option>
+                            <option value="90">90 dias</option>
+                            <option value="">Tudo</option>
+                        </select>
+                        <button type="button" class="ep-btn" onclick="histCarregar(true)" title="Atualizar"><i data-lucide="refresh-cw" style="width:13px;height:13px;"></i></button>
+                    </div>
+                    <div id="histLista" class="hist-lista"><div class="hist-vazio">Carregando...</div></div>
+                    <button type="button" id="histMais" class="hist-mais" onclick="histCarregar(false)" style="display:none;">Carregar mais</button>
                 </div>
 
                 <div class="admin-section config-sec" data-config="documentos" style="border-color: #9b59b6;">
@@ -6604,6 +6661,13 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     async function selecionarPerfil(perfil) {
         PERFIL_ATUAL = perfil;
+        // Carimba o perfil nos pedidos ao banco: o gatilho do histórico lê esse cabeçalho
+        // pra registrar QUEM fez cada alteração.
+        try {
+            const nomes = { gestao: 'Gestão', loja_norte: 'Loja Norte', loja_sul: 'Loja Sul' };
+            const h = supabaseDB.rest && supabaseDB.rest.headers;
+            if (h) h['x-perfil'] = nomes[perfil] || perfil;
+        } catch (e) { console.warn('Perfil no histórico:', e); }
 
         await carregarLojas();
         if (perfil === 'loja_norte' || perfil === 'loja_sul') {
@@ -6680,7 +6744,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         servicos: 'Tabela de serviços',
         avaliacao: 'Valores de avaliação',
         documentos: 'Documentos e cupons',
-        backup: 'Backup e restauração'
+        backup: 'Backup e restauração',
+        historico: 'Histórico de alterações'
     };
     let _configSecaoAtual = null;
 
@@ -6710,7 +6775,74 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (titulo) titulo.textContent = CONFIG_TITULOS[secao] || 'Configurações';
         // O preview do PDF só existe na seção de documentos; recalcula ao entrar nela
         if (secao === 'documentos') setTimeout(atualizarPreviewPDF, 80);
+        if (secao === 'historico') histCarregar(true);
         if (window.lucide) lucide.createIcons();
+    }
+
+    // ------------------------------------------------------------------
+    // HISTÓRICO DE ALTERAÇÕES — lê a tabela historico_alteracoes, preenchida por gatilhos
+    // no banco. Pega mudança feita de qualquer lugar, não só pelo app.
+    // ------------------------------------------------------------------
+    const HIST_PAGINA = 50;
+    let _histOffset = 0, _histFim = false, _histCarregando = false, _histTimer = 0;
+
+    function histAgendarBusca() {
+        clearTimeout(_histTimer);
+        _histTimer = setTimeout(() => histCarregar(true), 350);
+    }
+
+    async function histCarregar(reiniciar) {
+        if (_histCarregando) return;
+        _histCarregando = true;
+        const lista = document.getElementById('histLista');
+        if (reiniciar) { _histOffset = 0; _histFim = false; lista.innerHTML = '<div class="hist-vazio">Carregando...</div>'; }
+        try {
+            let q = supabaseDB.from('historico_alteracoes').select('*').order('criado_em', { ascending: false });
+            const area = document.getElementById('histArea').value;
+            if (area) q = q.eq('area', area);
+            const dias = document.getElementById('histPeriodo').value;
+            if (dias) {
+                const d = new Date(); d.setDate(d.getDate() - parseInt(dias, 10)); d.setHours(0, 0, 0, 0);
+                q = q.gte('criado_em', d.toISOString());
+            }
+            const busca = (document.getElementById('histBusca').value || '').trim();
+            if (busca) q = q.or(`rotulo.ilike.%${busca}%,resumo.ilike.%${busca}%`);
+            q = q.range(_histOffset, _histOffset + HIST_PAGINA - 1);
+
+            const { data, error } = await medirPromise('Histórico', () => q);
+            if (error) throw new Error(error.message);
+            const itens = data || [];
+            if (reiniciar) lista.innerHTML = '';
+            if (!itens.length && _histOffset === 0) {
+                lista.innerHTML = '<div class="hist-vazio">Nenhuma alteração registrada nesse período.</div>';
+            } else {
+                lista.insertAdjacentHTML('beforeend', itens.map(histLinha).join(''));
+            }
+            _histOffset += itens.length;
+            _histFim = itens.length < HIST_PAGINA;
+            document.getElementById('histMais').style.display = _histFim ? 'none' : '';
+        } catch (e) {
+            console.error('Histórico:', e);
+            if (reiniciar) lista.innerHTML = '<div class="hist-vazio">Não foi possível carregar o histórico.</div>';
+        } finally {
+            _histCarregando = false;
+        }
+    }
+
+    function histLinha(h) {
+        const d = new Date(h.criado_em);
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const quando = d >= hoje
+            ? 'hoje ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+            : d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const classe = h.acao === 'Criou' ? 'criou' : h.acao === 'Excluiu' ? 'excluiu' : '';
+        const quem = h.perfil ? ' · ' + escapeHTML(h.perfil) : '';
+        return `<div class="hist-item ${classe}">
+            <span class="hist-acao">${escapeHTML(h.acao)}</span>
+            <span class="hist-rotulo">${escapeHTML(h.rotulo || '—')}<span class="hist-area">${escapeHTML(h.area)}</span></span>
+            <span class="hist-quando">${quando}${quem}</span>
+            ${h.resumo ? `<span class="hist-resumo">${escapeHTML(h.resumo)}</span>` : ''}
+        </div>`;
     }
 
     function mudarAba(idAba, btn) {
