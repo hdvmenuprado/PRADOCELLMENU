@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261007113054">
+    <meta name="app-build" content="20261007132906">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2151,6 +2151,10 @@ body.modo-claro .main-content {
         }
         body.modo-claro .crm-precad-usado { background:#ecf8f0; border-color:#a9dcbb; color:#1f7a44; }
         .crm-precad-usado button { background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-size:12px; }
+        /* Filtro de mês da lista de vendas */
+        .crm-filtro-mes { padding:9px 11px; border-radius:8px; border:1px solid var(--border-color); background:var(--surface-2);
+            color:var(--text-main); font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; }
+        .crm-aviso-busca { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
         /* QR do cadastro pro cliente */
         .crm-btn-qr { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; padding:0;
             background:none; border:1px solid var(--border-color); border-radius:8px; color:var(--text-muted); cursor:pointer; }
@@ -3180,15 +3184,15 @@ body.modo-claro .main-content {
                             <div class="ep-stat-value" id="crmStatTotalClientes">—</div>
                         </div>
                         <div class="ep-stat entrada valor-restrito">
-                            <div class="ep-stat-label">Valor vendido (mês)</div>
+                            <div class="ep-stat-label" id="crmRotValorMes">Valor vendido (mês)</div>
                             <div class="ep-stat-value" id="crmStatValorMes">—</div>
                         </div>
                         <div class="ep-stat">
-                            <div class="ep-stat-label">Vendas este mês</div>
+                            <div class="ep-stat-label" id="crmRotQtdMes">Vendas este mês</div>
                             <div class="ep-stat-value" id="crmStatQtdMes">—</div>
                         </div>
                         <div class="ep-stat valor-restrito">
-                            <div class="ep-stat-label">Ticket médio (mês)</div>
+                            <div class="ep-stat-label" id="crmRotTicket">Ticket médio (mês)</div>
                             <div class="ep-stat-value" id="crmStatTicketMedio">—</div>
                         </div>
                     </div>
@@ -3221,6 +3225,11 @@ body.modo-claro .main-content {
                     <!-- BUSCA + CADASTRO -->
                     <div style="display:flex;align-items:center;gap:10px;max-width:1300px;margin-bottom:12px;flex-wrap:wrap;">
                         <input type="text" id="crmPesquisa" placeholder="Pesquisar por nome, CPF ou telefone..." oninput="crmFiltrarTabela()" class="ep-search" style="flex:1;min-width:220px;margin-bottom:0;">
+                        <select id="crmFiltroMes" onchange="crmAoTrocarMes()" class="crm-filtro-mes" title="Mostrar as vendas de qual mês">
+                            <option value="atual">Mês atual</option>
+                            <option value="todos">Todos os meses</option>
+                        </select>
+                        <span id="crmAvisoBusca" class="crm-aviso-busca" style="display:none;">buscando em todos os meses</span>
                         <span id="crmLoadingStatus" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--primary);font-weight:600;white-space:nowrap;"><canvas data-orb="searching" data-orb-tamanho="20" aria-label="Carregando"></canvas>Carregando da nuvem...</span>
                         <button class="ep-btn" onclick="crmAbrirModalCadastro()" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> Cadastrar Cliente</button>
                         <button type="button" class="crm-btn-qr" onclick="crmMostrarQrCliente()" title="Mostrar QR code do cadastro pro cliente"><i data-lucide="qr-code" style="width:15px;height:15px;"></i></button>
@@ -6322,11 +6331,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     function dashboardCardDetalhadoHTML(titulo, n, comNomes, mesLabel, anterior, projecaoInfo) {
         const statsNomes = comNomes ? `
                     <div class="ep-stat" style="border-left-color:#60a5fa;">
-                        <div class="ep-stat-label">iPhones vendidos · Geovana</div>
+                        <div class="ep-stat-label">Vendas · Geovana</div>
                         <div class="ep-stat-value" style="font-size:17px;">${n.iphonesGeovana}</div>
                     </div>
                     <div class="ep-stat" style="border-left-color:#60a5fa;">
-                        <div class="ep-stat-label">iPhones vendidos · Ester</div>
+                        <div class="ep-stat-label">Vendas · Ester</div>
                         <div class="ep-stat-value" style="font-size:17px;">${n.iphonesEster}</div>
                     </div>
                     <div class="ep-stat" style="border-left-color:#d4af37;">
@@ -6410,18 +6419,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     }
 
     // Calcula faturamento/perdas de uma loja (por lojaId) no mês escolhido (mesStr = 'AAAA-MM').
-    // Se comNomes=true, também calcula iPhones vendidos e mão de obra por vendedora
+    // Se comNomes=true, também calcula vendas (cadastros) e mão de obra por vendedora
     // (Geovana/Ester — só existem na Loja Norte).
-    // Reconhece se o texto do "produto" digitado é um iPhone, mesmo quando o vendedor
-    // abrevia (a maioria dos cadastros não escreve "iphone" por extenso — usam "IP 16
-    // pro max...", ou só o número do modelo tipo "15 pro max 512gb"). Só descarta se
-    // vier explicitamente uma marca Android (a loja também vende Android à parte).
-    function dashboardProdutoEhIphone(produto) {
-        const p = (produto || '').toLowerCase();
-        if (/samsung|xiaomi|redmi|poco|motorola|\bmoto\b|\blg\b|huawei|realme|nokia|asus/.test(p)) return false;
-        return /iphone|\bip\b|^\s*(5s?|se|6s?\+?|7\+?|8\+?|xr|xs|x\b|10|11|12|13|14|15|16|17)\b/.test(p);
-    }
-
     async function dashboardCalcularDetalhado(lojaId, comNomes, mesStr) {
         const resultado = {
             faturamentoAssistencia: 0, faturamentoVendas: 0,
@@ -6455,9 +6454,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 resultado.faturamentoVendas += parseFloat(c.valor_aparelho) || 0;
                 if (!comNomes) return;
                 const vend = (c.vendedor || '').trim().toLowerCase();
-                const ehIphone = dashboardProdutoEhIphone(c.produto);
-                if (ehIphone && vend.startsWith('geovan')) resultado.iphonesGeovana++;
-                else if (ehIphone && vend.startsWith('ester')) resultado.iphonesEster++;
+                // Conta TODO cadastro de venda da vendedora, sem olhar o texto do produto.
+                // O filtro por palavra-chave ("iphone", "ip", números de modelo) errava pros
+                // dois lados: deixava passar modelo novo (18 pro max) e abreviação ("iph 12"),
+                // e a cada lançamento quebraria de novo.
+                if (vend.startsWith('geovan')) resultado.iphonesGeovana++;
+                else if (vend.startsWith('ester')) resultado.iphonesEster++;
             });
         } catch(e) { console.error('Dashboard: erro ao calcular CRM', e); }
 
@@ -9371,6 +9373,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             if (error) throw new Error(error.message);
             _crmListaCompleta = (data || []).map(crmDoBanco);
             crmFiltrarTabela();
+            crmPopularFiltroMes();
             crmAtualizarStats();
         } catch (e) {
             console.error('Erro ao carregar CRM:', e);
@@ -9381,16 +9384,60 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
     }
 
+    // ------------------------------------------------------------------
+    // FILTRO DE MÊS da lista de vendas: "Mês atual" (padrão), um mês específico, ou todos.
+    // ------------------------------------------------------------------
+    function crmMesDeCompra(c) { return c && c.dataCompra ? String(c.dataCompra).split('T')[0].slice(0, 7) : null; }
+    function crmMesAtualStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+    function crmMesSelecionado() {
+        const el = document.getElementById('crmFiltroMes');
+        return el ? el.value : 'atual';
+    }
+    // Devolve 'AAAA-MM' do mês escolhido, ou null quando é "todos"
+    function crmMesEscolhido() {
+        const v = crmMesSelecionado();
+        if (v === 'todos') return null;
+        return v === 'atual' ? crmMesAtualStr() : v;
+    }
+    function crmNoMesSelecionado(c) {
+        const alvo = crmMesEscolhido();
+        return alvo === null || crmMesDeCompra(c) === alvo;
+    }
+    // Monta as opções com os meses que realmente têm venda, preservando a escolha atual
+    function crmPopularFiltroMes() {
+        const sel = document.getElementById('crmFiltroMes');
+        if (!sel) return;
+        const atual = sel.value || 'atual';
+        const hoje = crmMesAtualStr();
+        const meses = [...new Set(_crmListaCompleta.map(crmMesDeCompra).filter(m => m && m !== hoje))].sort().reverse();
+        sel.innerHTML = '<option value="atual">Mês atual</option>'
+            + meses.map(m => `<option value="${m}">${osFormatarAnoMes(m)}</option>`).join('')
+            + '<option value="todos">Todos os meses</option>';
+        sel.value = [...sel.options].some(o => o.value === atual) ? atual : 'atual';
+    }
+    function crmAoTrocarMes() {
+        crmAtualizarStats();
+        crmFiltrarTabela();
+    }
+
     function crmFiltrarTabela() {
         const termoEl = document.getElementById('crmPesquisa');
         const termo = (termoEl ? termoEl.value : '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
         let resultado = _crmListaCompleta;
+        const aviso = document.getElementById('crmAvisoBusca');
         if (termo) {
+            // Buscando: procura em TODOS os meses, senão um cliente antigo (que voltou por
+            // causa de garantia, por exemplo) sumiria só porque o filtro está em "Mês atual"
             resultado = resultado.filter(c => {
                 const alvo = [c.nome, c.cpf, c.telefone, c.produto].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
                 return alvo.includes(termo);
             });
+            if (aviso) aviso.style.display = crmMesSelecionado() === 'todos' ? 'none' : '';
+        } else {
+            resultado = resultado.filter(crmNoMesSelecionado);
+            if (aviso) aviso.style.display = 'none';
         }
+        // Os alertas (aniversário, 12 meses, garantia) olham todos os clientes, não só o mês
         crmCalcularAlertas(_crmListaCompleta);
         crmRenderizarLista(resultado);
     }
@@ -9557,19 +9604,26 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // ESTATÍSTICAS (Total clientes / Valor vendido no mês / Qtd vendas no mês / Ticket médio)
     // ------------------------------------------------------------------
     function crmAtualizarStats() {
-        const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
-        const inicioMesStr = inicioMes.toISOString().split('T')[0];
-        const vendasMes = _crmListaCompleta.filter(c => c.dataCompra && String(c.dataCompra).split('T')[0] >= inicioMesStr);
-        const valorMes = vendasMes.reduce((s, c) => s + (parseFloat(c.valorAparelho) || 0), 0);
-        const ticketMedio = vendasMes.length ? valorMes / vendasMes.length : 0;
+        // Os cartões de venda seguem o mês escolhido no filtro ("Todos" soma tudo);
+        // "Clientes cadastrados" é sempre o total geral.
+        const alvo = crmMesEscolhido();
+        const vendas = _crmListaCompleta.filter(c => c.dataCompra && (alvo === null || crmMesDeCompra(c) === alvo));
+        const valor = vendas.reduce((s, c) => s + (parseFloat(c.valorAparelho) || 0), 0);
+        const ticketMedio = vendas.length ? valor / vendas.length : 0;
+
+        const sufixo = alvo === null ? 'todos os meses' : (alvo === crmMesAtualStr() ? null : osFormatarAnoMes(alvo));
+        const rot = (id, padrao, comMes) => { const e = document.getElementById(id); if (e) e.textContent = sufixo ? comMes : padrao; };
+        rot('crmRotValorMes', 'Valor vendido (mês)', 'Valor vendido · ' + sufixo);
+        rot('crmRotQtdMes', 'Vendas este mês', 'Vendas · ' + sufixo);
+        rot('crmRotTicket', 'Ticket médio (mês)', 'Ticket médio · ' + sufixo);
 
         const elTotal = document.getElementById('crmStatTotalClientes');
         const elValorMes = document.getElementById('crmStatValorMes');
         const elQtdMes = document.getElementById('crmStatQtdMes');
         const elTicket = document.getElementById('crmStatTicketMedio');
         if (elTotal) elTotal.textContent = _crmListaCompleta.length;
-        if (elValorMes) elValorMes.textContent = epLikeMoeda(valorMes);
-        if (elQtdMes) elQtdMes.textContent = vendasMes.length;
+        if (elValorMes) elValorMes.textContent = epLikeMoeda(valor);
+        if (elQtdMes) elQtdMes.textContent = vendas.length;
         if (elTicket) elTicket.textContent = epLikeMoeda(ticketMedio);
     }
 
