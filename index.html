@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261007132906">
+    <meta name="app-build" content="20261007185020">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2151,6 +2151,46 @@ body.modo-claro .main-content {
         }
         body.modo-claro .crm-precad-usado { background:#ecf8f0; border-color:#a9dcbb; color:#1f7a44; }
         .crm-precad-usado button { background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; font-size:12px; }
+        /* ---------------- FUNCIONÁRIO DO MÊS ---------------- */
+        .fm-cartao { background:#17171b; border:1px solid #3d3622; border-radius:14px; padding:10px; text-align:center; }
+        body.modo-claro .fm-cartao { background:#ffffff; border-color:#e6dcc0; }
+        .fm-cartao-fixo {
+            position:fixed; right:22px; bottom:22px; width:176px; z-index:10010;
+            box-shadow:0 12px 34px rgba(0,0,0,.55);
+            opacity:0; transform:translateY(26px); pointer-events:none;
+            transition:opacity .45s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+        }
+        .fm-cartao-fixo.on { opacity:1; transform:none; }
+        .fm-foto { display:block; width:100%; aspect-ratio:4/5; object-fit:cover; object-position:50% 22%;
+            border-radius:9px; background:#26262d; }
+        .fm-foto-vazia { display:flex; align-items:center; justify-content:center; color:#6b6b73; }
+        .fm-legenda { margin-top:8px; font-size:10.5px; line-height:1.35; color:#d4af37; font-weight:600; }
+        .fm-nome { margin-top:6px; font-size:14px; font-weight:800; color:#f2f2f4; line-height:1.2; word-break:break-word; }
+        body.modo-claro .fm-nome { color:#1a1a1a; }
+        .fm-cargo { margin-top:2px; font-size:11.5px; color:#9a9aa2; }
+        @media (max-width:600px) {
+            .fm-cartao-fixo { right:12px; bottom:12px; width:128px; padding:8px; }
+            .fm-cartao-fixo .fm-nome { font-size:12px; }
+            .fm-cartao-fixo .fm-legenda { font-size:9.5px; margin-top:6px; }
+        }
+        /* tela de cadastro em Configurações */
+        .fm-layout { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+        .fm-form { flex:1 1 320px; max-width:460px; }
+        .fm-form label { display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin:14px 0 6px; }
+        .fm-form input[type=text] { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:7px;
+            border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13.5px; font-family:'Inter',sans-serif; }
+        .fm-foto-acoes { display:flex; align-items:center; gap:12px; }
+        .fm-dica { margin-top:6px; font-size:11.5px; color:var(--text-muted); line-height:1.5; }
+        .fm-link { background:none; border:none; color:var(--text-muted); text-decoration:underline; cursor:pointer; font-size:12px; padding:0; }
+        .fm-botoes { display:flex; align-items:center; gap:10px; margin-top:20px; }
+        .fm-btn-remover { background:none; border:1px solid #6b2a24; color:#e06a5e; border-radius:7px; padding:8px 14px; font-size:12.5px; font-weight:700; cursor:pointer; }
+        .fm-btn-remover:hover { background:#3a1916; }
+        .fm-previa-wrap { flex:0 0 auto; }
+        .fm-previa-rot { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:700; margin-bottom:8px; }
+        .fm-previa-fundo { background:#0e0e11; border:1px dashed #33333b; border-radius:12px; padding:34px 30px; }
+        body.modo-claro .fm-previa-fundo { background:#ececef; border-color:#cfcfd6; }
+        .fm-cartao-previa { width:176px; box-shadow:0 12px 34px rgba(0,0,0,.45); }
+
         /* Filtro de mês da lista de vendas */
         .crm-filtro-mes { padding:9px 11px; border-radius:8px; border:1px solid var(--border-color); background:var(--surface-2);
             color:var(--text-main); font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; }
@@ -2962,6 +3002,8 @@ body.modo-claro .main-content {
     </div>
 </div>
 
+<div id="fmCartao" class="fm-cartao fm-cartao-fixo" aria-live="polite"></div>
+
 <div id="telaBoasVindas" class="tela-boas-vindas">
     <div class="bv-spinner" id="bvSpinner">
         <canvas data-orb="breathing" data-orb-tamanho="96" aria-label="Carregando"></canvas>
@@ -3031,6 +3073,7 @@ body.modo-claro .main-content {
             <button class="config-item" data-sec="avaliacao" onclick="mostrarConfig('avaliacao', this)"><i data-lucide="smartphone" style="width:14px;height:14px;"></i> Valores de avaliação</button>
             <button class="config-item" data-sec="documentos" onclick="mostrarConfig('documentos', this)"><i data-lucide="printer" style="width:14px;height:14px;"></i> Documentos e cupons</button>
             <button class="config-item" data-sec="backup" onclick="mostrarConfig('backup', this)"><i data-lucide="shield-check" style="width:14px;height:14px;"></i> Backup e restauração</button>
+            <button class="config-item" data-sec="funcionariomes" onclick="mostrarConfig('funcionariomes', this)"><i data-lucide="award" style="width:14px;height:14px;"></i> Funcionário do mês</button>
             <button class="config-item" data-sec="historico" onclick="mostrarConfig('historico', this)"><i data-lucide="history" style="width:14px;height:14px;"></i> Histórico de alterações</button>
         </nav>
     </aside>
@@ -3967,6 +4010,40 @@ body.modo-claro .main-content {
                     <div style="display:flex;gap:12px;flex-wrap:wrap;">
                         <button class="action-btn" onclick="backupAbrirModal('backup')" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); padding: 12px 20px; font-size: 12px; flex:1; min-width:200px; display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="download" style="width:13px;height:13px;vertical-align:-2px;"></i> Baixar Backup</button>
                         <button class="action-btn secondary-btn" onclick="backupAbrirModal('restaurar')" style="padding: 12px 20px; font-size: 12px; flex:1; min-width:200px; display:inline-flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="upload" style="width:13px;height:13px;vertical-align:-2px;"></i> Restaurar Backup</button>
+                    </div>
+                </div>
+
+                <div class="admin-section config-sec" data-config="funcionariomes" style="border-color:#d4af37;">
+                    <h3 class="sub-title" style="color:var(--primary);"><i data-lucide="award" style="width:13px;height:13px;vertical-align:-2px;"></i> Funcionário do mês</h3>
+                    <div class="fm-layout">
+                        <div class="fm-form">
+                            <label>Foto</label>
+                            <div class="fm-foto-acoes">
+                                <button type="button" class="ep-btn" onclick="document.getElementById('fmFotoInput').click()"><i data-lucide="image" style="width:13px;height:13px;"></i> Escolher foto</button>
+                                <button type="button" class="fm-link" id="fmFotoTirar" onclick="fmTirarFoto()" style="display:none;">tirar foto</button>
+                                <input type="file" id="fmFotoInput" accept="image/*" style="display:none;" onchange="fmEscolherFoto(this)">
+                            </div>
+                            <div class="fm-dica">Dê preferência a uma foto em pé (retrato), com o rosto na parte de cima.</div>
+
+                            <label for="fmLegenda">Texto pequeno embaixo da foto</label>
+                            <input type="text" id="fmLegenda" maxlength="80" placeholder="Ex.: Funcionária do mês de Outubro" oninput="fmAtualizarPrevia()">
+
+                            <label for="fmNome">Nome</label>
+                            <input type="text" id="fmNome" maxlength="60" placeholder="Nome da pessoa" oninput="fmAtualizarPrevia()">
+
+                            <label for="fmCargo">Cargo</label>
+                            <input type="text" id="fmCargo" maxlength="50" placeholder="Ex.: Vendedora" oninput="fmAtualizarPrevia()">
+
+                            <div class="fm-botoes">
+                                <button type="button" class="ep-btn" id="fmSalvar" onclick="fmSalvar()"><i data-lucide="save" style="width:13px;height:13px;"></i> Salvar</button>
+                                <button type="button" class="fm-btn-remover" id="fmRemover" onclick="fmRemover()" style="display:none;">Remover</button>
+                            </div>
+                            <div class="fm-dica" id="fmStatus">Nenhum funcionário do mês cadastrado.</div>
+                        </div>
+                        <div class="fm-previa-wrap">
+                            <div class="fm-previa-rot">Como vai aparecer</div>
+                            <div class="fm-previa-fundo"><div class="fm-cartao fm-cartao-previa" id="fmPrevia"></div></div>
+                        </div>
                     </div>
                 </div>
 
@@ -6735,6 +6812,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
         const overlay = document.getElementById('telaSelecaoPerfil');
         if (overlay) overlay.style.display = 'none';
+        // O cartão do funcionário do mês fica ~2s por cima da animação de boas-vindas
+        if (typeof fmEsconder === 'function') fmEsconder(2000);
 
         bvMostrar(); // splash de boas-vindas por cima, enquanto os dados carregam por trás
 
@@ -6783,7 +6862,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         avaliacao: 'Valores de avaliação',
         documentos: 'Documentos e cupons',
         backup: 'Backup e restauração',
-        historico: 'Histórico de alterações'
+        historico: 'Histórico de alterações',
+        funcionariomes: 'Funcionário do mês'
     };
     let _configSecaoAtual = null;
 
@@ -6814,6 +6894,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         // O preview do PDF só existe na seção de documentos; recalcula ao entrar nela
         if (secao === 'documentos') setTimeout(atualizarPreviewPDF, 80);
         if (secao === 'historico') histCarregar(true);
+        if (secao === 'funcionariomes') fmCarregarConfig();
         if (window.lucide) lucide.createIcons();
     }
 
@@ -6882,6 +6963,170 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             ${h.resumo ? `<span class="hist-resumo">${escapeHTML(h.resumo)}</span>` : ''}
         </div>`;
     }
+
+    // ------------------------------------------------------------------
+    // FUNCIONÁRIO DO MÊS — cartão no canto de baixo da tela de escolha de loja.
+    // Cadastro em Configurações; aparece enquanto a pessoa escolhe a loja e some uns 2
+    // segundos depois que ela escolhe (por cima da animação de boas-vindas).
+    // ------------------------------------------------------------------
+    let _fmDados = null;      // registro atual no banco (ou null)
+    let _fmFoto = null;       // foto em edição (data URL) na tela de Configurações
+
+    function fmHtmlCartao(d) {
+        const foto = d.foto
+            ? `<img class="fm-foto" src="${d.foto}" alt="">`
+            : `<div class="fm-foto fm-foto-vazia"><i data-lucide="user" style="width:34px;height:34px;"></i></div>`;
+        return `${foto}
+            ${d.legenda ? `<div class="fm-legenda">${escapeHTML(d.legenda)}</div>` : ''}
+            <div class="fm-nome">${escapeHTML(d.nome || 'Nome da pessoa')}</div>
+            ${d.cargo ? `<div class="fm-cargo">${escapeHTML(d.cargo)}</div>` : ''}`;
+    }
+
+    // Reduz a foto no próprio navegador antes de gravar: lado maior em 640px e JPEG,
+    // baixando a qualidade até caber. Uma foto de celular tem vários MB e não precisa disso.
+    function fmCalcularTamanho(w, h, max) {
+        const maior = Math.max(w, h);
+        if (maior <= max) return { w, h };
+        const k = max / maior;
+        return { w: Math.round(w * k), h: Math.round(h * k) };
+    }
+
+    function fmEscolherFoto(input) {
+        const arquivo = input.files && input.files[0];
+        input.value = '';
+        if (!arquivo) return;
+        if (!/^image\//.test(arquivo.type)) { mostrarToast('Escolha um arquivo de imagem.', 'erro'); return; }
+        const url = URL.createObjectURL(arquivo);
+        const img = new Image();
+        img.onload = () => {
+            const t = fmCalcularTamanho(img.naturalWidth, img.naturalHeight, 640);
+            const c = document.createElement('canvas');
+            c.width = t.w; c.height = t.h;
+            c.getContext('2d').drawImage(img, 0, 0, t.w, t.h);
+            URL.revokeObjectURL(url);
+            let q = 0.85, out = c.toDataURL('image/jpeg', q);
+            while (out.length > 150000 && q > 0.4) { q -= 0.1; out = c.toDataURL('image/jpeg', q); }
+            _fmFoto = out;
+            fmAtualizarPrevia();
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); mostrarToast('Não consegui abrir essa imagem.', 'erro'); };
+        img.src = url;
+    }
+
+    function fmTirarFoto() { _fmFoto = null; fmAtualizarPrevia(); }
+
+    function fmLerFormulario() {
+        return {
+            nome: (document.getElementById('fmNome').value || '').trim(),
+            cargo: (document.getElementById('fmCargo').value || '').trim(),
+            legenda: (document.getElementById('fmLegenda').value || '').trim(),
+            foto: _fmFoto
+        };
+    }
+
+    function fmAtualizarPrevia() {
+        const d = fmLerFormulario();
+        document.getElementById('fmPrevia').innerHTML = fmHtmlCartao(d);
+        document.getElementById('fmFotoTirar').style.display = _fmFoto ? '' : 'none';
+    }
+
+    async function fmCarregarConfig() {
+        try {
+            const { data, error } = await supabaseDB.from('funcionario_mes').select('*').limit(1);
+            if (error) throw new Error(error.message);
+            _fmDados = (data && data[0]) || null;
+        } catch (e) {
+            console.error('Funcionário do mês:', e);
+            _fmDados = null;
+        }
+        document.getElementById('fmNome').value = _fmDados ? _fmDados.nome || '' : '';
+        document.getElementById('fmCargo').value = _fmDados ? _fmDados.cargo || '' : '';
+        document.getElementById('fmLegenda').value = _fmDados ? _fmDados.legenda || '' : '';
+        _fmFoto = _fmDados ? _fmDados.foto || null : null;
+        document.getElementById('fmRemover').style.display = _fmDados ? '' : 'none';
+        document.getElementById('fmStatus').textContent = _fmDados
+            ? 'Cadastrado: aparece na tela de escolha de loja.'
+            : 'Nenhum funcionário do mês cadastrado — nada aparece na tela de escolha de loja.';
+        fmAtualizarPrevia();
+    }
+
+    async function fmSalvar() {
+        const d = fmLerFormulario();
+        if (!d.nome) { mostrarToast('Informe o nome da pessoa.', 'erro'); return; }
+        const btn = document.getElementById('fmSalvar');
+        btn.disabled = true;
+        try {
+            // Só existe um registro (o banco garante): o "unico" fixo faz o upsert atualizar o mesmo
+            const { error } = await supabaseDB.from('funcionario_mes')
+                .upsert({ unico: true, nome: d.nome, cargo: d.cargo || null, legenda: d.legenda || null, foto: d.foto || null, atualizado_em: new Date().toISOString() },
+                        { onConflict: 'unico' });
+            if (error) throw new Error(error.message);
+            mostrarToast('Funcionário do mês salvo!');
+            fmCarregarConfig();
+        } catch (e) {
+            mostrarToast('Não deu pra salvar: ' + e.message, 'erro');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function fmRemover() {
+        if (!_fmDados) return;
+        if (!confirm('Remover o funcionário do mês? O cartão deixa de aparecer na tela de escolha de loja.')) return;
+        try {
+            const { error } = await supabaseDB.from('funcionario_mes').delete().eq('unico', true);
+            if (error) throw new Error(error.message);
+            mostrarToast('Removido.');
+            fmCarregarConfig();
+        } catch (e) {
+            mostrarToast('Não deu pra remover: ' + e.message, 'erro');
+        }
+    }
+
+    // ---- cartão na tela de escolha de loja ----
+    let _fmTimer = 0;
+
+    async function fmMostrarNaSelecao() {
+        const el = document.getElementById('fmCartao');
+        if (!el || el.classList.contains('on')) return;
+        clearTimeout(_fmTimer);
+        try {
+            const { data, error } = await supabaseDB.from('funcionario_mes').select('nome,cargo,legenda,foto').limit(1);
+            if (error) throw new Error(error.message);
+            const d = data && data[0];
+            if (!d) return;                       // sem cadastro, não aparece nada
+            // Se enquanto buscava a pessoa já escolheu a loja, não mostra mais
+            const sel = document.getElementById('telaSelecaoPerfil');
+            if (!sel || sel.style.display !== 'flex') return;
+            el.innerHTML = fmHtmlCartao(d);
+            void el.offsetWidth;
+            el.classList.add('on');
+        } catch (e) { console.warn('Funcionário do mês:', e); }
+    }
+
+    // Some depois de "ms" (2s depois de escolher a loja; 0 = na hora)
+    function fmEsconder(ms) {
+        clearTimeout(_fmTimer);
+        _fmTimer = setTimeout(() => {
+            const el = document.getElementById('fmCartao');
+            if (el) el.classList.remove('on');
+        }, ms || 0);
+    }
+
+    // Observa a tela de escolha de loja: quando ela abre (login, sessão já ativa ou
+    // "Trocar usuário"), mostra o cartão. Quando o login aparece, tira na hora.
+    document.addEventListener('DOMContentLoaded', () => {
+        const sel = document.getElementById('telaSelecaoPerfil');
+        const login = document.getElementById('telaLogin');
+        if (!sel) return;
+        const checar = () => {
+            if (sel.style.display === 'flex') fmMostrarNaSelecao();
+            else if (login && login.style.display === 'flex') fmEsconder(0);
+        };
+        new MutationObserver(checar).observe(sel, { attributes: true, attributeFilter: ['style'] });
+        if (login) new MutationObserver(checar).observe(login, { attributes: true, attributeFilter: ['style'] });
+        checar();
+    });
 
     function mudarAba(idAba, btn) {
         // Sair de Configurações esconde a coluna extra
