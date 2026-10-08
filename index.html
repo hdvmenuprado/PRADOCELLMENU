@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261007185020">
+    <meta name="app-build" content="20261008235717">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2083,6 +2083,35 @@ body.modo-claro .main-content {
         }
         .tf-badge-menu.tem { display:inline-flex; }
 
+
+        /* Tampas por cor: linha-resumo + faixa de chips (uma cor por chip) */
+        .ep-tr-grupo td { border-bottom:none !important; padding-bottom:4px !important; }
+        .ep-tr-chips td { padding:0 12px 12px !important; }
+        .ep-grupo-total { font-size:15px; }
+        .ep-grupo-un { font-size:11px; color:var(--text-muted); }
+        .ep-chips { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+        .ep-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 8px; border-radius:10px;
+            border:1px solid var(--border-color); background:var(--surface-2); }
+        .ep-chip.tem { border-color:#4a4636; background:#211f18; }
+        body.modo-claro .ep-chip.tem { background:#fbf6e6; border-color:#e2d3a0; }
+        .ep-chip.sem-cor { border-style:dashed; }
+        .ep-chip-dot { width:13px; height:13px; border-radius:50%; flex-shrink:0; border:1px solid rgba(128,128,128,.45); }
+        .ep-chip-nome { font-size:11.5px; font-weight:600; color:var(--text-main); white-space:nowrap; }
+        .ep-chip .ep-step-btn { width:22px; height:22px; font-size:13px; }
+        .ep-chip .ep-qtd-input { width:40px; padding:3px 2px; font-size:12px; }
+        .ep-chip .ep-btn-transf { margin-left:0; }
+        .ep-chip-classificar { background:none; border:none; padding:0 2px; font-size:11px; color:var(--primary); text-decoration:underline; cursor:pointer; }
+        .ep-chip-nova { background:none; border:1px dashed var(--border-color); border-radius:10px; padding:6px 11px;
+            font-size:11.5px; color:var(--text-muted); cursor:pointer; }
+        .ep-chip-nova:hover { color:var(--primary); border-color:var(--primary); }
+        .ep-chip-novacor { width:130px; padding:6px 9px; border-radius:8px; border:1px solid var(--primary);
+            background:var(--surface-2); color:var(--text-main); font-size:12px; }
+        .ep-class-dica { font-size:12px; color:var(--text-muted); line-height:1.5; margin-bottom:12px; }
+        .ep-class-lista { max-height:46vh; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
+        .ep-class-linha { display:flex; align-items:center; gap:9px; padding:7px 4px; border-bottom:1px solid var(--border-color); }
+        .ep-class-nome { flex:1; font-size:13px; font-weight:600; }
+        .ep-class-resumo { margin-top:12px; font-size:12.5px; font-weight:700; color:var(--text-main); }
+        .ep-class-resumo.excedeu { color:#e06a5e; }
 
         /* Estoque compartilhado: etiqueta da loja em cada peça + transferência */
         .ep-tag-loja {
@@ -5437,6 +5466,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     </div>
 </div>
 
+<div class="modal-overlay" id="modalEpClassificar">
+    <div class="modal-box ep-transf-box">
+        <h3>Classificar tampas por cor</h3>
+        <p id="epClassTitulo" class="ep-transf-nome"></p>
+        <div class="ep-class-dica">Conte as tampas que estão sem cor e diga quantas são de cada uma. O que não for distribuído continua em "Sem cor".</div>
+        <div id="epClassLista" class="ep-class-lista"></div>
+        <div id="epClassResumo" class="ep-class-resumo"></div>
+        <div class="ep-transf-acoes">
+            <button type="button" class="ep-transf-cancelar" onclick="epFecharClassificar()">Cancelar</button>
+            <button type="button" class="ep-transf-ok" id="epClassBtn" onclick="epConfirmarClassificar()" disabled>Classificar</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="modalEpTransferir">
     <div class="modal-box ep-transf-box">
         <h3>Transferir peça</h3>
@@ -7425,25 +7468,349 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             try {
                 // Traz o modelo nas duas lojas. Cada loja tem uma linha por categoria; a da
                 // outra loja só aparece quando tem peça, pra não duplicar a lista com zeros.
-                const { data, error } = await medirPromise('Estoque Peças', () =>
-                    supabaseDB.from('estoque_itens')
-                        .select('id, quantidade, custo_unitario, loja_id, estoque_categorias(id, nome)')
-                        .eq('modelo_id', modeloAtualId));
-                if (error) throw new Error(error.message);
+                const [resp, coresRef] = await Promise.all([
+                    medirPromise('Estoque Peças', () =>
+                        supabaseDB.from('estoque_itens')
+                            .select('id, quantidade, custo_unitario, loja_id, cor, estoque_categorias(id, nome)')
+                            .eq('modelo_id', modeloAtualId)),
+                    epBuscarCoresModelo(modeloAtualNome)
+                ]);
+                if (resp.error) throw new Error(resp.error.message);
+                const data = resp.data || [];
                 const minha = epMinhaLoja();
-                const visiveis = (data || [])
-                    .filter(it => !minha || it.loja_id === minha || (it.quantidade || 0) > 0)
-                    .sort((a, b) => {
-                        const ca = a.estoque_categorias ? a.estoque_categorias.nome : '';
-                        const cb = b.estoque_categorias ? b.estoque_categorias.nome : '';
-                        return ca.localeCompare(cb) || epNomeLoja(a.loja_id).localeCompare(epNomeLoja(b.loja_id));
-                    });
-                epRenderizarItens(visiveis);
+
+                // Categorias com cor (Tampa) são mostradas em GRUPO por loja: o grupo aparece se
+                // for da minha loja ou se tiver alguma peça (somando todas as cores).
+                const totalGrupo = new Map();
+                data.forEach(it => {
+                    if (!epEhCategoriaComCor(it)) return;
+                    const k = it.estoque_categorias.id + '|' + it.loja_id;
+                    totalGrupo.set(k, (totalGrupo.get(k) || 0) + (it.quantidade || 0));
+                });
+                const visiveis = data.filter(it => {
+                    if (epEhCategoriaComCor(it)) {
+                        return !minha || it.loja_id === minha || (totalGrupo.get(it.estoque_categorias.id + '|' + it.loja_id) || 0) > 0;
+                    }
+                    return !minha || it.loja_id === minha || (it.quantidade || 0) > 0;
+                });
+
+                // Se a minha loja ainda não tem NENHUMA linha de tampa nesse modelo (a Sul, por
+                // exemplo, só tem linha de "vidro c/ touch"), cria um grupo vazio dela, pra
+                // dar pra registrar tampas coloridas lá. A linha só vai pro banco na 1ª peça.
+                if (minha) {
+                    const modeloTampa = data.find(epEhCategoriaComCor);
+                    if (modeloTampa && !visiveis.some(it => epEhCategoriaComCor(it) && it.loja_id === minha)) {
+                        visiveis.push({ id: null, quantidade: 0, custo_unitario: 0, loja_id: minha, cor: '', sintetico: true,
+                                        estoque_categorias: modeloTampa.estoque_categorias });
+                    }
+                }
+
+                visiveis.sort((a, b) => {
+                    const ca = a.estoque_categorias ? a.estoque_categorias.nome : '';
+                    const cb = b.estoque_categorias ? b.estoque_categorias.nome : '';
+                    return ca.localeCompare(cb) || epNomeLoja(a.loja_id).localeCompare(epNomeLoja(b.loja_id)) || (a.cor || '').localeCompare(b.cor || '');
+                });
+                epRenderizarItens(visiveis, coresRef);
             } catch(e){
                 tbody.innerHTML = '<tr><td colspan="4" class="ep-empty" style="color:#f87171;">Erro ao carregar itens.</td></tr>';
                 epMostrarToast(e.message || 'Erro ao carregar itens', true);
             }
         }
+
+        // ------------------------------------------------------------------
+        // TAMPAS POR COR
+        // A categoria "Tampa" não vira uma linha por cor (seriam ~200 linhas): continua UMA
+        // linha por modelo e loja, com o total, e logo abaixo uma faixa de "chips" — um por cor
+        // do modelo, cada um com seu − qtd +. A cor só vira registro no banco quando entra a
+        // primeira peça dela. O que já existia fica em "Sem cor" até ser classificado.
+        // ------------------------------------------------------------------
+        const EP_CATEGORIAS_COM_COR = ['tampa'];
+        const _epCoresCache = new Map();
+
+        function epEhCategoriaComCor(it){
+            const n = it && it.estoque_categorias ? it.estoque_categorias.nome : '';
+            return EP_CATEGORIAS_COM_COR.includes(String(n).trim().toLowerCase());
+        }
+
+        function epChaveModelo(nome){ return String(nome || '').trim().toLowerCase(); }
+
+        // Cores de referência do modelo (tabela estoque_cores_modelo), em cache por modelo
+        async function epBuscarCoresModelo(nomeModelo){
+            const chave = epChaveModelo(nomeModelo);
+            if (_epCoresCache.has(chave)) return _epCoresCache.get(chave);
+            const { data, error } = await supabaseDB.from('estoque_cores_modelo')
+                .select('cor, ordem').eq('modelo_chave', chave).order('ordem', { ascending: true });
+            const lista = error ? [] : (data || []).map(r => r.cor);
+            if (!error) _epCoresCache.set(chave, lista);
+            return lista;
+        }
+
+        // Bolinha de cor só pra bater o olho; o que vale é o nome. Do mais específico pro geral.
+        function epCorHex(nome){
+            const n = String(nome || '').toLowerCase();
+            const regras = [
+                [/titânio natural/, '#b9a99b'], [/titânio deserto/, '#c6a283'], [/titânio azul/, '#5a6b82'],
+                [/titânio branco/, '#e3e1dc'], [/titânio preto/, '#3a3a3d'],
+                [/verde-meia-noite/, '#4e5d54'], [/verde-alpino/, '#5d6e57'], [/verde-acinzentado/, '#8da294'],
+                [/sálvia/, '#b7c4a8'], [/verde/, '#aedcc0'],
+                [/azul-sierra/, '#9bb5ce'], [/azul-pacífico/, '#2f5a7a'], [/azul-intenso/, '#1f3a64'],
+                [/azul-névoa/, '#c3d3e2'], [/azul-céu/, '#b9d3ec'], [/ultramarino/, '#6e7fd0'], [/azul/, '#86a8d3'],
+                [/roxo-profundo/, '#4d3d63'], [/lavanda/, '#cdbfe3'], [/roxo/, '#b9a6d9'],
+                [/ouro rosa/, '#e4bfb0'], [/dourado-claro/, '#e8d9b4'], [/dourado|ouro/, '#d9c18f'],
+                [/branco-nuvem/, '#f1f0ed'], [/branco|estelar/, '#ebebed'], [/prateado|prata/, '#cfd0d4'],
+                [/cinza|grafite/, '#5a5a5f'], [/preto-brilhante/, '#0f0f10'], [/preto|meia-noite/, '#26262a'],
+                [/vermelho/, '#cf2f3b'], [/laranja/, '#e5772d'], [/amarelo/, '#f2dc6b'], [/coral/, '#f2796a'],
+                [/rosa/, '#f0b8c8'], [/glacial/, '#aeb8c4'], [/bordô/, '#6d2233']
+            ];
+            for (const [re, hex] of regras) if (re.test(n)) return hex;
+            return '#8a8a92';
+        }
+
+        function epRenderizarGrupoCor(tbody, todos, categoria, lojaId, coresRef){
+            const linhas = todos.filter(x => epEhCategoriaComCor(x) && x.estoque_categorias.id === categoria.id && x.loja_id === lojaId);
+            const semCorItem = linhas.find(x => !x.cor) || null;
+            const coloridos = new Map(linhas.filter(x => x.cor).map(x => [x.cor, x]));
+            // Cores mostradas: as do modelo + qualquer outra que já tenha linha (mesmo fora da lista)
+            const nomesCores = [...coresRef];
+            coloridos.forEach((_, c) => { if (!nomesCores.includes(c)) nomesCores.push(c); });
+
+            const custoInicial = (semCorItem && Number(semCorItem.custo_unitario) > 0) ? Number(semCorItem.custo_unitario)
+                : (linhas.map(x => Number(x.custo_unitario) || 0).find(v => v > 0) || 0);
+            const grupo = { custo: custoInicial, estados: [] };
+
+            const trCab = document.createElement('tr');
+            trCab.className = 'ep-tr-grupo';
+            trCab.innerHTML = `
+                <td><span class="ep-nivel zero"></span>${escapeHTML(categoria.nome)} ${epTagLoja(lojaId)}</td>
+                <td><span class="ep-mono ep-grupo-total">0</span> <span class="ep-grupo-un">un</span></td>
+                <td><input type="number" class="epCustoInput ep-custo-input" min="0" step="0.01" value="${custoInicial.toFixed(2)}" title="Custo por peça (vale pra todas as cores)"></td>
+                <td class="ep-mono valor-restrito ep-grupo-valor">${epFormatarMoeda(0)}</td>`;
+            const trChips = document.createElement('tr');
+            trChips.className = 'ep-tr-chips';
+            trChips.innerHTML = '<td colspan="4"><div class="ep-chips"></div></td>';
+            const caixa = trChips.querySelector('.ep-chips');
+            const custoInput = trCab.querySelector('.epCustoInput');
+            const nivelDot = trCab.querySelector('.ep-nivel');
+
+            function atualizarTotais(){
+                const total = grupo.estados.reduce((soma, st) => soma + Math.max(0, parseInt(st.input.value) || 0), 0);
+                trCab.querySelector('.ep-grupo-total').textContent = total;
+                trCab.querySelector('.ep-grupo-valor').textContent = epFormatarMoeda(total * (parseFloat(custoInput.value) || 0));
+                nivelDot.className = 'ep-nivel ' + epNivelClasse(total);
+            }
+
+            // Mudar o custo no cabeçalho vale pra TODAS as cores desse grupo
+            custoInput.addEventListener('change', async () => {
+                const v = Math.max(0, parseFloat(custoInput.value) || 0);
+                grupo.custo = v;
+                const ids = grupo.estados.filter(st => st.id).map(st => st.id);
+                try {
+                    if (ids.length) {
+                        const { error } = await medirPromise('Estoque Peças', () =>
+                            supabaseDB.from('estoque_itens').update({ custo_unitario: v, atualizado_em: new Date().toISOString() }).in('id', ids));
+                        if (error) throw new Error(error.message);
+                    }
+                    atualizarTotais();
+                    epCarregarDashboard();
+                } catch(e){ epMostrarToast(e.message || 'Erro ao salvar o custo', true); }
+            });
+
+            function criarChip(cor, item, ehSemCor){
+                const st = { cor: cor || '', id: item && item.id ? item.id : null,
+                             quantidade: item ? (item.quantidade || 0) : 0, timer: null, salvando: false, reagendar: false };
+                grupo.estados.push(st);
+                const rotulo = ehSemCor ? 'Sem cor' : cor;
+                const el = document.createElement('div');
+                el.className = 'ep-chip' + (ehSemCor ? ' sem-cor' : '');
+                el.innerHTML = `
+                    <span class="ep-chip-dot" style="background:${ehSemCor ? '#8a8a92' : epCorHex(cor)}"></span>
+                    <span class="ep-chip-nome">${escapeHTML(rotulo)}</span>
+                    <button type="button" class="ep-step-btn minus">–</button>
+                    <input type="number" class="ep-qtd-input" min="0" step="1" value="${st.quantidade}">
+                    <button type="button" class="ep-step-btn plus">+</button>
+                    <button type="button" class="ep-btn-transf" title="Transferir pra outra loja">⇄</button>
+                    ${ehSemCor ? '<button type="button" class="ep-chip-classificar" title="Distribuir estas peças pelas cores">classificar</button>' : ''}`;
+                const input = el.querySelector('.ep-qtd-input');
+                const btnTransf = el.querySelector('.ep-btn-transf');
+                st.input = input;
+
+                function atualizarVisual(){
+                    const q = Math.max(0, parseInt(input.value) || 0);
+                    el.classList.toggle('tem', q > 0);
+                    btnTransf.style.visibility = (st.id && st.quantidade > 0) ? 'visible' : 'hidden';
+                    const cl = el.querySelector('.ep-chip-classificar');
+                    if (cl) cl.style.display = st.quantidade > 0 ? '' : 'none';
+                }
+
+                async function salvar(){
+                    if (st.salvando) { st.reagendar = true; return; }
+                    const nova = Math.max(0, parseInt(input.value) || 0);
+                    if (nova === st.quantidade) return;
+                    st.salvando = true;
+                    const anterior = st.quantidade;
+                    try {
+                        if (!st.id) {
+                            // Primeira peça dessa cor: só agora a linha é criada no banco
+                            const { data, error } = await medirPromise('Estoque Peças', () =>
+                                supabaseDB.from('estoque_itens').insert({
+                                    modelo_id: modeloAtualId, categoria_id: categoria.id, loja_id: lojaId,
+                                    cor: st.cor, quantidade: nova, custo_unitario: grupo.custo
+                                }).select('id').single());
+                            if (error) {
+                                if (error.code === '23505') { epMostrarToast('Outra pessoa acabou de mexer nessa cor. Atualizando...', true); epCarregarItensDoModelo(); return; }
+                                throw new Error(error.message);
+                            }
+                            st.id = data.id;
+                        } else {
+                            const { error } = await medirPromise('Estoque Peças', () =>
+                                supabaseDB.from('estoque_itens').update({ quantidade: nova, atualizado_em: new Date().toISOString() }).eq('id', st.id));
+                            if (error) throw new Error(error.message);
+                        }
+                        st.quantidade = nova;
+                        const diff = nova - anterior;
+                        if (diff !== 0) {
+                            const nomePeca = st.cor ? `${categoria.nome} (${st.cor})` : categoria.nome;
+                            epRegistrarMovimentacao(modeloAtualNome, nomePeca, diff > 0 ? 'Entrada' : 'Saída', Math.abs(diff), grupo.custo, null, lojaId);
+                        }
+                        epCarregarDashboard();
+                    } catch(e){
+                        epMostrarToast(e.message || 'Erro ao salvar', true);
+                        input.value = st.quantidade;     // volta pro que está salvo de verdade
+                    } finally {
+                        st.salvando = false;
+                        atualizarTotais(); atualizarVisual();
+                        if (st.reagendar) { st.reagendar = false; salvar(); }
+                    }
+                }
+                function agendar(){ clearTimeout(st.timer); st.timer = setTimeout(salvar, 400); }
+
+                // Mesma proteção das linhas normais: clicar em +/- não tira o foco do campo
+                el.querySelectorAll('.ep-step-btn').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
+                el.querySelector('.plus').addEventListener('click', () => { input.value = (parseInt(input.value) || 0) + 1; atualizarTotais(); atualizarVisual(); agendar(); });
+                el.querySelector('.minus').addEventListener('click', () => { input.value = Math.max(0, (parseInt(input.value) || 0) - 1); atualizarTotais(); atualizarVisual(); agendar(); });
+                input.addEventListener('input', () => { atualizarTotais(); atualizarVisual(); });
+                input.addEventListener('change', agendar);
+
+                btnTransf.addEventListener('click', () => {
+                    if (!st.id || st.quantidade <= 0) return;
+                    _epTransfItens[st.id] = { tabela: 'iphone', id: st.id,
+                        nome: `${modeloAtualNome} · ${categoria.nome}${st.cor ? ' (' + st.cor + ')' : ''}`,
+                        lojaId, quantidade: st.quantidade };
+                    window.epAbrirTransferencia(st.id);
+                });
+                const btnClass = el.querySelector('.ep-chip-classificar');
+                if (btnClass) btnClass.addEventListener('click', () => epAbrirClassificar({ categoria, lojaId, disponivel: st.quantidade, cores: nomesCores }));
+
+                atualizarVisual();
+                caixa.appendChild(el);
+            }
+
+            // "Sem cor" só aparece enquanto ainda tem peça por classificar
+            if (semCorItem && (semCorItem.quantidade || 0) > 0) criarChip('', semCorItem, true);
+            else if (semCorItem) grupo.estados.push({ cor: '', id: semCorItem.id, quantidade: 0, input: { value: '0' } });
+            nomesCores.forEach(c => criarChip(c, coloridos.get(c) || null, false));
+
+            // "+ cor": cadastra uma cor que não está na lista do modelo
+            const btnNova = document.createElement('button');
+            btnNova.type = 'button'; btnNova.className = 'ep-chip-nova'; btnNova.textContent = '+ cor';
+            btnNova.addEventListener('click', () => {
+                const inp = document.createElement('input');
+                inp.type = 'text'; inp.className = 'ep-chip-novacor'; inp.maxLength = 40; inp.placeholder = 'Nome da cor';
+                btnNova.replaceWith(inp); inp.focus();
+                let feito = false;
+                const confirmar = async () => {
+                    if (feito) return; feito = true;
+                    let nome = inp.value.trim();
+                    if (!nome) { inp.replaceWith(btnNova); return; }
+                    nome = nome.charAt(0).toUpperCase() + nome.slice(1);
+                    if (nomesCores.some(c => c.toLowerCase() === nome.toLowerCase())) {
+                        epMostrarToast('Essa cor já está na lista.', true); inp.replaceWith(btnNova); return;
+                    }
+                    const { error } = await supabaseDB.from('estoque_cores_modelo')
+                        .insert({ modelo_chave: epChaveModelo(modeloAtualNome), cor: nome, ordem: nomesCores.length + 1 });
+                    if (error) { epMostrarToast(error.message || 'Não deu pra adicionar a cor', true); inp.replaceWith(btnNova); return; }
+                    _epCoresCache.delete(epChaveModelo(modeloAtualNome));
+                    epCarregarItensDoModelo();
+                };
+                inp.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') confirmar();
+                    else if (e.key === 'Escape') { feito = true; inp.replaceWith(btnNova); }
+                });
+                inp.addEventListener('blur', confirmar);
+            });
+            caixa.appendChild(btnNova);
+
+            tbody.appendChild(trCab);
+            tbody.appendChild(trChips);
+            atualizarTotais();
+        }
+
+        // ---- Classificar as tampas que estão "sem cor" ----
+        let _epClass = null;
+        function epAbrirClassificar(ctx){
+            _epClass = { ...ctx, valores: {} };
+            document.getElementById('epClassTitulo').textContent = `${modeloAtualNome} · ${epNomeLoja(ctx.lojaId)}`;
+            const lista = document.getElementById('epClassLista');
+            lista.innerHTML = ctx.cores.map((c, i) => `
+                <div class="ep-class-linha" data-i="${i}">
+                    <span class="ep-chip-dot" style="background:${epCorHex(c)}"></span>
+                    <span class="ep-class-nome">${escapeHTML(c)}</span>
+                    <div class="ep-qtd-wrap">
+                        <button type="button" class="ep-step-btn minus">–</button>
+                        <input type="number" class="ep-qtd-input" min="0" step="1" value="0">
+                        <button type="button" class="ep-step-btn plus">+</button>
+                    </div>
+                </div>`).join('') || '<div class="ep-empty">Esse modelo ainda não tem cores cadastradas. Feche e use "+ cor".</div>';
+            lista.querySelectorAll('.ep-class-linha').forEach(linha => {
+                const cor = ctx.cores[parseInt(linha.dataset.i, 10)];
+                const input = linha.querySelector('.ep-qtd-input');
+                const aplicar = () => {
+                    input.value = Math.max(0, parseInt(input.value) || 0);
+                    _epClass.valores[cor] = parseInt(input.value) || 0;
+                    epClassResumo();
+                };
+                linha.querySelectorAll('.ep-step-btn').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
+                linha.querySelector('.plus').addEventListener('click', () => { input.value = (parseInt(input.value) || 0) + 1; aplicar(); });
+                linha.querySelector('.minus').addEventListener('click', () => { input.value = Math.max(0, (parseInt(input.value) || 0) - 1); aplicar(); });
+                input.addEventListener('input', aplicar);
+            });
+            epClassResumo();
+            document.getElementById('modalEpClassificar').classList.add('ativo');
+        }
+        function epClassResumo(){
+            const dist = Object.values(_epClass.valores).reduce((a, b) => a + b, 0);
+            const el = document.getElementById('epClassResumo');
+            el.textContent = `Distribuído: ${dist} de ${_epClass.disponivel} sem cor`;
+            el.classList.toggle('excedeu', dist > _epClass.disponivel);
+            document.getElementById('epClassBtn').disabled = !(dist > 0 && dist <= _epClass.disponivel);
+        }
+        window.epFecharClassificar = function(){
+            document.getElementById('modalEpClassificar').classList.remove('ativo');
+            _epClass = null;
+        };
+        window.epConfirmarClassificar = async function(){
+            if (!_epClass) return;
+            const dist = {};
+            Object.entries(_epClass.valores).forEach(([c, q]) => { if (q > 0) dist[c] = q; });
+            const btn = document.getElementById('epClassBtn');
+            btn.disabled = true;
+            try {
+                // Tudo numa transação só no banco: tira do "sem cor" e soma nas cores
+                const { data, error } = await supabaseDB.rpc('reclassificar_tampas', {
+                    p_modelo_id: modeloAtualId, p_categoria_id: _epClass.categoria.id,
+                    p_loja_id: _epClass.lojaId, p_distribuicao: dist
+                }).maybeSingle();
+                if (error) throw new Error(error.message);
+                if (!data || !data.ok) throw new Error((data && data.mensagem) || 'Não foi possível classificar.');
+                epFecharClassificar();
+                epMostrarToast('Tampas classificadas!');
+                epCarregarItensDoModelo();
+                epCarregarDashboard();
+            } catch(e){
+                epMostrarToast(e.message || 'Erro ao classificar', true);
+                btn.disabled = false;
+            }
+        };
 
         function epNivelClasse(qtd){
             if (qtd <= 0) return 'zero';
@@ -7451,14 +7818,25 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             return 'ok';
         }
 
-        function epRenderizarItens(itens){
+        function epRenderizarItens(itens, coresRef){
+            coresRef = coresRef || [];
             const tbody = document.getElementById('epItensLinhas');
             if (!itens.length){
                 tbody.innerHTML = '<tr><td colspan="4" class="ep-empty">Nenhuma categoria cadastrada ainda — cadastre uma categoria acima.</td></tr>';
                 return;
             }
             tbody.innerHTML = '';
+            const gruposFeitos = new Set();
             itens.forEach(it => {
+                // Tampa: uma linha com o total + faixa de cores, no lugar de uma linha por cor
+                if (epEhCategoriaComCor(it)) {
+                    const chaveGrupo = it.estoque_categorias.id + '|' + it.loja_id;
+                    if (!gruposFeitos.has(chaveGrupo)) {
+                        gruposFeitos.add(chaveGrupo);
+                        epRenderizarGrupoCor(tbody, itens, it.estoque_categorias, it.loja_id, coresRef);
+                    }
+                    return;
+                }
                 const categoriaNome = it.estoque_categorias ? it.estoque_categorias.nome : '(categoria removida)';
                 // Guarda o estado "confirmado no banco" à parte, pra sempre calcular a diferença
                 // (Entrada/Saída) a partir do último valor realmente salvo — nunca do valor antigo
@@ -8019,7 +8397,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 if (eMov) throw new Error(eMov.message);
                 if (eItens) throw new Error(eItens.message);
 
-                const chaveDe = (modelo, categoria) => (modelo || '(avulso)') + ' || ' + (categoria || '');
+                // "Tampa (Azul)" e "Tampa" contam como a mesma peça: a sugestão é por modelo, com as
+                // cores somadas — senão o histórico antigo (sem cor) viraria um item zerado e fantasma
+                const chaveDe = (modelo, categoria) => (modelo || '(avulso)') + ' || ' + String(categoria || '').replace(/^(Tampa) \(.+\)$/i, '$1');
 
                 // Estoque atual por peça
                 const estoqueAtual = new Map();
@@ -10812,7 +11192,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (typeof crmFecharQrCliente === 'function') crmFecharQrCliente(); if (window.epFecharTransferencia) epFecharTransferencia(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); sorteioFecharApagarTodos(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (typeof crmFecharQrCliente === 'function') crmFecharQrCliente(); if (window.epFecharTransferencia) epFecharTransferencia(); if (window.epFecharClassificar) epFecharClassificar(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); sorteioFecharApagarTodos(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
