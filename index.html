@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261009113754">
+    <meta name="app-build" content="20261009114127">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -7624,10 +7624,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 trCab.querySelector('.ep-grupo-valor').textContent = epFormatarMoeda(total * custo);
                 nivelDot.className = 'ep-nivel ' + epNivelClasse(total);
                 // Resumo fechado: dá pra saber quantas cores têm peça sem abrir a lista
-                const semCor = grupo.estados.find(st => !st.cor);
-                const qSem = semCor ? Math.max(0, parseInt(semCor.input.value) || 0) : 0;
-                trCab.querySelector('.ep-grupo-resumo').textContent =
-                    `${comEstoque} de ${nomesCores.length} cores com peça` + (qSem > 0 ? ` · ${qSem} sem cor` : '');
+                trCab.querySelector('.ep-grupo-resumo').textContent = `${comEstoque} de ${nomesCores.length} cores com peça`;
             }
 
             // Mudar o custo no cabeçalho vale pra TODAS as cores desse grupo
@@ -7746,9 +7743,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 grupo.linhasCor.push(el);
             }
 
-            // "Sem cor" só aparece enquanto ainda tem peça por classificar
-            if (semCorItem && (semCorItem.quantidade || 0) > 0) criarLinhaCor('', semCorItem, true);
-            else if (semCorItem) grupo.estados.push({ cor: '', id: semCorItem.id, quantidade: 0, input: { value: '0' } });
+            // A linha antiga sem cor (de antes da separação por cor) não aparece mais na lista.
+            // Continua contando no total e recebendo o custo, só fica invisível.
+            if (semCorItem) {
+                const q = semCorItem.quantidade || 0;
+                grupo.estados.push({ cor: '', id: semCorItem.id, quantidade: q, input: { value: String(q) } });
+            }
             nomesCores.forEach(c => criarLinhaCor(c, coloridos.get(c) || null, false));
 
             // Última linha da lista: "+ cor" pra cadastrar uma cor que não está na lista do modelo
