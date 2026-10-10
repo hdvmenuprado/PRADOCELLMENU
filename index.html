@@ -1,44 +1,71 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261009114127">
+    <meta name="app-build" content="20261010124433">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://unpkg.com/lucide@1.44.0/dist/umd/lucide.js"></script>
     <script>
-    // Os ícones da Lucide só viram desenho quando createIcons() roda. Como várias telas
-    // montam HTML na hora (listas, botões que mudam de estado), era fácil esquecer de
-    // chamar — e o ícone ficava invisível até algum modal abrir e chamar por acaso.
-    // Este observador desenha qualquer ícone novo assim que ele entra na tela, então não
-    // depende mais de ninguém lembrar de chamar.
+    // ÍCONES (Lucide): desenha SÓ os ícones novos, nunca os que já estão na tela.
+    //
+    // Por quê: a createIcons() da biblioteca procura tudo que tem data-lucide — e o ícone
+    // já desenhado CONTINUA com data-lucide. Então cada chamada trocava todos os ícones da
+    // página. Com o vigia abaixo (que chama sozinho quando aparece ícone novo), isso virou um
+    // loop: trocar ícones → o vigia vê "ícone novo" → troca de novo, ~50x por segundo. O botão
+    // X, o OK da senha etc. eram trocados entre o apertar e o soltar do mouse, e o clique se
+    // perdia; e o computador ficava ocupado sem parar.
+    //
+    // Solução: só os elementos que ainda NÃO são <svg> são desenhados. Vale também pras
+    // chamadas lucide.createIcons() espalhadas pelo sistema.
     (function () {
+        var PENDENTE = '[data-lucide]:not(svg)';
+        function prepararLucide() {
+            if (!window.lucide || window.lucide.__soNovos) return;
+            var original = window.lucide.createIcons;
+            window.lucide.createIcons = function (opcoes) {
+                var raiz = (opcoes && opcoes.root) || document;
+                var pendentes = raiz.querySelectorAll(PENDENTE);
+                if (!pendentes.length) return;
+                // Marca só os pendentes com outro atributo e manda a biblioteca procurar ESSE
+                for (var i = 0; i < pendentes.length; i++) pendentes[i].setAttribute('data-lucide-novo', pendentes[i].getAttribute('data-lucide'));
+                try {
+                    original(Object.assign({}, opcoes || {}, { nameAttr: 'data-lucide-novo' }));
+                } finally {
+                    var marcados = document.querySelectorAll('[data-lucide-novo]');
+                    for (var j = 0; j < marcados.length; j++) marcados[j].removeAttribute('data-lucide-novo');
+                }
+            };
+            window.lucide.__soNovos = true;
+        }
+
         var pendente = false;
         function desenhar() {
             pendente = false;
-            if (!window.lucide) return;
-            // só gasta trabalho se existir ícone ainda não desenhado
-            if (document.querySelector('[data-lucide]')) lucide.createIcons();
+            prepararLucide();
+            if (window.lucide && document.querySelector(PENDENTE)) window.lucide.createIcons();
         }
         function agendar() {
             if (pendente) return;
             pendente = true;
             requestAnimationFrame(desenhar);
         }
+        function ehPendente(n) {
+            return n.nodeType === 1 && ((n.matches && n.matches(PENDENTE)) || (n.querySelector && n.querySelector(PENDENTE)));
+        }
         function ligar() {
             desenhar();
             new MutationObserver(function (mutacoes) {
                 for (var i = 0; i < mutacoes.length; i++) {
-                    var m = mutacoes[i];
-                    for (var j = 0; j < m.addedNodes.length; j++) {
-                        var n = m.addedNodes[j];
-                        if (n.nodeType !== 1) continue;
-                        if (n.hasAttribute('data-lucide') || n.querySelector('[data-lucide]')) { agendar(); return; }
+                    var add = mutacoes[i].addedNodes;
+                    for (var j = 0; j < add.length; j++) {
+                        if (ehPendente(add[j])) { agendar(); return; }
                     }
                 }
             }).observe(document.body, { childList: true, subtree: true });
         }
+        prepararLucide();
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar);
         else ligar();
     })();
@@ -2084,6 +2111,13 @@ body.modo-claro .main-content {
         .tf-badge-menu.tem { display:inline-flex; }
 
 
+        /* Tela de perfis: aviso de "verificando acesso" e botões travados enquanto espera */
+        .selecao-perfil-status { min-height:18px; margin-top:14px; font-size:12.5px; color:var(--text-muted); text-align:center; }
+        .selecao-perfil-status.erro { color:#e06a5e; }
+        .selecao-perfil-btn:disabled, .selecao-perfil-admin-btn:disabled { opacity:.55; cursor:progress; }
+        #btnConfirmarSenha.verificando { opacity:.6; cursor:progress; }
+        #senhaErro.verificando { color:var(--text-muted) !important; }
+
         /* Tampas por cor: linha-resumo que abre/fecha a lista de cores embaixo */
         .ep-grupo-toggle { cursor:pointer; user-select:none; }
         .ep-seta { display:inline-block; width:14px; color:var(--text-muted); font-size:11px; transition:transform .15s ease; }
@@ -3032,6 +3066,7 @@ body.modo-claro .main-content {
         </div>
 
         <button class="selecao-perfil-admin-btn" onclick="solicitarSenhaGestao()" title="Acesso completo, todas as lojas">Gestão</button>
+        <div id="selecaoPerfilStatus" class="selecao-perfil-status" aria-live="polite"></div>
     </div>
 </div>
 
@@ -8948,11 +8983,34 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // só se a proteção de cada loja está ativa ou não. A conferência do PIN em si
     // acontece toda dentro da Edge Function 'config-seguranca' (servidor).
     let CONFIG_SEGURANCA = { lojaNorte: { ativo: false }, lojaSul: { ativo: false } };
+    // Só vira true quando o servidor RESPONDEU quais lojas têm senha. Enquanto for false, o
+    // valor acima (ativo: false) é só um chute e NÃO pode ser usado pra deixar alguém entrar —
+    // era assim que dava pra entrar sem senha clicando rápido logo depois de recarregar.
+    let CONFIG_SEGURANCA_CONFIRMADA = false;
+    let _cfgSegPromessa = null;
 
     async function chamarConfigSeguranca(payload) {
-        const { data, error } = await supabaseDB.functions.invoke('config-seguranca', { body: payload });
+        // A função do servidor às vezes demora pra "acordar"; sem limite, o pedido podia
+        // ficar pendurado e o botão parecia não responder.
+        const pedido = supabaseDB.functions.invoke('config-seguranca', { body: payload });
+        const limite = new Promise((_, rej) => setTimeout(() => rej(new Error('O servidor demorou pra responder.')), 15000));
+        const { data, error } = await Promise.race([pedido, limite]);
         if (error) throw new Error(error.message);
         return data;
+    }
+
+    // Garante que já sabemos quais lojas têm senha. Devolve true/false (false = não deu pra saber).
+    function garantirConfigSeguranca() {
+        if (CONFIG_SEGURANCA_CONFIRMADA) return Promise.resolve(true);
+        if (!_cfgSegPromessa) {
+            _cfgSegPromessa = (async () => {
+                for (let tentativa = 1; tentativa <= 2 && !CONFIG_SEGURANCA_CONFIRMADA; tentativa++) {
+                    await carregarConfigSeguranca();
+                }
+                return CONFIG_SEGURANCA_CONFIRMADA;
+            })().finally(() => { _cfgSegPromessa = null; });
+        }
+        return _cfgSegPromessa;
     }
 
     async function carregarConfigSeguranca() {
@@ -8960,6 +9018,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const data = await chamarConfigSeguranca({ acao: 'status' });
             if (data && data.ok) {
                 CONFIG_SEGURANCA = { lojaNorte: { ativo: !!data.lojaNorteAtivo }, lojaSul: { ativo: !!data.lojaSulAtivo } };
+                CONFIG_SEGURANCA_CONFIRMADA = true;
             }
         } catch (e) { console.error('Erro ao carregar config de segurança:', e); }
         // Reflete no formulário do Admin, se ele já estiver na tela.
@@ -8997,7 +9056,33 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     // Chamado pelos botões de Loja Norte/Sul na tela de login. Se a senha estiver
     // ativada pro painel, pede senha antes; senão, entra direto como sempre.
-    function entrarComoLoja(perfil) {
+    let _entrandoComoLoja = false;
+    async function entrarComoLoja(perfil) {
+        if (_entrandoComoLoja) return;
+        _entrandoComoLoja = true;
+        const status = document.getElementById('selecaoPerfilStatus');
+        const botoes = document.querySelectorAll('.selecao-perfil-btn, .selecao-perfil-admin-btn');
+        try {
+            if (!CONFIG_SEGURANCA_CONFIRMADA) {
+                // Clicou antes do servidor responder: espera em vez de chutar "sem senha"
+                botoes.forEach(b => b.disabled = true);
+                if (status) { status.className = 'selecao-perfil-status'; status.textContent = 'Verificando acesso...'; }
+                const sei = await garantirConfigSeguranca();
+                if (!sei) {
+                    // Na dúvida, não entra
+                    if (status) { status.className = 'selecao-perfil-status erro'; status.textContent = 'Não consegui verificar a senha da loja. Confira a internet e tente de novo.'; }
+                    return;
+                }
+                if (status) status.textContent = '';
+            }
+            entrarComoLojaDecidido(perfil);
+        } finally {
+            _entrandoComoLoja = false;
+            botoes.forEach(b => b.disabled = false);
+        }
+    }
+
+    function entrarComoLojaDecidido(perfil) {
         const chave = perfil === 'loja_norte' ? 'lojaNorte' : 'lojaSul';
         const cfg = CONFIG_SEGURANCA[chave];
         if (cfg && cfg.ativo) {
@@ -9070,7 +9155,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     async function confirmarSenha() {
         const senha = document.getElementById("campoSenha").value;
         const btnConfirmar = document.getElementById('btnConfirmarSenha');
-        if (btnConfirmar) btnConfirmar.disabled = true;
+        if (btnConfirmar && btnConfirmar.disabled) return;      // já está verificando
+        if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.classList.add('verificando'); }
+        const erroEl = document.getElementById("senhaErro");
+        erroEl.innerText = 'Verificando...';
+        erroEl.classList.add('verificando');
         try {
             if (_modoModalSenha === 'gestao') {
                 const data = await chamarConfigSeguranca({ acao: 'verificar', tipo: 'gestao', senha });
@@ -9098,9 +9187,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             document.getElementById("senhaErro").innerText = "Senha incorreta! Tente novamente.";
             pinLimparCampo();
         } catch (e) {
-            document.getElementById("senhaErro").innerText = "Erro ao verificar. Tente de novo.";
+            document.getElementById("senhaErro").innerText = "Não consegui verificar agora. Confira a internet e tente de novo.";
         } finally {
-            if (btnConfirmar) btnConfirmar.disabled = false;
+            if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.classList.remove('verificando'); }
+            erroEl.classList.remove('verificando');
+            if (erroEl.innerText === 'Verificando...') erroEl.innerText = '';
         }
     }
 
@@ -11229,6 +11320,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
         // Só mostra a tela de escolha de loja se realmente existir uma sessão de
         // login válida no Supabase; senão, fica travado na tela de login.
+        garantirConfigSeguranca();   // já pergunta quais lojas têm senha, sem esperar
         await verificarSessaoEIniciar();
 
         atualizarIndicadorConexao(navigator.onLine); // chute inicial instantâneo; o polling da O.S. confirma/corrige em seguida
@@ -11238,7 +11330,29 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         svaIniciar(); // painel de cadastro/edição — só existe na aba Admin (Gestão)
         carregarConfigPDF();
         carregarConfigSeguranca();
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { fecharModal(); if (typeof crmFecharQrCliente === 'function') crmFecharQrCliente(); if (window.epFecharTransferencia) epFecharTransferencia(); if (window.epFecharClassificar) epFecharClassificar(); tfFecharModal('modalTfNova'); tfFecharModal('modalTfFinalizar'); crmFecharModalCadastro(); sorteioFecharModalSugestoes(); sorteioFecharRoleta(); sorteioFecharApagarTodos(); osFecharModalEditar(); backupFecharModal(); osFecharConsultasStatus(); osFecharHistoricoRetornos(); osFecharChecklist(); osFecharReabrir(); } });
+        // Esc fecha qualquer janela aberta. Cada fechamento é independente: se um der erro,
+        // os outros continuam (antes, um erro no meio parava a lista inteira).
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Escape') return;
+            [
+                () => { fecharModal(); },
+                () => { if (typeof crmFecharQrCliente === 'function') crmFecharQrCliente(); },
+                () => { if (window.epFecharTransferencia) epFecharTransferencia(); },
+                () => { if (window.epFecharClassificar) epFecharClassificar(); },
+                () => { tfFecharModal('modalTfNova'); },
+                () => { tfFecharModal('modalTfFinalizar'); },
+                () => { crmFecharModalCadastro(); },
+                () => { sorteioFecharModalSugestoes(); },
+                () => { sorteioFecharRoleta(); },
+                () => { sorteioFecharApagarTodos(); },
+                () => { osFecharModalEditar(); },
+                () => { backupFecharModal(); },
+                () => { osFecharConsultasStatus(); },
+                () => { osFecharHistoricoRetornos(); },
+                () => { osFecharChecklist(); },
+                () => { osFecharReabrir(); }
+            ].forEach(fechar => { try { fechar(); } catch (err) { console.warn('Esc:', err); } });
+        });
         iniciarVerificacaoDeAtualizacao();
 
         // Se a sessão expirar ou a pessoa fizer logout em outra aba, volta pra tela de login.
