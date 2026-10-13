@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261010124433">
+    <meta name="app-build" content="20261013004000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -1392,6 +1392,113 @@ body.modo-claro .main-content {
             border: 1px solid var(--border-color);
         }
         .btn-resposta-defeito:hover { background: rgba(239, 68, 68, 0.12); border-color: #ef4444; transform: translateY(-2px); }
+
+        /* --- AVALIAÇÃO (fluxo novo, out/2026) — fundos sólidos, sem neon/transparência --- */
+        #menu-inicio { --av-p1:#17171b; --av-p2:#1b1b20; --av-p3:#1f1f25; --av-b1:#2a2a31; --av-b2:#34343d;
+            --av-muted:#8b8b93; --av-ok:#27ae60; --av-def:#e5484d; --av-def-suave:#3a1a1c; --av-ouro:#d4af37; --av-ouro-txt:#1a1405; }
+        body.modo-claro #menu-inicio { --av-p1:#ffffff; --av-p2:#fafafb; --av-p3:#f3f3f6; --av-b1:#e2e2e8; --av-b2:#d4d4dc;
+            --av-muted:#6a6a72; --av-ok:#1f8f4e; --av-def:#d13438; --av-def-suave:#fbe7e7; --av-ouro:#b8931f; --av-ouro-txt:#ffffff; }
+        .av2-grade { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; text-align:left; }
+        .av2-num { font-family:'Space Grotesk','Inter',sans-serif; font-variant-numeric:tabular-nums; }
+        .av2-palco { background:var(--av-p1); border:1px solid var(--av-b1); border-radius:18px; padding:26px; min-height:440px; display:flex; flex-direction:column; }
+        .av2-rotulo { font-size:12.5px; color:var(--av-muted); margin-bottom:6px; display:flex; justify-content:space-between; gap:10px; }
+        .av2-titulo { font:700 26px/1.25 'Space Grotesk','Inter',sans-serif; margin:0 0 22px; padding:0; border:none; max-width:30ch; color:var(--text-main); text-transform:none; letter-spacing:0; }
+        .av2-cena { flex:1; display:flex; flex-direction:column; }
+        .av2-cena.av2-entra { animation:av2Entra .22s cubic-bezier(.2,.8,.2,1); }
+        .av2-cena.av2-entra.av2-volta { animation-name:av2EntraVolta; }
+        @keyframes av2Entra { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:none; } }
+        @keyframes av2EntraVolta { from { opacity:0; transform:translateX(-18px); } to { opacity:1; transform:none; } }
+        .av2-select { width:100%; background:var(--av-p2); border:1px solid var(--av-b1); border-radius:12px; padding:14px; color:var(--text-main); font:15px 'Inter',sans-serif; margin:0 0 16px; cursor:pointer; }
+        .av2-caps { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+        .av2-cap, .av2-resp, .av2-btn2, .av2-btn-ouro, .av2-link, .av2-item button { font-family:'Inter',sans-serif; color:var(--text-main); cursor:pointer; }
+        .av2-cap { background:var(--av-p2); border:1px solid var(--av-b1); border-radius:14px; padding:18px 16px; text-align:left; transition:border-color .12s; }
+        .av2-cap:hover { border-color:var(--av-ouro); }
+        .av2-cap b { display:block; font:700 24px 'Space Grotesk',sans-serif; }
+        .av2-cap span { display:block; color:var(--av-muted); font-size:12.5px; margin-top:4px; }
+        .av2-cap .av2-tecla { float:right; font-size:11px; border:1px solid var(--av-b2); border-radius:5px; padding:0 5px; margin:0; }
+        .av2-respostas { display:grid; gap:12px; }
+        .av2-resp { display:flex; align-items:center; gap:14px; width:100%; text-align:left; border-radius:14px; padding:18px; font-weight:600; font-size:15px; border:1px solid var(--av-b1); background:var(--av-p2); transition:transform .1s, background .12s, border-color .12s; }
+        .av2-resp:active { transform:scale(.99); }
+        .av2-resp-ok { background:var(--av-ok); border-color:var(--av-ok); color:#fff; }
+        .av2-resp-ok:hover { filter:brightness(1.08); }
+        .av2-resp-def:hover { border-color:var(--av-def); background:var(--av-def-suave); }
+        .av2-resp .av2-tecla { border:1px solid currentColor; opacity:.7; border-radius:6px; font-size:11px; padding:1px 6px; font-weight:700; }
+        .av2-resp .av2-desc { margin-left:auto; font:700 15px 'Space Grotesk',sans-serif; color:var(--av-def); }
+        .av2-resp .av2-desc.av2-zero { color:var(--av-muted); font:500 12px 'Inter',sans-serif; }
+        .av2-resp.av2-marcada { outline:2px solid var(--av-ouro); outline-offset:2px; }
+        .av2-rodape { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:auto; padding-top:22px; flex-wrap:wrap; }
+        .av2-link { background:none; border:none; color:var(--av-muted); padding:6px 0; font-size:13px; }
+        .av2-link:hover { color:var(--text-main); }
+        .av2-btn2 { background:var(--av-p3); border:1px solid var(--av-b1); border-radius:10px; padding:10px 14px; font-weight:600; font-size:13px; }
+        .av2-btn2:hover { border-color:var(--av-ok); color:var(--av-ok); }
+        .av2-btn-ouro { background:var(--av-ouro); color:var(--av-ouro-txt); border:none; border-radius:10px; padding:12px 18px; font-weight:700; font-size:14px; }
+        .av2-btn-ouro:hover { filter:brightness(1.07); }
+        .av2-acoes { display:flex; gap:10px; flex-wrap:wrap; }
+        .av2-res-valores { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+        .av2-res-caixa { background:var(--av-p2); border:1px solid var(--av-b1); border-radius:14px; padding:18px; }
+        .av2-res-caixa.av2-ouro { border-color:var(--av-ouro); }
+        .av2-res-caixa small { color:var(--av-muted); font-size:12.5px; }
+        .av2-res-caixa .av2-num { display:block; font-size:34px; font-weight:700; margin-top:4px; }
+        .av2-res-caixa.av2-ouro .av2-num { color:var(--av-ouro); }
+        .av2-res-lista { list-style:none; margin:0 0 18px; padding:0; border-top:1px solid var(--av-b1); }
+        .av2-res-lista li { display:flex; justify-content:space-between; padding:9px 2px; border-bottom:1px solid var(--av-b1); font-size:13.5px; }
+        .av2-res-lista .av2-d { color:var(--av-def); font-weight:600; }
+        .av2-res-lista .av2-o { color:var(--av-muted); }
+        .av2-dica { color:var(--av-muted); font-size:13px; }
+        .av2-lado { display:flex; flex-direction:column; gap:14px; position:sticky; top:16px; }
+        .av2-cartao { background:var(--av-p1); border:1px solid var(--av-b1); border-radius:18px; padding:18px; }
+        .av2-aparelho { font:700 17px 'Space Grotesk',sans-serif; min-height:22px; color:var(--text-main); }
+        .av2-aparelho.av2-vazio { color:var(--av-muted); font:500 13px 'Inter',sans-serif; }
+        .av2-valores { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 10px; }
+        .av2-valores small { display:block; color:var(--av-muted); font-size:12px; }
+        .av2-valores .av2-num { font-size:24px; font-weight:700; display:block; line-height:1.2; color:var(--text-main); }
+        .av2-valores .av2-compra .av2-num { color:var(--av-ouro); }
+        .av2-medidor { height:6px; background:var(--av-p3); border-radius:99px; overflow:hidden; }
+        .av2-medidor i { display:block; height:100%; width:0; background:var(--av-ouro); border-radius:99px; transition:width .45s cubic-bezier(.2,.8,.2,1); }
+        .av2-medidor-txt { font-size:11.5px; color:var(--av-muted); margin-top:6px; min-height:16px; }
+        .av2-itens { list-style:none; margin:14px 0 0; padding:0; }
+        .av2-item { display:flex; align-items:center; gap:10px; padding:7px 8px; margin:0 -8px; border-radius:8px; font-size:13px; color:var(--text-main); }
+        .av2-item button { all:unset; display:flex; align-items:center; gap:10px; width:100%; cursor:pointer; }
+        .av2-item.av2-respondido:hover { background:var(--av-p3); }
+        .av2-ponto { width:10px; height:10px; border-radius:50%; border:2px solid var(--av-b2); flex-shrink:0; }
+        .av2-item.av2-ok .av2-ponto { background:var(--av-ok); border-color:var(--av-ok); }
+        .av2-item.av2-def .av2-ponto { background:var(--av-def); border-color:var(--av-def); }
+        .av2-item.av2-atual { background:var(--av-p3); }
+        .av2-item.av2-atual .av2-ponto { border-color:var(--av-ouro); }
+        .av2-item .av2-status { margin-left:auto; color:var(--av-muted); font-size:12px; }
+        .av2-item.av2-def .av2-status { color:var(--av-def); font-weight:600; }
+        .av2-item.av2-ok .av2-status { color:var(--av-ok); }
+        .av2-item.av2-pendente { color:var(--av-muted); }
+        .av2-hist-topo { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+        .av2-hist-topo h4 { margin:0; font:700 14px 'Space Grotesk',sans-serif; color:var(--text-main); }
+        .av2-hist-topo .av2-link { font-size:11.5px; padding:0; }
+        .av2-hist-vazio { color:var(--av-muted); font-size:12.5px; margin:0; }
+        .av2-hist-linha { display:flex; justify-content:space-between; gap:8px; font-size:12.5px; padding:7px 0; border-top:1px solid var(--av-b1); color:var(--text-main); }
+        .av2-hist-linha:first-child { border-top:none; }
+        .av2-hist-linha .av2-h { color:var(--av-muted); margin-left:6px; }
+        .av2-hist-linha .av2-v { white-space:nowrap; text-align:right; }
+        .av2-hist-linha .av2-v b { color:var(--av-ouro); }
+        @media (max-width: 860px) {
+            .av2-grade { grid-template-columns:1fr; gap:12px; }
+            .av2-lado { display:contents; }
+            .av2-ficha { order:-1; padding:14px 16px; }
+            .av2-hist { order:2; }
+            .av2-valores .av2-num { font-size:20px; }
+            .av2-itens { display:flex; gap:4px; margin-top:10px; }
+            .av2-item { margin:0; padding:0; flex:1; }
+            .av2-item button { gap:0; }
+            .av2-item .av2-nome, .av2-item .av2-status { display:none; }
+            .av2-ponto { width:100%; height:6px; border-radius:3px; }
+            .av2-item.av2-atual { background:none; }
+            .av2-item.av2-atual .av2-ponto { background:var(--av-ouro); }
+            .av2-palco { padding:20px; min-height:0; }
+            .av2-titulo { font-size:22px; }
+            .av2-res-caixa .av2-num { font-size:26px; }
+            .av2-atalhos { display:none; }
+        }
+        body.modo-leve .av2-cena.av2-entra { animation:none; }
+        body.modo-leve .av2-medidor i { transition:none; }
+        @media (prefers-reduced-motion: reduce) { .av2-cena.av2-entra { animation:none; } .av2-medidor i { transition:none; } }
 
         /* --- UTILITÁRIOS --- */
         .hidden { display: none !important; }
@@ -3158,124 +3265,30 @@ body.modo-claro .main-content {
                 </div>
                 <style>@keyframes girar { to { transform: rotate(360deg); } }</style>
 
-                <div id="avalHistoricoBox" style="display:none; background: var(--surface-1); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 18px; margin-bottom: 24px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                        <h3 class="sub-title" style="margin:0;font-size:0.95rem;color:var(--primary);"><i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px;"></i> Avaliações de Hoje</h3>
-                        <button onclick="avalHistoricoLimpar()" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;">limpar</button>
-                    </div>
-                    <div id="avalHistoricoLista" style="display:flex;flex-direction:column;gap:6px;"></div>
-                </div>
-
-                <div id="step1" class="step-container fade-in">
-                    <label>Selecione o modelo do aparelho do cliente:</label>
-                    <select id="modelo"><option value="iPhone 11">iPhone 11</option><option value="iPhone 11 Pro">iPhone 11 Pro</option><option value="iPhone 11 Pro Max">iPhone 11 Pro Max</option><option value="iPhone 12">iPhone 12</option><option value="iPhone 12 Mini">iPhone 12 Mini</option><option value="iPhone 12 Pro">iPhone 12 Pro</option><option value="iPhone 12 Pro Max">iPhone 12 Pro Max</option><option value="iPhone 13">iPhone 13</option><option value="iPhone 13 Mini">iPhone 13 Mini</option><option value="iPhone 13 Pro">iPhone 13 Pro</option><option value="iPhone 13 Pro Max">iPhone 13 Pro Max</option><option value="iPhone 14">iPhone 14</option><option value="iPhone 14 Plus">iPhone 14 Plus</option><option value="iPhone 14 Pro">iPhone 14 Pro</option><option value="iPhone 14 Pro Max">iPhone 14 Pro Max</option><option value="iPhone 15">iPhone 15</option><option value="iPhone 15 Plus">iPhone 15 Plus</option><option value="iPhone 15 Pro">iPhone 15 Pro</option><option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option><option value="iPhone 16">iPhone 16</option><option value="iPhone 16 Plus">iPhone 16 Plus</option><option value="iPhone 16 Pro">iPhone 16 Pro</option><option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option><option value="iPhone 16e">iPhone 16e</option><option value="iPhone 17">iPhone 17</option><option value="iPhone 17 Air">iPhone 17 Air</option><option value="iPhone 17 Pro">iPhone 17 Pro</option><option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option></select>
-                    <div style="display:flex; gap:12px; align-items:stretch; width:100%; margin-top:24px;">
-                        <button class="action-btn" style="margin-top:0; flex:5;" onclick="next(1.5)">Iniciar Diagnóstico</button>
-                        <button class="action-btn btn-tudo-ok" style="margin-top:0; flex:1; padding-left:6px; padding-right:6px; font-size:11px; letter-spacing:0.5px;" onclick="tudoOk()">Pular Avaliação</button>
-                    </div>
-                </div>
-
-                <div id="step1_5" class="step-container hidden">
-                    <label>Selecione a capacidade de armazenamento:</label>
-                    <select id="capacidade">
-                        <option value="64GB">64 GB</option>
-                        <option value="128GB" selected="">128 GB</option>
-                        <option value="256GB">256 GB</option>
-                        <option value="512GB">512 GB</option>
-                    </select>
-                    <button class="action-btn" onclick="avancarCapacidade()">Avançar</button>
-                </div>
-
-                <div id="step2" class="step-container hidden">
-                    <label>A tela está em perfeito estado?</label>
-                    <select id="tela" style="display:none"><option value="Sim">Sim, Perfeita</option><option value="Não">Não (Trincos/Manchas)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('tela','Sim',3)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, perfeita</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('tela','Não',3)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Trincos/Manchas)</button>
-                    </div>
-                </div>
-                
-                <div id="step3" class="step-container hidden">
-                    <label>A saúde da bateria está acima de 80%?</label>
-                    <select id="bateria" style="display:none"><option value="Sim">Sim</option><option value="Não">Não (Abaixo de 80% / Manutenção)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('bateria','Sim',4)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, acima de 80%</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('bateria','Não',4)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Abaixo de 80%)</button>
-                    </div>
-                </div>
-
-                <div id="step4" class="step-container hidden">
-                    <label>O vidro traseiro está intacto?</label>
-                    <select id="tampa" style="display:none"><option value="Sim">Sim, intacto</option><option value="Não">Não (Trincado/Quebrado)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('tampa','Sim',5)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, intacto</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('tampa','Não',5)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Trincado/Quebrado)</button>
-                    </div>
-                </div>
-
-                <div id="step5" class="step-container hidden">
-                    <label>A carcaça está livre de amassados profundos?</label>
-                    <select id="carcaca" style="display:none"><option value="Sim">Sim, estrutura ok</option><option value="Não">Não (Amassada/Empenada)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('carcaca','Sim',6)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, estrutura ok</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('carcaca','Não',6)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Amassada/Empenada)</button>
-                    </div>
-                </div>
-
-                <div id="step6" class="step-container hidden">
-                    <label>O módulo de câmeras traseiras opera sem defeitos?</label>
-                    <select id="cameraT" style="display:none"><option value="Sim">Sim</option><option value="Não">Não (Tremedeira/Manchas/Foco)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('cameraT','Sim',7)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, sem defeitos</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('cameraT','Não',7)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Tremedeira/Manchas/Foco)</button>
-                    </div>
-                </div>
-
-                <div id="step7" class="step-container hidden">
-                    <label>A câmera frontal opera normalmente?</label>
-                    <select id="cameraF" style="display:none"><option value="Sim">Sim</option><option value="Não">Não (Defeito/Falha)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('cameraF','Sim',8)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, normal</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('cameraF','Não',8)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Defeito/Falha)</button>
-                    </div>
-                </div>
-
-                <div id="step8" class="step-container hidden">
-                    <label>Biometria (Face ID / Touch ID) funcional?</label>
-                    <select id="faceid" style="display:none"><option value="Sim">Sim, configura normal</option><option value="Não">Não (Erro de TrueDepth/Falha)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('faceid','Sim',9)"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Sim, funcional</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('faceid','Não',9)"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não (Erro/Falha)</button>
-                    </div>
-                </div>
-
-                <div id="step9" class="step-container hidden">
-                    <label>Existem falhas graves na placa ou o aparelho não liga?</label>
-                    <select id="placa" style="display:none"><option value="Não">Aparelho Liga (Tudo OK)</option><option value="Sim">Sim (Não liga / Curto na Placa)</option></select>
-                    <div class="pergunta-botoes">
-                        <button class="btn-resposta btn-resposta-ok" onclick="responderPergunta('placa','Não','calcular')"><i data-lucide="check-circle-2" style="width:14px;height:14px;vertical-align:-2px;"></i> Aparelho Liga (Tudo OK)</button>
-                        <button class="btn-resposta btn-resposta-defeito" onclick="responderPergunta('placa','Sim','calcular')"><i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i> Não liga / Curto na Placa</button>
-                    </div>
-                </div>
-
-                <div id="resultado" class="result-box hidden">
-                    <div id="infoAparelho" style="color:var(--text-main); margin-bottom:20px; font-size: 1.5em; text-transform: uppercase; letter-spacing: 2px;">iPhone 15 Pro (128GB)</div>
-                    
-                    <div class="form-grid" style="margin-bottom: 20px;">
-                        <div style="background: var(--surface-2); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                            <span style="font-size:12px; color:var(--text-muted); font-weight:600; letter-spacing:1px;">Valor de troca</span>
-                            <div id="resTroca" class="val-destaque" style="color: #e74c3c;">R$ 2600,00</div>
+                <!-- Avaliação reformulada (out/2026): palco com uma pergunta por vez + ficha ao vivo.
+                     Tudo é desenhado pelo JS av2* (ver "AVALIAÇÃO — FLUXO NOVO"). -->
+                <div class="av2-grade">
+                    <section class="av2-palco" aria-live="polite">
+                        <div class="av2-rotulo"><span id="av2Rotulo"></span><span class="av2-atalhos" id="av2Atalhos"></span></div>
+                        <h3 class="av2-titulo" id="av2Titulo"></h3>
+                        <div class="av2-cena" id="av2Cena"></div>
+                    </section>
+                    <aside class="av2-lado">
+                        <div class="av2-cartao av2-ficha">
+                            <div class="av2-aparelho av2-vazio" id="av2Aparelho">Escolha o modelo para começar</div>
+                            <div class="av2-valores">
+                                <div><small>Troca</small><span class="av2-num" id="av2Troca">—</span></div>
+                                <div class="av2-compra"><small>Compra</small><span class="av2-num" id="av2Compra">—</span></div>
+                            </div>
+                            <div class="av2-medidor" aria-hidden="true"><i id="av2Medidor"></i></div>
+                            <div class="av2-medidor-txt" id="av2MedidorTxt"></div>
+                            <ul class="av2-itens" id="av2Itens"></ul>
                         </div>
-                        <div style="background: rgba(212, 175, 55, 0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--border-highlight);">
-                            <span style="font-size:12px; color:var(--text-muted); font-weight:600; letter-spacing:1px;">Valor na compra</span>
-                            <div id="resVenda" class="val-destaque">R$ 2000,00</div>
+                        <div class="av2-cartao av2-hist">
+                            <div class="av2-hist-topo"><h4>Avaliações de hoje</h4><button type="button" class="av2-link" onclick="avalHistoricoLimpar()">limpar</button></div>
+                            <div id="avalHistoricoLista"></div>
                         </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 15px;">
-                        <button class="action-btn success-btn" id="btnCopiar" onclick="copiarResumo()" style="margin-top: 0;"><i data-lucide="clipboard-copy" style="width:14px;height:14px;"></i> Copiar Resumo</button>
-                        <button class="action-btn secondary-btn" onclick="voltarInicio()" style="margin-top: 0;">↻ Nova Avaliação</button>
-                    </div>
+                    </aside>
                 </div>
             </div>
 
@@ -6290,10 +6303,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     function popularSelects() {
         const s1 = document.getElementById("modelo");
         const s2 = document.getElementById("adminModelo");
-        s1.innerHTML = ""; s2.innerHTML = "";
+        if (s1) s1.innerHTML = "";
+        if (s2) s2.innerHTML = "";
         listaModelos.forEach(m => {
-            s1.add(new Option(m, m));
-            s2.add(new Option(m, m));
+            if (s1) s1.add(new Option(m, m));
+            if (s2) s2.add(new Option(m, m));
         });
     }
 
@@ -8777,29 +8791,27 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         } catch (e) { lista = []; }
         const hoje = avalHojeStr();
         lista = lista.filter(item => item.data === hoje);
-        lista.unshift(entrada);
+        const jaExiste = entrada.id ? lista.findIndex(item => item.id === entrada.id) : -1;
+        if (jaExiste >= 0) lista[jaExiste] = entrada; else lista.unshift(entrada);
         try { localStorage.setItem(AVAL_HISTORICO_KEY, JSON.stringify(lista)); } catch (e) {}
         avalHistoricoRenderizar(lista);
     }
 
+    // Histórico guarda "1600,00" (formato antigo); na tela mostra "R$ 1.600"
+    function av2HistValor(txt) {
+        const n = Number(String(txt || '').replace(/\./g, '').replace(',', '.'));
+        return isFinite(n) ? 'R$ ' + Math.round(n).toLocaleString('pt-BR') : 'R$ ' + escapeHTML(txt);
+    }
+
     function avalHistoricoRenderizar(lista) {
-        const box = document.getElementById('avalHistoricoBox');
         const cont = document.getElementById('avalHistoricoLista');
-        if (!box || !cont) return;
-        if (!lista || !lista.length) { box.style.display = 'none'; cont.innerHTML = ''; return; }
-        box.style.display = 'block';
+        if (!cont) return;
+        if (!lista || !lista.length) { cont.innerHTML = '<p class="av2-hist-vazio">As avaliações feitas hoje aparecem aqui.</p>'; return; }
         cont.innerHTML = lista.map(item => `
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(0,0,0,0.25);border-radius:8px;padding:8px 12px;font-size:12px;">
-                <div>
-                    <span style="font-weight:600;color:var(--text-main);">${item.modelo} (${item.capacidade})</span>
-                    <span style="color:var(--text-muted);margin-left:8px;">${item.hora}</span>
-                </div>
-                <div style="text-align:right;white-space:nowrap;">
-                    <span style="color:#e74c3c;font-weight:600;">Troca R$ ${item.valorTroca}</span>
-                    <span style="color:var(--primary);font-weight:600;margin-left:10px;">Venda R$ ${item.valorVenda}</span>
-                </div>
-            </div>
-        `).join('');
+            <div class="av2-hist-linha">
+                <span>${escapeHTML(String(item.modelo || '').replace('iPhone ', ''))} ${escapeHTML(String(item.capacidade || '').replace('GB', ''))}<span class="av2-h">${escapeHTML(item.hora || '')}</span></span>
+                <span class="av2-v av2-num">${av2HistValor(item.valorTroca)} / <b>${av2HistValor(item.valorVenda)}</b></span>
+            </div>`).join('');
     }
 
     function avalHistoricoLimpar() {
@@ -8808,118 +8820,253 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         avalHistoricoRenderizar([]);
     }
 
-    function next(n) {
-        ["step1","step1_5","step2","step3","step4","step5","step6","step7","step8","step9","resultado"].forEach(id => {
-            let el = document.getElementById(id);
-            if(el) { el.classList.add("hidden"); el.classList.remove("fade-in"); }
-        });
-        let stepId = n === 1.5 ? "step1_5" : "step" + n;
-        let proximoPasso = document.getElementById(stepId);
-        if(proximoPasso) { proximoPasso.classList.remove("hidden"); void proximoPasso.offsetWidth; proximoPasso.classList.add("fade-in"); }
+    // ==========================================
+    // AVALIAÇÃO — FLUXO NOVO (out/2026)
+    // Modelo (caixa) → capacidade → 8 perguntas, uma por vez, com a ficha ao vivo do lado.
+    // A conta é a MESMA de antes: (base + ajuste da capacidade) − soma dos descontos, mínimo 0.
+    // O resumo copiado tem o mesmo texto de antes.
+    // ==========================================
+    const AV2_PERGUNTAS = [
+        { id: 'tela',    campo: 'tela', nome: 'Tela',           p: 'A tela está em perfeito estado?',              ok: 'Sim, perfeita',         def: 'Não, trincos ou manchas' },
+        { id: 'bateria', campo: 'bat',  nome: 'Bateria',        p: 'A saúde da bateria está acima de 80%?',        ok: 'Sim, acima de 80%',     def: 'Não, abaixo de 80%' },
+        { id: 'tampa',   campo: 'tam',  nome: 'Tampa Traseira', p: 'O vidro traseiro está intacto?',               ok: 'Sim, intacto',          def: 'Não, trincado ou quebrado' },
+        { id: 'carcaca', campo: 'car',  nome: 'Carcaça',        p: 'A carcaça está livre de amassados profundos?', ok: 'Sim, estrutura ok',     def: 'Não, amassada ou empenada' },
+        { id: 'cameraT', campo: 'ct',   nome: 'Câm. Traseira',  p: 'As câmeras traseiras funcionam sem defeito?',  ok: 'Sim, sem defeitos',     def: 'Não, tremedeira, mancha ou foco' },
+        { id: 'cameraF', campo: 'cf',   nome: 'Câm. Frontal',   p: 'A câmera frontal funciona normalmente?',       ok: 'Sim, normal',           def: 'Não, com defeito' },
+        { id: 'faceid',  campo: 'fid',  nome: 'Face ID',        p: 'Face ID / Touch ID funciona?',                 ok: 'Sim, configura normal', def: 'Não, erro ou falha' },
+        // Pergunta escrita no positivo de propósito: "Sim" é sempre a resposta boa (atalho S/N).
+        { id: 'placa',   campo: 'pla',  nome: 'Placa/Ligar',    p: 'O aparelho liga, sem falha grave na placa?',   ok: 'Sim, liga normal',      def: 'Não liga ou curto na placa' }
+    ];
+
+    // Capacidades que cada modelo tem de fábrica (só essas aparecem). Modelo fora da lista: 128/256/512.
+    const AV2_CAPS_REAIS = {
+        'iPhone 11': ['64GB','128GB','256GB'], 'iPhone 11 Pro': ['64GB','256GB','512GB'], 'iPhone 11 Pro Max': ['64GB','256GB','512GB'],
+        'iPhone 12': ['64GB','128GB','256GB'], 'iPhone 12 Mini': ['64GB','128GB','256GB'],
+        'iPhone 17': ['256GB','512GB'], 'iPhone 17 Air': ['256GB','512GB'], 'iPhone 17 Pro': ['256GB','512GB'], 'iPhone 17 Pro Max': ['256GB','512GB']
+    };
+    function av2CapsDo(modelo) { return AV2_CAPS_REAIS[modelo] || ['128GB','256GB','512GB']; }
+
+    function av2NovoEstado() { return { etapa: 'modelo', modelo: null, cap: null, resp: {}, atual: 0, voltandoPara: null, id: null, contado: false }; }
+    let av2St = av2NovoEstado();
+
+    // Valor do banco pode vir como texto ("300.00"): sempre converter antes de somar.
+    function av2N(x) { const n = Number(x); return isFinite(n) ? n : 0; }
+    function av2Brl(v) { return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
+    function av2Brl2(v) { return v.toFixed(2).replace('.', ','); }
+    function av2SemAnimacao() {
+        return document.body.classList.contains('modo-leve') || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+    function av2Ajuste(d, cap) { return av2N({ '64GB': d.adj64, '128GB': d.adj128, '256GB': d.adj256, '512GB': d.adj512 }[cap]); }
+
+    function av2Totais() {
+        if (!av2St.modelo || !banco[av2St.modelo]) return null;
+        const d = banco[av2St.modelo];
+        const aj = av2St.cap ? av2Ajuste(d, av2St.cap) : 0;
+        let desc = 0;
+        AV2_PERGUNTAS.forEach(q => { if (av2St.resp[q.id] === 'def') desc += av2N(d[q.campo]); });
+        const cheia = av2N(d.tro) + aj;
+        return { troca: Math.max(0, cheia - desc), compra: Math.max(0, av2N(d.ven) + aj - desc), cheia, desc };
     }
 
-    // Responde a pergunta do diagnóstico com um único toque: grava a
-    // resposta no <select> escondido (pra não mexer no restante da lógica
-    // de cálculo) e já avança pro próximo passo sozinho — sem precisar de
-    // um segundo clique em "Avançar".
-    function responderPergunta(idCampo, valor, proximo) {
-        const el = document.getElementById(idCampo);
-        if (el) el.value = valor;
-        if (proximo === 'calcular') calcular();
-        else next(proximo);
+    // Número que "rola" até o valor novo quando muda (desligado no Modo leve)
+    const _av2Atual = {};
+    function av2AnimarValor(id, alvo) {
+        const el = document.getElementById(id); if (!el) return;
+        if (alvo == null) { el.textContent = '—'; _av2Atual[id] = null; return; }
+        const de = _av2Atual[id] == null ? alvo : _av2Atual[id];
+        _av2Atual[id] = alvo;
+        if (av2SemAnimacao() || de === alvo) { el.textContent = av2Brl(alvo); return; }
+        const t0 = performance.now(), dur = 420;
+        (function passo(t) {
+            const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+            el.textContent = av2Brl(de + (alvo - de) * e);
+            if (k < 1 && _av2Atual[id] === alvo) requestAnimationFrame(passo);
+        })(t0);
     }
 
-    let modoTudoOk = false;
-
-    function tudoOk() {
-        modoTudoOk = true;
-        next(1.5);
+    function av2DesenharFicha() {
+        const ap = document.getElementById('av2Aparelho'); if (!ap) return;
+        if (av2St.modelo) { ap.classList.remove('av2-vazio'); ap.textContent = av2St.modelo + (av2St.cap ? ' · ' + av2St.cap.replace('GB', ' GB') : ''); }
+        else { ap.classList.add('av2-vazio'); ap.textContent = 'Escolha o modelo para começar'; }
+        const t = av2Totais();
+        av2AnimarValor('av2Troca', t ? t.troca : null);
+        av2AnimarValor('av2Compra', t ? t.compra : null);
+        const pct = !t ? 0 : (t.cheia > 0 ? Math.max(0, t.troca / t.cheia * 100) : 100);
+        document.getElementById('av2Medidor').style.width = pct + '%';
+        document.getElementById('av2MedidorTxt').textContent = t && t.desc > 0 ? 'Descontos até agora: ' + av2Brl(t.desc) : (t ? 'Sem descontos até agora' : '');
+        const d = av2St.modelo ? banco[av2St.modelo] : null;
+        const podeMudar = av2St.etapa === 'pergunta' || av2St.etapa === 'resultado';
+        document.getElementById('av2Itens').innerHTML = AV2_PERGUNTAS.map((q, i) => {
+            const r = av2St.resp[q.id];
+            const atual = av2St.etapa === 'pergunta' && av2St.atual === i;
+            const cls = r === 'ok' ? 'av2-ok av2-respondido' : r === 'def' ? 'av2-def av2-respondido' : 'av2-pendente';
+            const status = r === 'ok' ? 'ok' : r === 'def' ? (d && av2N(d[q.campo]) ? '− ' + av2Brl(av2N(d[q.campo])) : 'defeito') : '';
+            const miolo = `<span class="av2-ponto"></span><span class="av2-nome">${q.nome}</span><span class="av2-status">${status}</span>`;
+            return `<li class="av2-item ${cls}${atual ? ' av2-atual' : ''}">${r && podeMudar ? `<button type="button" data-av2-ir="${i}" title="Mudar resposta">${miolo}</button>` : miolo}</li>`;
+        }).join('');
     }
 
-    function avancarCapacidade() {
-        if (modoTudoOk) {
-            calcularTudoOk();
-        } else {
-            next(2);
-        }
+    function av2Cena(html, voltando) {
+        const c = document.getElementById('av2Cena'); if (!c) return;
+        c.innerHTML = html;
+        c.classList.remove('av2-entra', 'av2-volta'); void c.offsetWidth;
+        c.classList.add('av2-entra'); if (voltando) c.classList.add('av2-volta');
+    }
+    function av2Cabecalho(rotulo, titulo, atalhos) {
+        document.getElementById('av2Rotulo').textContent = rotulo;
+        document.getElementById('av2Titulo').textContent = titulo;
+        document.getElementById('av2Atalhos').textContent = atalhos || '';
     }
 
-    function calcular() { 
-        const m = document.getElementById("modelo").value;
-        const cap = document.getElementById("capacidade").value; 
-        const d = banco[m];
-        if(!d) return alert("Erro crítico: Modelo não encontrado na Avaliação!");
-
-        let ajusteGiga = 0;
-        if (cap === "64GB") ajusteGiga = d.adj64 || 0;
-        else if (cap === "128GB") ajusteGiga = d.adj128 || 0;
-        else if (cap === "256GB") ajusteGiga = d.adj256 || 0;
-        else if (cap === "512GB") ajusteGiga = d.adj512 || 0;
-
-        let desc = 0; let listaStatus = [];
-        const verificar = (id, valor, nome) => {
-            const el = document.getElementById(id); if(!el) return;
-            const isDefeito = (id === "placa") ? el.value === "Sim" : el.value === "Não";
-            if(isDefeito) { desc += valor; listaStatus.push("❌ " + nome); } else { listaStatus.push("✅ " + nome); }
-        };
-
-        verificar("tela", d.tela, "Tela"); verificar("bateria", d.bat, "Bateria");
-        verificar("tampa", d.tam, "Tampa Traseira"); verificar("carcaca", d.car, "Carcaça");
-        verificar("cameraT", d.ct, "Câm. Traseira"); verificar("cameraF", d.cf, "Câm. Frontal");
-        verificar("faceid", d.fid, "Face ID"); verificar("placa", d.pla, "Placa/Ligar");
-
-        const tTroca = Math.max(0, (d.tro + ajusteGiga) - desc);
-        const tVenda = Math.max(0, (d.ven + ajusteGiga) - desc);
-
-        document.getElementById("step9").classList.add("hidden");
-
-        finalizarAvaliacao(m, cap, tTroca, tVenda, listaStatus);
+    function av2TelaModelo(voltando) {
+        if (!document.getElementById('av2Cena')) return;
+        av2St.etapa = 'modelo';
+        av2Cabecalho('Passo 1 de 3', 'Selecione o modelo do aparelho do cliente', '');
+        const atual = av2St.modelo || listaModelos[0];
+        av2Cena(`<select class="av2-select" id="av2SelModelo">${listaModelos.map(m => `<option value="${escapeHTML(m)}"${m === atual ? ' selected' : ''}>${escapeHTML(m)}</option>`).join('')}</select>
+            <div class="av2-acoes"><button type="button" class="av2-btn-ouro" data-av2-acao="continuar">Continuar</button></div>`, voltando);
+        av2DesenharFicha();
     }
 
-    function calcularTudoOk() {
-        const m = document.getElementById("modelo").value;
-        const cap = document.getElementById("capacidade").value;
-        const d = banco[m];
-        if(!d) return alert("Erro crítico: Modelo não encontrado na Avaliação!");
-
-        let ajusteGiga = 0;
-        if (cap === "64GB") ajusteGiga = d.adj64 || 0;
-        else if (cap === "128GB") ajusteGiga = d.adj128 || 0;
-        else if (cap === "256GB") ajusteGiga = d.adj256 || 0;
-        else if (cap === "512GB") ajusteGiga = d.adj512 || 0;
-
-        const listaStatus = ["✅ Tela", "✅ Bateria", "✅ Tampa Traseira", "✅ Carcaça", "✅ Câm. Traseira", "✅ Câm. Frontal", "✅ Face ID", "✅ Placa/Ligar"];
-
-        const tTroca = Math.max(0, d.tro + ajusteGiga);
-        const tVenda = Math.max(0, d.ven + ajusteGiga);
-
-        document.getElementById("step1_5").classList.add("hidden");
-        modoTudoOk = false;
-
-        finalizarAvaliacao(m, cap, tTroca, tVenda, listaStatus);
+    function av2EscolherModelo(m) {
+        if (!banco[m]) return mostrarToast('Modelo não encontrado na tabela de avaliação.', 'erro');
+        if (av2St.modelo !== m) { av2St.resp = {}; av2St.cap = null; }
+        av2St.modelo = m;
+        av2TelaCapacidade();
     }
 
-    function finalizarAvaliacao(m, cap, tTroca, tVenda, listaStatus) {
-        let painelResult = document.getElementById("resultado");
-        painelResult.classList.remove("hidden"); void painelResult.offsetWidth; painelResult.classList.add("fade-in");
+    function av2TelaCapacidade(voltando) {
+        av2St.etapa = 'capacidade';
+        const caps = av2CapsDo(av2St.modelo), d = banco[av2St.modelo];
+        av2Cabecalho('Passo 2 de 3', 'Qual a capacidade?', 'Teclas 1 a ' + caps.length + ' escolhem, ← volta');
+        av2Cena(`<div class="av2-caps">${caps.map((c, i) => `
+                <button type="button" class="av2-cap" data-av2-cap="${c}"><span class="av2-tecla">${i + 1}</span><b class="av2-num">${c.replace('GB', ' GB')}</b>
+                <span>Troca até ${av2Brl(av2N(d.tro) + av2Ajuste(d, c))}</span></button>`).join('')}</div>
+            <div class="av2-rodape"><button type="button" class="av2-link" data-av2-acao="voltarModelo">← Trocar modelo</button></div>`, voltando);
+        av2DesenharFicha();
+    }
+    function av2EscolherCap(c) {
+        av2St.cap = c;
+        const prox = AV2_PERGUNTAS.findIndex(q => !av2St.resp[q.id]);
+        if (prox === -1) av2TelaResultado(); else av2IrPergunta(prox);
+    }
 
-        document.getElementById("infoAparelho").innerText = m + " (" + cap + ")";
-        document.getElementById("resTroca").innerText = "R$ " + tTroca.toFixed(2).replace(".",",");
-        document.getElementById("resVenda").innerText = "R$ " + tVenda.toFixed(2).replace(".",",");
+    function av2IrPergunta(i, voltando) {
+        av2St.etapa = 'pergunta'; av2St.atual = i;
+        const q = AV2_PERGUNTAS[i], v = av2N(banco[av2St.modelo][q.campo]), r = av2St.resp[q.id];
+        av2Cabecalho('Passo 3 de 3: pergunta ' + (i + 1) + ' de ' + AV2_PERGUNTAS.length, q.p, 'S = sim, N = não, ← volta');
+        const faltam = AV2_PERGUNTAS.filter(x => !av2St.resp[x.id] && x.id !== q.id).length;
+        av2Cena(`<div class="av2-respostas">
+                <button type="button" class="av2-resp av2-resp-ok${r === 'ok' ? ' av2-marcada' : ''}" data-av2-resp="ok"><span class="av2-tecla">S</span>${q.ok}</button>
+                <button type="button" class="av2-resp av2-resp-def${r === 'def' ? ' av2-marcada' : ''}" data-av2-resp="def"><span class="av2-tecla">N</span>${q.def}
+                    ${v ? `<span class="av2-desc av2-num">− ${av2Brl(v)}</span>` : '<span class="av2-desc av2-zero">sem desconto na tabela</span>'}</button>
+            </div>
+            <div class="av2-rodape">
+                <button type="button" class="av2-link" data-av2-acao="voltar">← Voltar</button>
+                ${av2St.voltandoPara ? '' : `<button type="button" class="av2-btn2" data-av2-acao="restoOk">Marcar ${faltam ? 'tudo que falta' : 'esta'} como ok e ver valor</button>`}
+            </div>`, voltando);
+        av2DesenharFicha();
+    }
 
-        resumoParaCopiar = "*DIAGNÓSTICO TÉCNICO*\n📱 " + m + " " + cap + "\n\n" + listaStatus.join("\n") + "\n\n🔄 CUSTO TROCA: R$ " + tTroca.toFixed(2).replace(".",",") + "\n💰 VALOR VENDA: R$ " + tVenda.toFixed(2).replace(".",",") + "\n_Valores sujeitos a análise física final._";
+    let _av2Avanco = null;
+    function av2Responder(valor) {
+        if (av2St.etapa !== 'pergunta') return;
+        const q = AV2_PERGUNTAS[av2St.atual];
+        av2St.resp[q.id] = valor;
+        av2DesenharFicha();
+        if (av2St.voltandoPara === 'resultado') { av2St.voltandoPara = null; return av2TelaResultado(); }
+        const depois = AV2_PERGUNTAS.findIndex((x, i) => i > av2St.atual && !av2St.resp[x.id]);
+        const alvo = depois !== -1 ? depois : AV2_PERGUNTAS.findIndex(x => !av2St.resp[x.id]);
+        // Trava a tela no meio da troca: um clique duplo não responde a próxima pergunta sem querer
+        av2St.etapa = 'avancando';
+        clearTimeout(_av2Avanco);
+        _av2Avanco = setTimeout(() => alvo === -1 ? av2TelaResultado() : av2IrPergunta(alvo), av2SemAnimacao() ? 0 : 140);
+    }
 
+    function av2TelaResultado() {
+        av2St.etapa = 'resultado';
+        const t = av2Totais(), d = banco[av2St.modelo];
+        const listaStatus = AV2_PERGUNTAS.map(q => (av2St.resp[q.id] === 'def' ? '❌ ' : '✅ ') + q.nome);
+        const defeitos = AV2_PERGUNTAS.filter(q => av2St.resp[q.id] === 'def');
+        av2Cabecalho('Avaliação pronta', av2St.modelo + ' · ' + av2St.cap.replace('GB', ' GB'), 'C copia o resumo, Enter começa outra');
+        av2Cena(`<div class="av2-res-valores">
+                <div class="av2-res-caixa"><small>Valor de troca</small><span class="av2-num">${av2Brl(t.troca)}</span></div>
+                <div class="av2-res-caixa av2-ouro"><small>Valor na compra</small><span class="av2-num">${av2Brl(t.compra)}</span></div>
+            </div>
+            <ul class="av2-res-lista">${defeitos.length
+                ? defeitos.map(q => `<li><span>${q.nome}</span><span class="av2-d av2-num">− ${av2Brl(av2N(d[q.campo]))}</span></li>`).join('')
+                : '<li><span>Nenhum defeito encontrado</span><span class="av2-o">valor cheio</span></li>'}</ul>
+            <div class="av2-acoes">
+                <button type="button" class="av2-btn-ouro" id="av2BtnCopiar" data-av2-acao="copiar">Copiar resumo</button>
+                <button type="button" class="av2-btn2" data-av2-acao="nova">Nova avaliação</button>
+            </div>
+            <div class="av2-rodape"><span class="av2-dica">Toque num item da ficha para mudar a resposta.</span></div>`);
+
+        // Mesmo texto do resumo antigo
+        resumoParaCopiar = "*DIAGNÓSTICO TÉCNICO*\n📱 " + av2St.modelo + " " + av2St.cap + "\n\n" + listaStatus.join("\n") +
+            "\n\n🔄 CUSTO TROCA: R$ " + av2Brl2(t.troca) + "\n💰 VALOR VENDA: R$ " + av2Brl2(t.compra) + "\n_Valores sujeitos a análise física final._";
+
+        // Corrigir uma resposta depois atualiza a mesma linha do histórico (não duplica)
+        if (!av2St.id) av2St.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         avalHistoricoSalvar({
-            modelo: m,
-            capacidade: cap,
-            valorTroca: tTroca.toFixed(2).replace(".", ","),
-            valorVenda: tVenda.toFixed(2).replace(".", ","),
+            id: av2St.id, modelo: av2St.modelo, capacidade: av2St.cap,
+            valorTroca: av2Brl2(t.troca), valorVenda: av2Brl2(t.compra),
             hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             data: avalHojeStr()
         });
-
-        incrementarContador();
+        if (!av2St.contado) { av2St.contado = true; incrementarContador(); }
+        av2DesenharFicha();
     }
+
+    const av2Acoes = {
+        continuar: () => { const s = document.getElementById('av2SelModelo'); if (s) av2EscolherModelo(s.value); },
+        voltarModelo: () => av2TelaModelo(true),
+        voltar: () => {
+            if (av2St.voltandoPara === 'resultado') { av2St.voltandoPara = null; return av2TelaResultado(); }
+            if (av2St.atual === 0) return av2TelaCapacidade(true);
+            av2IrPergunta(av2St.atual - 1, true);
+        },
+        restoOk: () => { AV2_PERGUNTAS.forEach(q => { if (!av2St.resp[q.id]) av2St.resp[q.id] = 'ok'; }); av2TelaResultado(); },
+        copiar: () => copiarResumo(),
+        nova: () => voltarInicio()
+    };
+
+    document.addEventListener('click', (e) => {
+        const raiz = e.target.closest && e.target.closest('#menu-inicio'); if (!raiz) return;
+        const ir = e.target.closest('[data-av2-ir]');
+        if (ir) { av2St.voltandoPara = av2St.etapa === 'resultado' ? 'resultado' : null; return av2IrPergunta(+ir.dataset.av2Ir, true); }
+        const cap = e.target.closest('[data-av2-cap]'); if (cap) return av2EscolherCap(cap.dataset.av2Cap);
+        const resp = e.target.closest('[data-av2-resp]'); if (resp) return av2Responder(resp.dataset.av2Resp);
+        const ac = e.target.closest('[data-av2-acao]'); if (ac && av2Acoes[ac.dataset.av2Acao]) return av2Acoes[ac.dataset.av2Acao]();
+    });
+
+    // Atalhos de teclado: só valem com a aba de Avaliação na tela, sem modal aberto e fora de campos de texto
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const aba = document.getElementById('menu-inicio');
+        if (!aba || aba.classList.contains('hidden') || aba.offsetParent === null) return;
+        if (document.querySelector('.modal-overlay.ativo')) return;
+        const tag = (e.target.tagName || '').toUpperCase();
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+        const k = (e.key || '').toLowerCase();
+        if (av2St.etapa === 'capacidade') {
+            const caps = av2CapsDo(av2St.modelo), n = parseInt(k, 10);
+            if (n >= 1 && n <= caps.length) { e.preventDefault(); av2EscolherCap(caps[n - 1]); }
+            else if (k === 'arrowleft' || k === 'backspace') { e.preventDefault(); av2TelaModelo(true); }
+        } else if (av2St.etapa === 'pergunta') {
+            if (k === 's' || k === '1') { e.preventDefault(); av2Responder('ok'); }
+            else if (k === 'n' || k === '2') { e.preventDefault(); av2Responder('def'); }
+            else if (k === 'arrowleft' || k === 'backspace') { e.preventDefault(); av2Acoes.voltar(); }
+        } else if (av2St.etapa === 'resultado') {
+            if (k === 'c') { e.preventDefault(); copiarResumo(); }
+            else if (k === 'enter' && tag !== 'BUTTON') { e.preventDefault(); voltarInicio(); }
+        }
+    });
+
+    // Desenha a tela inicial só depois que a página inteira carregou: escapeHTML() mora em
+    // outro bloco <script> mais abaixo e ainda não existe neste ponto. O try garante que um
+    // erro aqui nunca interrompe o resto deste bloco.
+    document.addEventListener('DOMContentLoaded', () => { try { av2TelaModelo(); } catch (e) { console.error('Avaliação:', e); } });
 
     // Copia texto pra área de transferência de um jeito que funciona tanto no site publicado
     // (HTTPS, usa a API moderna) quanto testando local (abrindo o arquivo .html direto —
@@ -8952,24 +9099,19 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!resumoParaCopiar) return;
         copiarParaAreaDeTransferencia(resumoParaCopiar).then((ok) => {
             if (!ok) { mostrarToast('Não consegui copiar. Copie manualmente.', 'erro'); return; }
-            const btn = document.getElementById("btnCopiar"); btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Texto Copiado!'; if (window.lucide) lucide.createIcons();
-            setTimeout(() => { btn.innerHTML = '<i data-lucide="clipboard-copy" style="width:14px;height:14px;"></i> Copiar Resumo'; if (window.lucide) lucide.createIcons(); }, 2000);
+            mostrarToast('Resumo copiado');
+            const btn = document.getElementById('av2BtnCopiar');
+            if (btn) { btn.textContent = 'Copiado!'; setTimeout(() => { if (btn.isConnected) btn.textContent = 'Copiar resumo'; }, 2000); }
         });
     }
 
+    // Chamada ao entrar na aba (mudarAba) e em "Nova avaliação": começa do zero.
     function voltarInicio() {
-        ["step1_5","step2","step3","step4","step5","step6","step7","step8","step9","resultado"].forEach(id => {
-            let el = document.getElementById(id); if(el){ el.classList.add("hidden"); el.classList.remove("fade-in"); }
-        });
-        modoTudoOk = false;
         resumoParaCopiar = "";
-        let step1 = document.getElementById("step1");
-        if(step1){ step1.classList.remove("hidden"); void step1.offsetWidth; step1.classList.add("fade-in"); }
+        av2St = av2NovoEstado();
+        av2TelaModelo();
         avalHistoricoCarregar();
     }
-
-
-
 
     // ==========================================
     // LÓGICA DA ABA: ADMIN
