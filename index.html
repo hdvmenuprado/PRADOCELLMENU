@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261017120000">
+    <meta name="app-build" content="20261021120000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2320,6 +2320,13 @@ body.modo-claro .main-content {
         .crm-filtro-mes { padding:9px 11px; border-radius:8px; border:1px solid var(--border-color); background:var(--surface-2);
             color:var(--text-main); font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; }
         .crm-aviso-busca { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+        /* Barras de pesquisa por campo, em cima da lista de vendas */
+        .crm-filtros { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)) auto; gap:8px; max-width:1300px; margin-bottom:12px; }
+        .crm-filtros .ep-search { margin-bottom:0; padding:8px 12px; font-size:12.5px; min-width:0; }
+        .crm-filtros .ep-search.ativo { border-color:var(--primary); }
+        .crm-filtros-limpar { padding:0 12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-muted); font-size:12px; cursor:pointer; white-space:nowrap; }
+        .crm-filtros-limpar:hover { color:var(--text-main); border-color:var(--primary); }
+        @media (max-width: 900px) { .crm-filtros { grid-template-columns:repeat(2, minmax(0,1fr)); } .crm-filtros-limpar { padding:8px 12px; } }
         /* QR do cadastro pro cliente */
         .crm-btn-qr { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; padding:0;
             background:none; border:1px solid var(--border-color); border-radius:8px; color:var(--text-muted); cursor:pointer; }
@@ -3300,6 +3307,16 @@ body.modo-claro .main-content {
                         <span id="crmLoadingStatus" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--primary);font-weight:600;white-space:nowrap;"><canvas data-orb="searching" data-orb-tamanho="20" aria-label="Carregando"></canvas>Carregando da nuvem...</span>
                         <button class="ep-btn" onclick="crmAbrirModalCadastro()" style="display:inline-flex;align-items:center;gap:5px;"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> Cadastrar Cliente</button>
                         <button type="button" class="crm-btn-qr" onclick="crmMostrarQrCliente()" title="Mostrar QR code do cadastro pro cliente"><i data-lucide="qr-code" style="width:15px;height:15px;"></i></button>
+                    </div>
+
+                    <!-- PESQUISA POR CAMPO (somam entre si e com a busca geral) -->
+                    <div class="crm-filtros" id="crmFiltros">
+                        <input type="search" class="ep-search" data-crm-campo="nome" placeholder="Nome do cliente" oninput="crmFiltrarTabela()" autocomplete="off">
+                        <input type="search" class="ep-search" data-crm-campo="modelo" placeholder="Modelo" oninput="crmFiltrarTabela()" autocomplete="off">
+                        <input type="search" class="ep-search" data-crm-campo="imei" placeholder="IMEI" inputmode="numeric" oninput="crmFiltrarTabela()" autocomplete="off">
+                        <input type="search" class="ep-search" data-crm-campo="vendedor" placeholder="Vendedor" oninput="crmFiltrarTabela()" autocomplete="off">
+                        <input type="search" class="ep-search" data-crm-campo="telefone" placeholder="Telefone" inputmode="tel" oninput="crmFiltrarTabela()" autocomplete="off">
+                        <button type="button" class="crm-filtros-limpar" onclick="crmLimparFiltros()" title="Limpar as pesquisas">Limpar</button>
                     </div>
 
                     <!-- TABELA -->
@@ -10222,12 +10239,46 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         crmFiltrarTabela();
     }
 
+    // Pesquisa por campo (barras em cima da lista). Texto: sem acento/maiúscula.
+    // IMEI e telefone: só os dígitos, então "(11) 9 8888" acha "11988881234".
+    function crmNormTexto(v) { return String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+    function crmSoDigitos(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
+    const CRM_CAMPOS_FILTRO = {
+        nome:     { valor: c => c.nome,     digitos: false },
+        modelo:   { valor: c => c.produto,  digitos: false },
+        imei:     { valor: c => c.imei,     digitos: true },
+        vendedor: { valor: c => c.vendedor, digitos: false },
+        telefone: { valor: c => c.telefone, digitos: true },
+    };
+    function crmFiltrosAtivos() {
+        const ativos = [];
+        document.querySelectorAll('#crmFiltros [data-crm-campo]').forEach(inp => {
+            const def = CRM_CAMPOS_FILTRO[inp.dataset.crmCampo];
+            if (!def) return;
+            const busca = def.digitos ? crmSoDigitos(inp.value) : crmNormTexto(inp.value);
+            inp.classList.toggle('ativo', !!busca);
+            if (busca) ativos.push({ def, busca });
+        });
+        return ativos;
+    }
+    function crmLimparFiltros() {
+        document.querySelectorAll('#crmFiltros [data-crm-campo]').forEach(inp => { inp.value = ''; });
+        crmFiltrarTabela();
+    }
+
     function crmFiltrarTabela() {
         const termoEl = document.getElementById('crmPesquisa');
         const termo = (termoEl ? termoEl.value : '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        const filtros = crmFiltrosAtivos();
         let resultado = _crmListaCompleta;
         const aviso = document.getElementById('crmAvisoBusca');
-        if (termo) {
+        if (filtros.length) {
+            resultado = resultado.filter(c => filtros.every(({ def, busca }) => {
+                const v = def.valor(c);
+                return (def.digitos ? crmSoDigitos(v) : crmNormTexto(v)).includes(busca);
+            }));
+        }
+        if (termo || filtros.length) {
             // Buscando: procura em TODOS os meses, senão um cliente antigo (que voltou por
             // causa de garantia, por exemplo) sumiria só porque o filtro está em "Mês atual"
             resultado = resultado.filter(c => {
@@ -10374,7 +10425,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         const tbody = document.getElementById('crmLinhas');
         if (!tbody) return;
         if (!lista || !lista.length) {
-            tbody.innerHTML = '<tr><td colspan="8" class="ep-empty">Nenhum cliente cadastrado.</td></tr>';
+            const buscando = (document.getElementById('crmPesquisa')?.value || '').trim()
+                || [...document.querySelectorAll('#crmFiltros [data-crm-campo]')].some(i => i.value.trim());
+            tbody.innerHTML = `<tr><td colspan="8" class="ep-empty">${buscando ? 'Nenhuma venda encontrada com essa pesquisa.' : 'Nenhum cliente cadastrado.'}</td></tr>`;
             return;
         }
         const hojeStr = crmHojeStr();
