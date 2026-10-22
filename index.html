@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261022230000">
+    <meta name="app-build" content="20261023010000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -476,11 +476,18 @@
         .ast-tag.ok { color:#4ade80; border:1px solid rgba(74,222,128,.4); }
         .ast-tag.venc { color:#f87171; border:1px solid rgba(248,113,113,.4); }
         .ast-tag.zero { color:var(--ast-suave); border:1px solid var(--ast-borda); }
+        .ast-msg.ia.carregando { width:auto; padding:8px 10px; }
         .ast-fonte { font-size:11px; color:var(--ast-suave); margin-top:6px; }
-        .ast-digitando { display:inline-flex; gap:4px; padding:2px 0; }
-        .ast-digitando i { width:7px; height:7px; border-radius:50%; background:var(--ast-suave); animation:astPisca 1s infinite ease-in-out; }
-        .ast-digitando i:nth-child(2) { animation-delay:.15s; } .ast-digitando i:nth-child(3) { animation-delay:.3s; }
-        @keyframes astPisca { 0%, 80%, 100% { opacity:.25; transform:translateY(0); } 40% { opacity:1; transform:translateY(-3px); } }
+        /* Orbe "pensando": cores girando por dentro + brilho fixo + respiração */
+        .ast-orbe { position:relative; display:block; width:30px; height:30px; border-radius:50%; overflow:hidden; margin:2px 0;
+            box-shadow:0 0 14px rgba(212,175,55,.55), 0 0 28px rgba(122,162,255,.35); animation:astRespira 1.8s ease-in-out infinite; }
+        .ast-orbe::before { content:""; position:absolute; inset:-35%; filter:blur(4px);
+            background:conic-gradient(from 0deg, #d4af37, #f7e08a, #7aa2ff, #b18cff, #d4af37); animation:astGira 1.3s linear infinite; }
+        .ast-orbe::after { content:""; position:absolute; inset:0; border-radius:50%;
+            background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.9), rgba(255,255,255,0) 34%), radial-gradient(circle, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%); }
+        @keyframes astGira { to { transform:rotate(360deg); } }
+        @keyframes astRespira { 0%, 100% { transform:scale(.9); box-shadow:0 0 10px rgba(212,175,55,.45), 0 0 20px rgba(122,162,255,.25); }
+            50% { transform:scale(1.06); box-shadow:0 0 18px rgba(212,175,55,.75), 0 0 34px rgba(122,162,255,.45); } }
         .ast-form { display:flex; gap:8px; padding:12px 14px 14px; border-top:1px solid var(--ast-borda); }
         .ast-form input { flex:1; min-width:0; background:var(--ast-campo); border:1px solid var(--ast-borda); color:var(--ast-texto);
             border-radius:12px; padding:11px 13px; font-size:14px; }
@@ -495,7 +502,7 @@
         }
         @media (prefers-reduced-motion: reduce) {
             .ast-gaveta, .ast-veu { transition:none; }
-            .ast-digitando i { animation:none; opacity:.6; }
+            .ast-orbe, .ast-orbe::before { animation-duration:4s; }
         }
 
         /* --- SINO DE AVISOS (flutuante, canto inferior direito) --- */
@@ -10948,6 +10955,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         'quais os estão prontas?', 'tem bateria de iphone 11?', 'tem os reaberta?', 'os em custódia'];
     const AST_DICAS_GESTAO = ['qual o faturamento da assistência?', 'quantas garantias tivemos esse mês?', 'faturamento do mês passado'];
     let _astOcupado = false, _astIniciado = false;
+    // Memória da conversa: últimas perguntas + o que foi entendido (nada de dados da loja).
+    let _astHist = [];
 
     function astSortearDicas() {
         const pool = AST_DICAS.concat(typeof PERFIL_ATUAL !== 'undefined' && PERFIL_ATUAL === 'gestao' ? AST_DICAS_GESTAO : []).slice();
@@ -10999,9 +11008,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
         let acao = 'desconhecido';
         const rel = astInterpretarRelatorio(p);
-        if (rel) return rel;
+        if (rel) return Object.assign(rel, { forte: true });
+        const preco = astInterpretarPreco(p);
+        if (preco) return preco;
         const os = astInterpretarOS(p, pergunta);
-        if (os) return os;
+        if (os) return Object.assign(os, { forte: !!os.os_codigo || /\bo\.?s\b|ordem|conserto/.test(p) });
         if (/garantia|vend(eu|emos|i|a|as)\b|comprou|cliente|quem/.test(p) || (dig && !/pra vender|para vender|a venda/.test(p))) acao = 'vendas';
         else if (AST_PALAVRAS_PECA.some(w => new RegExp('(^|\\W)' + astNorm(w) + '(\\W|$)').test(p))) acao = 'pecas';
         else if (/pra vender|para vender|a venda|disponivel|tem (um |uma )?(iphone|samsung|galaxy|xiaomi|redmi|moto|celular|aparelho)|iphone|aparelho/.test(p)) acao = 'aparelhos';
@@ -11059,10 +11070,57 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         return { acao: 'os', os_codigo: cod, status, tecnico: tec, cliente: cli, termos, imei: '', telefone: (p.match(/\b\d{10,11}\b/) || [''])[0], codigo: '', vendedor: '', garantia: /garantia/.test(p) };
     }
 
+    // Preço de serviço ("preço de troca de tela do iphone 11", "quanto fica a bateria do a54")
+    const AST_PALAVRAS_SERVICO = ['tela','display','oled','bateria','conector','carga','camera','tampa','vidro','carcaca','botao','power','formatacao','formatar','windows','lente','flex','alto','falante','microfone','face','touch','placa','software','desbloqueio'];
+    const AST_VERBOS_SERVICO = /^(troca|trocar|preco|precos|valor|valores|quanto|custa|fica|sai|cobra|cobramos|servico|servicos|conserto|reparo|consertar|fazer|faz|pra|por)$/;
+    function astEhServico(w) { return AST_PALAVRAS_SERVICO.includes(w); }
+    function astInterpretarPreco(p) {
+        const precoPalavra = /pre[cç]o|\bvalor|quanto (custa|fica|sai|cobra|e\b|é\b|ta\b|tá\b)|\bcobr/.test(p);
+        const toks = p.replace(/[?!.,;:]/g, ' ').split(/\s+/).filter(Boolean);
+        const temServico = toks.some(astEhServico) || /\btroca\b|servico/.test(p);
+        if (!precoPalavra || !temServico) return null;
+        const termos = toks.filter(w => !AST_VAZIAS.has(w) && !AST_VERBOS_SERVICO.test(w)).join(' ');
+        return { acao: 'precos', termos, forte: true, cliente: '', imei: '', telefone: '', codigo: '', vendedor: '', garantia: false };
+    }
+    // Pergunta curta/"e ..." continua a anterior: mantém a ação e troca só o que mudou.
+    function astMesclarContexto(local, pergunta) {
+        const ult = _astHist.length ? _astHist[_astHist.length - 1].i : null;
+        if (!ult) return local;
+        const p = astNorm(pergunta).replace(/[?!.,;:()"]/g, ' ').replace(/\s+/g, ' ').trim();
+        const continua = /^(e|tambem|agora|so|mas|e\s+(o|a|os|as|do|da|no|na|pra|de))\b/.test(p) || p.split(/\s+/).length <= 3;
+        if (local.acao !== 'desconhecido' && (local.forte || !continua)) return local;
+        if (local.acao !== 'desconhecido' && local.acao === ult.acao && !continua) return local;
+        if (!continua && local.acao === 'desconhecido') return local;
+        const m = Object.assign({}, ult);
+        const novos = astTokens(p.replace(/^(e|tambem|agora|so|mas)\s+/, ''));
+        if (['precos', 'pecas'].includes(ult.acao)) {
+            const antes = astTokens(ult.termos || '');
+            const servNovo = novos.filter(astEhServico), modNovo = novos.filter(w => !astEhServico(w) && !AST_VERBOS_SERVICO.test(w) && !/^(norte|sul|loja)$/.test(w));
+            const serv = servNovo.length ? servNovo : antes.filter(astEhServico);
+            const mod = modNovo.length ? modNovo : antes.filter(w => !astEhServico(w));
+            m.termos = serv.concat(mod).join(' ');
+        } else if (['vendas', 'aparelhos', 'os'].includes(ult.acao)) {
+            const mod = novos.filter(w => !/^(norte|sul|loja|prontas?|abertas?|reabertas?|custodia|orcando|aguardando|aprovadas?|retiradas?|reprovadas?|andamento|garantia)$/.test(w));
+            if (mod.length) m.termos = mod.join(' ');
+            if (ult.acao === 'os') for (const [st, re] of AST_STATUS_OS) if (re.test(p)) { m.status = st; break; }
+        }
+        if (ult.acao === 'relatorio') {
+            const r = astInterpretarRelatorio('faturamento ' + p);
+            if (r) {
+                if (/hoje|ontem|semana|mes passado|ultimo mes|ano|sempre|tudo|janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro/.test(p)) { m.periodo = r.periodo; m.mes = r.mes; }
+            }
+            if (/garantia/.test(p)) m.metrica = 'garantias';
+            else if (/assist|o\.?s\b/.test(p)) m.metrica = 'faturamento_assistencia';
+            else if (/venda/.test(p)) m.metrica = 'faturamento_vendas';
+        }
+        if (/\bnorte\b/.test(p)) m.loja = 'norte'; else if (/\bsul\b/.test(p)) m.loja = 'sul'; else if (/(as )?duas lojas|todas/.test(p)) m.loja = '';
+        return m;
+    }
+
     // ---- comparação de termos ("tela s23" casa com "Tela s23 ULTRA SOFT") ----
     const AST_SINONIMOS = { samsung:['samsung','sam','galaxy'], sam:['samsung','sam'], galaxy:['samsung','sam','galaxy'], motorola:['motorola','moto','mto'], moto:['motorola','moto','mto'], mto:['motorola','moto','mto'],
         redmi:['redmi','rm'], rm:['redmi','rm'], iphone:['iphone','ip'], ip:['iphone','ip'], tela:['tela','display','oled','lcd'], display:['tela','display','oled','lcd'], camera:['camera','cam'], bateria:['bateria','bat'] };
-    function astTokens(termos) { return astNorm(termos).split(/[\s/]+/).filter(w => w && !AST_VAZIAS.has(w)); }
+    function astTokens(termos) { return astNorm(termos).replace(/[?!.,;:()"]/g, ' ').split(/[\s/]+/).filter(w => w && !AST_VAZIAS.has(w)); }
     function astBate(texto, tokens) {
         const alvo = ' ' + astNorm(texto).replace(/[^a-z0-9]+/g, ' ') + ' ';
         return tokens.every(t => (AST_SINONIMOS[t] || [t]).some(v => alvo.includes(' ' + v.replace(/[^a-z0-9]+/g, ' ').trim())));
@@ -11075,20 +11133,25 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!pergunta) return;
         _astOcupado = true; document.getElementById('astEnviarBtn').disabled = true;
         inp.value = ''; astMsgEu(pergunta);
-        const bolha = astMsgIa('<span class="ast-digitando" aria-label="Procurando"><i></i><i></i><i></i></span>');
+        const bolha = astMsgIa('<span class="ast-orbe" role="img" aria-label="Procurando"></span>');
+        bolha.classList.add('carregando');
         let intencao = null, fonte = 'local';
         try {
-            const { data, error } = await supabaseDB.functions.invoke('assistente', { body: { pergunta } });
+            const contexto = _astHist.slice(-4).map(t => ({ p: t.p, i: t.i }));
+            const { data, error } = await supabaseDB.functions.invoke('assistente', { body: { pergunta, contexto } });
             if (!error && data && data.ok && data.intencao) { intencao = data.intencao; fonte = 'gemini'; }
         } catch (e) { /* cai no intérprete local */ }
         if (!intencao || intencao.acao === 'desconhecido') {
-            const local = astInterpretarLocal(pergunta);
+            const local = astMesclarContexto(astInterpretarLocal(pergunta), pergunta);
             if (!intencao || local.acao !== 'desconhecido') { intencao = local; fonte = 'local'; }
         }
         try {
             bolha.innerHTML = await astExecutar(intencao);
+            bolha.classList.remove('carregando');
             bolha.dataset.fonte = fonte; // gemini | local (só pra conferência, não aparece na tela)
+            if (intencao.acao !== 'desconhecido') { _astHist.push({ p: pergunta, i: intencao }); _astHist = _astHist.slice(-6); }
         } catch (e) {
+            bolha.classList.remove('carregando');
             bolha.innerHTML = `<span class="mp-erro">Não consegui buscar: ${mpEsc(e.message || e)}</span>`;
         } finally {
             _astOcupado = false; document.getElementById('astEnviarBtn').disabled = false;
@@ -11102,7 +11165,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (it.acao === 'aparelhos') return astBuscarAparelhos(it);
         if (it.acao === 'relatorio') return astRelatorio(it);
         if (it.acao === 'os') return astBuscarOS(it);
-        return `Não entendi bem. Tente perguntar sobre uma <b>venda/garantia</b> ("garantia do a54"), uma <b>peça</b> ("tem tela de s23?"), uma <b>O.S.</b> ("como tá a os da maria?", "quais estão prontas?"), um <b>aparelho à venda</b> ("tem iphone 13?") ou, no perfil Gestão, <b>números</b> ("faturamento da assistência", "quantas garantias tivemos").`;
+        if (it.acao === 'precos') return astBuscarPrecos(it);
+        return `Não entendi bem. Tente perguntar sobre uma <b>venda/garantia</b> ("garantia do a54"), uma <b>peça</b> ("tem tela de s23?"), uma <b>O.S.</b> ("como tá a os da maria?", "quais estão prontas?"), um <b>preço de serviço</b> ("troca de tela do iphone 11"), um <b>aparelho à venda</b> ("tem iphone 13?") ou, no perfil Gestão, <b>números</b> ("faturamento da assistência", "quantas garantias tivemos").`;
     }
     function astResumoFiltro(it) {
         return [it.termos, it.cliente, it.imei && 'IMEI ' + it.imei, it.codigo && 'código ' + it.codigo, it.telefone && 'tel. ' + it.telefone, it.vendedor && 'vendedor ' + it.vendedor].filter(Boolean).join(', ');
@@ -11311,6 +11375,40 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                 <div class="l2">${mpEsc(o.codigo || '')} · ${o.data ? mpEsc(crmFormatarDataBR(o.data)) : '-'}${o.tecnico ? ' · técnico ' + mpEsc(o.tecnico) : ''}${gestao && o.total != null ? ' · ' + mpMoeda(parseFloat(o.total) || 0) : ''}${gar}${reab}</div>
                 ${o.reparo ? `<div class="l2">${mpEsc(String(o.reparo).replace(/\n+/g, ' · '))}</div>` : ''}</div>`;
         });
+    }
+
+    // ---- Preços de serviço (tabela da aba Valores de Serviços; todos os perfis veem) ----
+    let _astServicos = null, _astServicosEm = 0;
+    async function astCarregarServicos() {
+        if (_astServicos && Date.now() - _astServicosEm < 300000) return _astServicos;
+        const { data, error } = await supabaseDB.from('servicos_itens').select('servico, valor, servicos_modelos(nome, servicos_marcas(nome))');
+        if (error) throw new Error(error.message);
+        _astServicos = (data || []).map(i => {
+            const mo = i.servicos_modelos || {}, ma = mo.servicos_marcas || {};
+            return { servico: i.servico || '', valor: Number(i.valor) || 0, modelo: mo.nome || '', marca: ma.nome || '' };
+        }).filter(i => i.modelo);
+        _astServicosEm = Date.now();
+        return _astServicos;
+    }
+    async function astBuscarPrecos(it) {
+        const tokens = astTokens(it.termos).filter(w => !AST_VERBOS_SERVICO.test(w));
+        const serv = tokens.filter(astEhServico), mod = tokens.filter(w => !astEhServico(w));
+        if (!mod.length) return `De qual modelo? Ex.: <b>iPhone 11</b>, <b>A54</b>, <b>Moto G54</b>.`;
+        const todos = await astCarregarServicos();
+        const doModelo = todos.filter(i => astBate(i.marca + ' ' + i.modelo, mod));
+        if (!doModelo.length) return `Não achei <b>${mpEsc(mod.join(' '))}</b> na tabela de Valores de Serviços.`;
+        // "iphone 11" prefere o modelo exato a "iphone 11 pro"/"11 pro max"
+        const sobra = i => astTokens(i.marca + ' ' + i.modelo).filter(w => !mod.some(t => (AST_SINONIMOS[t] || [t]).includes(w))).filter(w => !astTokens(i.marca).includes(w)).length;
+        const menor = Math.min(...doModelo.map(sobra));
+        const exatos = doModelo.filter(i => sobra(i) === menor);
+        let lista = exatos.filter(i => !serv.length || astBate(i.servico, serv));
+        if (!lista.length) return `Na tabela do <b>${mpEsc(exatos[0].modelo)}</b> não tem <b>${mpEsc(serv.join(' '))}</b>. Tem: ${[...new Set(exatos.map(i => i.servico))].map(mpEsc).join(', ')}.`;
+        const porModelo = {};
+        lista.forEach(i => { const k = (i.marca && !/apple/i.test(i.marca) ? i.marca + ' ' : '') + i.modelo; (porModelo[k] = porModelo[k] || []).push(i); });
+        const nomes = Object.keys(porModelo).slice(0, 4);
+        return nomes.map(nome => `<b>${mpEsc(nome)}</b><div class="ast-res">${porModelo[nome].sort((a, b) => a.valor - b.valor).map(i =>
+            `<div class="ast-item"><div class="l1"><span>${mpEsc(i.servico)}</span><span class="mp-valor">${mpMoeda(i.valor)}</span></div></div>`).join('')}</div>`).join('<div style="height:8px"></div>')
+            + (Object.keys(porModelo).length > 4 ? `<div class="ast-fonte">…e mais ${Object.keys(porModelo).length - 4} modelos.</div>` : '');
     }
 
     async function astBuscarAparelhos(it) {
