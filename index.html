@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261023010000">
+    <meta name="app-build" content="20261023020000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -478,16 +478,7 @@
         .ast-tag.zero { color:var(--ast-suave); border:1px solid var(--ast-borda); }
         .ast-msg.ia.carregando { width:auto; padding:8px 10px; }
         .ast-fonte { font-size:11px; color:var(--ast-suave); margin-top:6px; }
-        /* Orbe "pensando": cores girando por dentro + brilho fixo + respiração */
-        .ast-orbe { position:relative; display:block; width:30px; height:30px; border-radius:50%; overflow:hidden; margin:2px 0;
-            box-shadow:0 0 14px rgba(212,175,55,.55), 0 0 28px rgba(122,162,255,.35); animation:astRespira 1.8s ease-in-out infinite; }
-        .ast-orbe::before { content:""; position:absolute; inset:-35%; filter:blur(4px);
-            background:conic-gradient(from 0deg, #d4af37, #f7e08a, #7aa2ff, #b18cff, #d4af37); animation:astGira 1.3s linear infinite; }
-        .ast-orbe::after { content:""; position:absolute; inset:0; border-radius:50%;
-            background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.9), rgba(255,255,255,0) 34%), radial-gradient(circle, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%); }
-        @keyframes astGira { to { transform:rotate(360deg); } }
-        @keyframes astRespira { 0%, 100% { transform:scale(.9); box-shadow:0 0 10px rgba(212,175,55,.45), 0 0 20px rgba(122,162,255,.25); }
-            50% { transform:scale(1.06); box-shadow:0 0 18px rgba(212,175,55,.75), 0 0 34px rgba(122,162,255,.45); } }
+        .ast-msg.ia.carregando canvas { display:block; }
         .ast-form { display:flex; gap:8px; padding:12px 14px 14px; border-top:1px solid var(--ast-borda); }
         .ast-form input { flex:1; min-width:0; background:var(--ast-campo); border:1px solid var(--ast-borda); color:var(--ast-texto);
             border-radius:12px; padding:11px 13px; font-size:14px; }
@@ -502,7 +493,6 @@
         }
         @media (prefers-reduced-motion: reduce) {
             .ast-gaveta, .ast-veu { transition:none; }
-            .ast-orbe, .ast-orbe::before { animation-duration:4s; }
         }
 
         /* --- SINO DE AVISOS (flutuante, canto inferior direito) --- */
@@ -10980,6 +10970,17 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && document.body.classList.contains('ast-aberto')) astAlternar(false);
     });
+    // Orbe de "pensando" (thinking-orbs.js, já usado nas telas de carregamento do app).
+    // working = entendendo a pergunta; depois troca pelo jeito da busca.
+    const AST_ORBE_POR_ACAO = { vendas: 'searching', os: 'searching', pecas: 'searching', aparelhos: 'searching', precos: 'connecting', relatorio: 'solving' };
+    function astOrbe(bolha, estado, rotulo) {
+        const c = document.createElement('canvas');
+        c.setAttribute('data-orb', estado);
+        c.setAttribute('data-orb-tamanho', '32');
+        c.setAttribute('aria-label', rotulo);
+        bolha.replaceChildren(c);
+        if (window.ThinkingOrb) window.ThinkingOrb.montar(c);
+    }
     function astUsarDica(btn) { document.getElementById('astPergunta').value = btn.textContent; astEnviar(); }
     function astMsgEu(txt) { astAdd('eu', mpEsc(txt)); }
     function astMsgIa(html) { return astAdd('ia', html); }
@@ -11133,8 +11134,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!pergunta) return;
         _astOcupado = true; document.getElementById('astEnviarBtn').disabled = true;
         inp.value = ''; astMsgEu(pergunta);
-        const bolha = astMsgIa('<span class="ast-orbe" role="img" aria-label="Procurando"></span>');
+        const bolha = astMsgIa('');
         bolha.classList.add('carregando');
+        astOrbe(bolha, 'working', 'Pensando');
         let intencao = null, fonte = 'local';
         try {
             const contexto = _astHist.slice(-4).map(t => ({ p: t.p, i: t.i }));
@@ -11146,6 +11148,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             if (!intencao || local.acao !== 'desconhecido') { intencao = local; fonte = 'local'; }
         }
         try {
+            astOrbe(bolha, AST_ORBE_POR_ACAO[intencao.acao] || 'searching', 'Procurando');
             bolha.innerHTML = await astExecutar(intencao);
             bolha.classList.remove('carregando');
             bolha.dataset.fonte = fonte; // gemini | local (só pra conferência, não aparece na tela)
