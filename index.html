@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261021120000">
+    <meta name="app-build" content="20261022160000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -2320,6 +2320,34 @@ body.modo-claro .main-content {
         .crm-filtro-mes { padding:9px 11px; border-radius:8px; border:1px solid var(--border-color); background:var(--surface-2);
             color:var(--text-main); font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; }
         .crm-aviso-busca { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+        /* Cadastro de Vendas: abas internas (Vendas | Consulta de estoque) */
+        .crm-subabas { display:inline-flex; gap:4px; padding:4px; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-card); margin:0 0 14px; }
+        .crm-subaba { border:none; background:none; color:var(--text-muted); font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+        .crm-subaba:hover { color:var(--text-main); }
+        .crm-subaba.ativa { background:var(--primary); color:#111; }
+        /* Consulta de estoque (Mercado Phone, só leitura) */
+        .mp-topo { display:flex; gap:8px; align-items:center; flex-wrap:wrap; max-width:1300px; margin-bottom:12px; }
+        .mp-topo .ep-search { flex:1; min-width:220px; margin-bottom:0; }
+        .mp-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-size:12.5px; cursor:pointer; white-space:nowrap; }
+        .mp-btn:hover { border-color:var(--primary); }
+        .mp-btn:disabled { opacity:.55; cursor:wait; }
+        .mp-info { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+        .mp-erro { color:#f87171; font-size:12.5px; padding:10px 0; }
+        .mp-cod { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:11.5px; color:var(--text-muted); }
+        .mp-imei { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:11px; color:var(--text-muted); }
+        .mp-valor { font-family:'JetBrains Mono', ui-monospace, monospace; font-weight:700; white-space:nowrap; }
+        .mp-chip { display:inline-block; font-size:10.5px; padding:2px 7px; border-radius:20px; border:1px solid var(--border-color); color:var(--text-muted); white-space:nowrap; }
+        .mp-chip.novo { color:#4ade80; border-color:rgba(74,222,128,.4); }
+        /* Busca do Mercado Phone dentro do modal de venda */
+        .mp-puxar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:0 0 12px; padding:10px; border:1px dashed var(--border-highlight, var(--border-color)); border-radius:10px; }
+        .mp-puxar label { font-size:11.5px; color:var(--text-muted); width:100%; margin:0; }
+        .mp-puxar input { flex:1; min-width:180px; }
+        .mp-puxar-res { width:100%; font-size:12.5px; }
+        .mp-puxar-res .mp-op { display:flex; justify-content:space-between; gap:10px; width:100%; text-align:left; padding:8px 10px; margin-top:6px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); cursor:pointer; font-size:12.5px; }
+        .mp-puxar-res .mp-op:hover { border-color:var(--primary); }
+        .mp-aviso { color:#e0a52e; }
+        .mp-ok { color:#4ade80; }
+        .mp-preenchido { border-color:#4ade80 !important; box-shadow:0 0 0 2px rgba(74,222,128,.2) !important; }
         /* Barras de pesquisa por campo, em cima da lista de vendas */
         .crm-filtros { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)) auto; gap:8px; max-width:1300px; margin-bottom:12px; }
         .crm-filtros .ep-search { margin-bottom:0; padding:8px 12px; font-size:12.5px; min-width:0; }
@@ -3251,6 +3279,13 @@ body.modo-claro .main-content {
                         <span class="ep-tag">clientes &amp; garantias</span>
                     </div>
 
+                    <div class="crm-subabas" role="tablist">
+                        <button type="button" class="crm-subaba ativa" id="crmSubabaVendas" onclick="crmTrocarSubaba('vendas')"><i data-lucide="shopping-cart" style="width:14px;height:14px;"></i> Vendas</button>
+                        <button type="button" class="crm-subaba" id="crmSubabaEstoque" onclick="crmTrocarSubaba('estoque')"><i data-lucide="package-search" style="width:14px;height:14px;"></i> Consulta de estoque</button>
+                    </div>
+
+                    <div id="crmPainelVendas">
+
                     <!-- ESTATÍSTICAS -->
                     <div class="ep-stats">
                         <div class="ep-stat">
@@ -3298,7 +3333,7 @@ body.modo-claro .main-content {
 
                     <!-- BUSCA + CADASTRO -->
                     <div style="display:flex;align-items:center;gap:10px;max-width:1300px;margin-bottom:12px;flex-wrap:wrap;">
-                        <input type="text" id="crmPesquisa" placeholder="Pesquisar por nome, CPF ou telefone..." oninput="crmFiltrarTabela()" class="ep-search" style="flex:1;min-width:220px;margin-bottom:0;">
+                        <input type="text" id="crmPesquisa" placeholder="Pesquisar por nome, CPF, telefone ou código..." oninput="crmFiltrarTabela()" class="ep-search" style="flex:1;min-width:220px;margin-bottom:0;">
                         <select id="crmFiltroMes" onchange="crmAoTrocarMes()" class="crm-filtro-mes" title="Mostrar as vendas de qual mês">
                             <option value="atual">Mês atual</option>
                             <option value="todos">Todos os meses</option>
@@ -3338,6 +3373,34 @@ body.modo-claro .main-content {
                                 <tr><td colspan="8" class="ep-empty">Carregando...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                    </div><!-- /crmPainelVendas -->
+
+                    <!-- CONSULTA DE ESTOQUE (Mercado Phone) — só leitura -->
+                    <div id="crmPainelEstoque" style="display:none;">
+                        <div class="mp-topo">
+                            <input type="search" id="mpBusca" class="ep-search" placeholder="Pesquisar por modelo, cor, código ou IMEI..." oninput="mpRenderizarEstoque()" autocomplete="off">
+                            <button type="button" class="mp-btn" id="mpBtnAtualizar" onclick="mpCarregarEstoque(true)"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Atualizar</button>
+                            <span class="mp-info" id="mpInfo"></span>
+                        </div>
+                        <div class="ep-table-wrap">
+                            <table class="ep-table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Aparelho</th>
+                                        <th>Estado</th>
+                                        <th>Bateria</th>
+                                        <th>IMEI</th>
+                                        <th style="text-align:right;">Valor de venda</th>
+                                        <th>Entrada</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mpLinhas">
+                                    <tr><td colspan="7" class="ep-empty">Abra esta aba para carregar o estoque.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5065,6 +5128,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             <div id="crmPreCadLista" class="crm-precad-lista" style="display:none;"></div>
             <div id="crmPreCadUsado" class="crm-precad-usado" style="display:none;"></div>
         </div>
+        <div class="mp-puxar" id="mpPuxarBarra">
+            <label for="mpPuxarCodigo">Puxar aparelho do estoque Mercado Phone (código ou IMEI)</label>
+            <input type="text" id="mpPuxarCodigo" inputmode="numeric" autocomplete="off" placeholder="Ex: 11404660" onkeydown="if(event.key==='Enter'){event.preventDefault();mpPuxarBuscar();}">
+            <button type="button" class="mp-btn" id="mpPuxarBtn" onclick="mpPuxarBuscar()"><i data-lucide="search" style="width:14px;height:14px;"></i> Buscar</button>
+            <div class="mp-puxar-res" id="mpPuxarRes"></div>
+        </div>
         <input type="hidden" id="crmId" value="">
         <input type="hidden" id="crmPreCadId" value="">
         <div class="form-grid-3">
@@ -5143,6 +5212,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
                     <input type="number" id="crmValorPagamento2" min="0" step="0.01" placeholder="Valor pago nessa forma (R$)" style="flex:1;min-width:150px;">
                     <button type="button" onclick="crmRemoverSegundaForma()" style="display:inline-flex;background:none;border:none;color:#f87171;cursor:pointer;font-size:12px;padding:0 6px;white-space:nowrap;" title="Remover 2ª forma de pagamento"><i data-lucide="trash-2" style="width:13px;height:13px;"></i> Remover</button>
                 </div>
+            </div>
+            <div class="form-group">
+                <label>Código do Aparelho <span style="color:#f87171;" title="Obrigatório">*</span></label>
+                <input type="text" id="crmCodigoAparelho" inputmode="numeric" autocomplete="off" placeholder="Código no Mercado Phone">
             </div>
             <div class="form-group">
                 <label>IMEI do Aparelho</label>
@@ -9661,6 +9734,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         const cliente = document.getElementById("crmNome").value.trim();
         const dias = parseInt(document.getElementById("crmDiasGarantia").value) || 90;
         if(!cliente) return alert("O Nome do Cliente é obrigatório!");
+        if (!crmValidarCodigoAparelho()) return;
 
         gerandoPDFGarantia = true;
         const botao = document.getElementById('crmBtnEmitirGarantia');
@@ -9735,6 +9809,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmOrigem').value = c.origem || '';
         document.getElementById('crmAparelhoTroca').value = c.aparelhoTroca || '';
         document.getElementById('crmImei').value = c.imei || '';
+        document.getElementById('crmCodigoAparelho').value = c.codigoAparelho || '';
         document.getElementById('crmDiasGarantia').value = c.diasGarantia || 90;
         document.getElementById('crmObservacoes').value = c.observacoes || '';
         document.getElementById('crmValorAparelho').value = c.valorAparelho || '';
@@ -10073,6 +10148,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             origem: c.origem || null,
             aparelho_troca: c.aparelhoTroca || null,
             imei: c.imei || null,
+            codigo_aparelho: c.codigoAparelho || null,
             vendedor: c.vendedor || null,
             dias_garantia: c.diasGarantia ? parseInt(c.diasGarantia) : 90,
             data_fim_garantia: c.dataFimGarantia || null,
@@ -10099,6 +10175,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             origem: row.origem,
             aparelhoTroca: row.aparelho_troca,
             imei: row.imei,
+            codigoAparelho: row.codigo_aparelho,
             vendedor: row.vendedor,
             diasGarantia: row.dias_garantia,
             dataFimGarantia: row.data_fim_garantia,
@@ -10282,7 +10359,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             // Buscando: procura em TODOS os meses, senão um cliente antigo (que voltou por
             // causa de garantia, por exemplo) sumiria só porque o filtro está em "Mês atual"
             resultado = resultado.filter(c => {
-                const alvo = [c.nome, c.cpf, c.telefone, c.produto].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const alvo = [c.nome, c.cpf, c.telefone, c.produto, c.codigoAparelho].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
                 return alvo.includes(termo);
             });
             if (aviso) aviso.style.display = crmMesSelecionado() === 'todos' ? 'none' : '';
@@ -10437,11 +10514,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             return `<tr>
                 <td style="font-weight:600;color:var(--text-main);max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="${c.nome || ''}">${c.nome || '-'}<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;">${c.cpf || '-'}</div></td>
                 <td style="color:var(--text-muted);font-size:12px;">${c.telefone || '-'}</td>
-                <td style="color:var(--text-main);max-width:130px;overflow:hidden;text-overflow:ellipsis;" title="${c.produto || ''}">${c.produto || '-'}${c.imei ? '<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;" title="IMEI">IMEI: ' + c.imei + '</div>' : ''}</td>
+                <td style="color:var(--text-main);max-width:130px;overflow:hidden;text-overflow:ellipsis;" title="${c.produto || ''}">${c.produto || '-'}${c.codigoAparelho ? '<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;" title="Código do aparelho">Cód: ' + c.codigoAparelho + '</div>' : ''}${c.imei ? '<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;" title="IMEI">IMEI: ' + c.imei + '</div>' : ''}</td>
                 <td class="ep-mono" style="font-size:12px;"><span>${c.valorAparelho ? epLikeMoeda(c.valorAparelho) : '-'}</span><div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px;font-family:'Inter',sans-serif;">${crmDescricaoPagamento(c)}</div></td>
                 <td style="color:var(--text-muted);font-size:12px;">${crmFormatarDataBR(c.dataCompra)}</td>
                 <td style="font-size:12px;font-weight:${vencida ? '700' : '400'};color:${vencida ? '#f87171' : 'var(--text-muted)'};">${crmFormatarDataBR(fimGarantia)}</td>
-                <td style="color:var(--text-muted);font-size:12px;">${c.vendedor || '-'}</td>
+                <td style="color:var(--text-muted);font-size:12px;">${c.vendedor || '-'}${c.origem ? '<div style="font-size:10px;margin-top:2px;" title="Por onde o cliente veio">' + c.origem + '</div>' : ''}</td>
                 <td style="text-align:center;white-space:nowrap;">
                     <button class="crmBtnMaisOpcoes" onclick="crmAbrirMenuPontinhos(this, '${c.id}')" title="Mais opções" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:2px 6px;border-radius:4px;display:inline-flex;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
@@ -10505,7 +10582,9 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             campo('Próximo Aniversário', crmFormatarDataBR(crmProximoAniversario(c.dataNascimento))) +
             campo('Endereço', c.endereco) +
             campo('Produto', c.produto) +
+            campo('Código do Aparelho', c.codigoAparelho) +
             campo('IMEI', c.imei) +
+            campo('Origem do Cliente', c.origem) +
             campo('Valor do Aparelho', c.valorAparelho ? epLikeMoeda(c.valorAparelho) : null) +
             campo('Forma de Pagamento', crmDescricaoPagamento(c)) +
             campo('Data da Compra', crmFormatarDataBR(c.dataCompra)) +
@@ -10671,6 +10750,147 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         setTimeout(() => { const el = document.getElementById('crmNome'); if (el) el.focus(); }, 100);
     }
 
+    // ==================================================================
+    // MERCADO PHONE (somente leitura) — via Edge Function "mercadophone".
+    // A chave da API fica no servidor; o app só pede "estoque" ou "buscar".
+    // ==================================================================
+    function mpEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+    function mpNomeBonito(t) {
+        const especiais = { iphone:'iPhone', ipad:'iPad', macbook:'MacBook', airpods:'AirPods', imac:'iMac', se:'SE', mm:'mm', gb:'GB', tb:'TB' };
+        return String(t || '').toLowerCase().split(/(\s+)/).map(p => especiais[p] || (/^\d/.test(p) ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1))).join('');
+    }
+    function mpCapacidade(gb) {
+        const n = parseFloat(gb);
+        if (!gb || isNaN(n)) return '';
+        return n <= 4 ? n + 'TB' : n + 'GB';
+    }
+    // "iPhone 15 Pro Max 256GB Azul" — texto que vai pro campo "O que Comprou"
+    function mpTituloItem(i) {
+        return [mpNomeBonito(i.modelo), mpCapacidade(i.gb), mpNomeBonito(i.cor)].filter(Boolean).join(' ').trim();
+    }
+    function mpMoeda(v) {
+        if (v == null || isNaN(v)) return '—';
+        return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+    async function mpChamar(corpo) {
+        const { data, error } = await supabaseDB.functions.invoke('mercadophone', { body: corpo });
+        if (error) {
+            let msg = error.message || 'Falha ao consultar o Mercado Phone.';
+            try { const det = await error.context.json(); if (det && det.mensagem) msg = det.mensagem; } catch (e) {}
+            throw new Error(msg);
+        }
+        if (!data || data.ok === false) throw new Error((data && data.mensagem) || 'Falha ao consultar o Mercado Phone.');
+        return data;
+    }
+
+    // ---------- Modal de venda: puxar aparelho pelo código/IMEI ----------
+    let _mpPuxarOcupado = false;
+    async function mpPuxarBuscar() {
+        if (_mpPuxarOcupado) return;
+        const inp = document.getElementById('mpPuxarCodigo');
+        const res = document.getElementById('mpPuxarRes');
+        const btn = document.getElementById('mpPuxarBtn');
+        const q = (inp.value || '').replace(/\D/g, '');
+        if (q.length < 4) { res.innerHTML = '<span class="mp-aviso">Digite o código ou o IMEI (mínimo 4 números).</span>'; return; }
+        _mpPuxarOcupado = true; btn.disabled = true;
+        res.innerHTML = '<span class="mp-info">Buscando no Mercado Phone...</span>';
+        try {
+            const d = await mpChamar({ acao: 'buscar', q });
+            const itens = d.itens || [];
+            if (!itens.length) { res.innerHTML = '<span class="mp-aviso">Nenhum aparelho com esse código ou IMEI.</span>'; return; }
+            window._mpPuxarItens = itens;
+            const aviso = d.foraDoEstoque ? '<div class="mp-aviso" style="margin-top:6px;">Atenção: esse aparelho já está sem estoque no Mercado Phone (pode já ter sido vendido).</div>' : '';
+            if (itens.length === 1) { mpPuxarAplicar(0); res.innerHTML += aviso; return; }
+            res.innerHTML = '<span class="mp-info">Mais de um aparelho encontrado, escolha:</span>' + aviso + itens.map((i, k) => `
+                <button type="button" class="mp-op" onclick="mpPuxarAplicar(${k})">
+                    <span><b>${mpEsc(mpTituloItem(i))}</b> <span class="mp-cod">#${mpEsc(i.codigo)}</span><br><span class="mp-imei">${mpEsc(i.imei || 'sem IMEI')}</span></span>
+                    <span class="mp-valor">${mpMoeda(i.valorVenda)}</span>
+                </button>`).join('');
+        } catch (e) {
+            res.innerHTML = `<span class="mp-erro">${mpEsc(e.message)}</span>`;
+        } finally {
+            _mpPuxarOcupado = false; btn.disabled = false;
+        }
+    }
+    function mpPuxarAplicar(k) {
+        const i = (window._mpPuxarItens || [])[k];
+        if (!i) return;
+        const campos = { crmProduto: mpTituloItem(i), crmCodigoAparelho: i.codigo != null ? String(i.codigo) : '', crmImei: i.imei || '', crmValorAparelho: i.valorVenda != null ? i.valorVenda : '' };
+        Object.entries(campos).forEach(([id, v]) => {
+            const el = document.getElementById(id);
+            if (!el || v === '' || v == null) return;
+            el.value = v;
+            el.classList.remove('crm-conferir');
+            el.classList.add('mp-preenchido');
+        });
+        document.getElementById('mpPuxarRes').innerHTML =
+            `<span class="mp-ok">✓ Preenchido: ${mpEsc(mpTituloItem(i))} · ${mpEsc(i.imei || 'sem IMEI')} · ${mpMoeda(i.valorVenda)}</span>`;
+    }
+    function mpPuxarLimpar() {
+        const inp = document.getElementById('mpPuxarCodigo'); if (inp) inp.value = '';
+        const res = document.getElementById('mpPuxarRes'); if (res) res.innerHTML = '';
+        ['crmProduto', 'crmImei', 'crmCodigoAparelho', 'crmValorAparelho'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('mp-preenchido', 'crm-conferir'); });
+        window._mpPuxarItens = [];
+    }
+    document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('mp-preenchido')) e.target.classList.remove('mp-preenchido'); });
+
+    // ---------- Aba "Consulta de estoque" ----------
+    let _mpEstoque = null, _mpEstoqueEm = 0, _mpCarregando = false;
+    function crmTrocarSubaba(qual) {
+        const estoque = qual === 'estoque';
+        document.getElementById('crmPainelVendas').style.display = estoque ? 'none' : '';
+        document.getElementById('crmPainelEstoque').style.display = estoque ? '' : 'none';
+        document.getElementById('crmSubabaVendas').classList.toggle('ativa', !estoque);
+        document.getElementById('crmSubabaEstoque').classList.toggle('ativa', estoque);
+        if (estoque) mpCarregarEstoque(false);
+    }
+    async function mpCarregarEstoque(forcar) {
+        if (_mpCarregando) return;
+        if (!forcar && _mpEstoque && Date.now() - _mpEstoqueEm < 120000) { mpRenderizarEstoque(); return; }
+        const btn = document.getElementById('mpBtnAtualizar'), info = document.getElementById('mpInfo');
+        _mpCarregando = true; if (btn) btn.disabled = true;
+        if (info) info.textContent = 'Carregando do Mercado Phone...';
+        if (!_mpEstoque) document.getElementById('mpLinhas').innerHTML = '<tr><td colspan="7" class="ep-empty">Carregando...</td></tr>';
+        try {
+            const d = await mpChamar({ acao: 'estoque' });
+            _mpEstoque = (d.itens || []).sort((a, b) => mpTituloItem(a).localeCompare(mpTituloItem(b), 'pt-BR', { numeric: true }));
+            _mpEstoqueEm = Date.now();
+            mpRenderizarEstoque();
+        } catch (e) {
+            if (info) info.textContent = '';
+            document.getElementById('mpLinhas').innerHTML = `<tr><td colspan="7" class="ep-empty mp-erro">${mpEsc(e.message)}</td></tr>`;
+        } finally {
+            _mpCarregando = false; if (btn) btn.disabled = false;
+        }
+    }
+    function mpRenderizarEstoque() {
+        const tbody = document.getElementById('mpLinhas');
+        if (!tbody || !_mpEstoque) return;
+        const norm = v => String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const termos = norm(document.getElementById('mpBusca').value).split(/\s+/).filter(Boolean);
+        const lista = _mpEstoque.filter(i => {
+            if (!termos.length) return true;
+            const alvo = norm([mpTituloItem(i), i.modelo, i.estado, i.codigo, i.imei, i.imei2, i.serial].join(' '));
+            return termos.every(t => alvo.includes(t));
+        });
+        const info = document.getElementById('mpInfo');
+        if (info) {
+            const hora = new Date(_mpEstoqueEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            info.textContent = `${lista.length} de ${_mpEstoque.length} aparelhos · atualizado às ${hora}`;
+        }
+        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="ep-empty">Nenhum aparelho encontrado com essa pesquisa.</td></tr>'; return; }
+        tbody.innerHTML = lista.map(i => `
+            <tr>
+                <td class="mp-cod">${mpEsc(i.codigo)}</td>
+                <td><b>${mpEsc(mpTituloItem(i))}</b>${i.quantidade > 1 ? ` <span class="mp-chip">${mpEsc(i.quantidade)} un.</span>` : ''}</td>
+                <td><span class="mp-chip ${/novo/i.test(i.estado || '') && !/semi/i.test(i.estado || '') ? 'novo' : ''}">${mpEsc(mpNomeBonito(i.estado) || '—')}</span></td>
+                <td>${i.bateria ? mpEsc(i.bateria) + '%' : '—'}</td>
+                <td class="mp-imei">${mpEsc(i.imei || '—')}</td>
+                <td class="mp-valor" style="text-align:right;">${mpMoeda(i.valorVenda)}</td>
+                <td style="font-size:11.5px;color:var(--text-muted);">${i.dataEntrada ? mpEsc(crmFormatarDataBR(i.dataEntrada)) : '—'}</td>
+            </tr>`).join('');
+    }
+
     function crmFecharModalCadastro() {
         document.getElementById('modalCrmCadastro').classList.remove('ativo');
         crmResetarFormulario();
@@ -10678,11 +10898,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
 
     function crmResetarFormulario() {
         document.getElementById('crmId').value = '';
+        if (typeof mpPuxarLimpar === 'function') mpPuxarLimpar();
         const preId = document.getElementById('crmPreCadId'); if (preId) preId.value = '';
         if (typeof crmLimparConferir === 'function') crmLimparConferir();
         const usado = document.getElementById('crmPreCadUsado'); if (usado) usado.style.display = 'none';
         const lista = document.getElementById('crmPreCadLista'); if (lista) lista.style.display = 'none';
-        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmOrigem', 'crmAparelhoTroca', 'crmImei', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho', 'crmValorPagamento1', 'crmValorPagamento2'].forEach(id => {
+        ['crmNome', 'crmCpf', 'crmTelefone', 'crmEndereco', 'crmNascimento', 'crmDataCompra', 'crmProduto', 'crmOrigem', 'crmAparelhoTroca', 'crmImei', 'crmCodigoAparelho', 'crmVendedor', 'crmObservacoes', 'crmValorAparelho', 'crmValorPagamento1', 'crmValorPagamento2'].forEach(id => {
             const el = document.getElementById(id); if (el) el.value = '';
         });
         document.getElementById('crmFormaPagamento').value = '';
@@ -10709,6 +10930,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         document.getElementById('crmOrigem').value = c.origem || '';
         document.getElementById('crmAparelhoTroca').value = c.aparelhoTroca || '';
         document.getElementById('crmImei').value = c.imei || '';
+        document.getElementById('crmCodigoAparelho').value = c.codigoAparelho || '';
         vendedoresPopularSelect('crmVendedor', c.vendedor);
         document.getElementById('crmDiasGarantia').value = c.diasGarantia || 90;
         document.getElementById('crmObservacoes').value = c.observacoes || '';
@@ -10734,6 +10956,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         const nome = c.nome || '-';
         const valor = c.valorAparelho ? Number(c.valorAparelho).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00';
         const modelo = c.produto || '-';
+        const codigoAparelho = c.codigoAparelho || '-';
         const origem = (c.origem || '-').replace(/^Cliente\s*/i, '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim() || '-';
         const formaPagamento = [c.formaPagamento, c.formaPagamento2].filter(Boolean).join(' / ') || '-';
         const troca = c.aparelhoTroca || 'Nenhum';
@@ -10742,6 +10965,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         return `*nome Cliente* : ${nome}\n` +
                `*Valor*: R$${valor}\n` +
                `*Modelo ou numeração* : ${modelo}\n` +
+               `*Código do aparelho*: ${codigoAparelho}\n` +
                `*Por Onde Veio*: ${origem}\n` +
                `*Forma de Pagamento*: ${formaPagamento}\n` +
                `*Qual celular deu na troca*: ${troca}\n` +
@@ -10814,10 +11038,20 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         else if (tipo === 'excluir') crmExcluir(id);
     }
 
+    // Código do aparelho (Mercado Phone) é obrigatório para salvar a venda e emitir a garantia.
+    function crmValidarCodigoAparelho() {
+        const el = document.getElementById('crmCodigoAparelho');
+        if (el && el.value.trim()) return true;
+        alert('Preencha o código do aparelho. Use "Puxar aparelho do estoque Mercado Phone" ou digite o código.');
+        if (el) { el.classList.add('crm-conferir'); el.focus(); }
+        return false;
+    }
+
     async function crmSalvar() {
         const id = document.getElementById('crmId').value;
         const nome = document.getElementById('crmNome').value.trim();
         if (!nome) { alert('Preencha o nome do cliente.'); return; }
+        if (!crmValidarCodigoAparelho()) return;
         const dados = {
             nome,
             cpf: document.getElementById('crmCpf').value.trim(),
@@ -10829,6 +11063,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             origem: document.getElementById('crmOrigem').value,
             aparelhoTroca: document.getElementById('crmAparelhoTroca').value.trim(),
             imei: document.getElementById('crmImei').value.trim(),
+            codigoAparelho: document.getElementById('crmCodigoAparelho').value.trim(),
             vendedor: document.getElementById('crmVendedor').value.trim(),
             diasGarantia: document.getElementById('crmDiasGarantia').value || '90',
             observacoes: document.getElementById('crmObservacoes').value.trim(),
