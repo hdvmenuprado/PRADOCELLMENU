@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261023030000">
+    <meta name="app-build" content="20261023120000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -10942,11 +10942,12 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // ==================================================================
     // Sugestões: 2 sorteadas por vez (as de números só pra Gestão)
     const AST_DICAS = ['busca um a54 pra ver se já acabou a garantia', 'a gente tem tela de s23?', 'tem iphone 13 pra vender?',
-        'quais os estão prontas?', 'tem bateria de iphone 11?', 'tem os reaberta?', 'os em custódia'];
+        'quais os estão prontas?', 'tem bateria de iphone 11?', 'tem os reaberta?', 'os em custódia', 'tem alguém de aniversário hoje?'];
     const AST_DICAS_GESTAO = ['qual o faturamento da assistência?', 'quantas garantias tivemos esse mês?', 'faturamento do mês passado'];
     let _astOcupado = false, _astIniciado = false;
     // Memória da conversa: últimas perguntas + o que foi entendido (nada de dados da loja).
     let _astHist = [];
+    let _astFalas = []; // todas as mensagens do usuário (pro "já te disse o nome")
 
     function astSortearDicas() {
         const pool = AST_DICAS.concat(typeof PERFIL_ATUAL !== 'undefined' && PERFIL_ATUAL === 'gestao' ? AST_DICAS_GESTAO : []).slice();
@@ -11008,6 +11009,10 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             else codigo = dig;
         }
         let acao = 'desconhecido';
+        if (/anivers/.test(p)) {
+            const periodo = /semana/.test(p) ? 'semana' : /\bmes\b|mês/.test(p) ? 'mes_atual' : /amanha/.test(p) ? 'amanha' : 'hoje';
+            return { acao: 'aniversarios', periodo, forte: true, termos: '', cliente: '', imei: '', telefone: '', codigo: '', vendedor: '', garantia: false };
+        }
         const rel = astInterpretarRelatorio(p);
         if (rel) return Object.assign(rel, { forte: true });
         const preco = astInterpretarPreco(p);
@@ -11085,9 +11090,26 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     }
     // Pergunta curta/"e ..." continua a anterior: mantém a ação e troca só o que mudou.
     function astMesclarContexto(local, pergunta) {
-        const ult = _astHist.length ? _astHist[_astHist.length - 1].i : null;
-        if (!ult) return local;
         const p = astNorm(pergunta).replace(/[?!.,;:()"]/g, ' ').replace(/\s+/g, ' ').trim();
+        // "já te disse o nome": refaz a última busca com o nome da mensagem anterior
+        if (/\bja (te )?(disse|falei|passei|mandei)|\beu (disse|falei)|\bte (disse|falei)|falei o nome|disse o nome/.test(p)) {
+            const ultBusca = _astHist.length ? _astHist[_astHist.length - 1].i : { acao: 'vendas' };
+            const anteriores = _astFalas.slice(0, -1).reverse();
+            for (const fala of anteriores) {
+                const sep = astSepararNomes(astTokens(fala).join(' '));
+                if (sep.nome.length) return Object.assign({}, ultBusca.acao === 'os' ? ultBusca : { acao: 'vendas' }, { cliente: sep.nome.join(' '), termos: sep.modelo.join(' ') });
+            }
+        }
+        const ult = _astHist.length ? _astHist[_astHist.length - 1].i : null;
+        // Mensagem que é só um nome ("marcia regina") logo depois de pedir o nome: busca de vendas por cliente
+        if (local.acao === 'desconhecido') {
+            const sep = astSepararNomes(local.termos);
+            const ias = [...document.querySelectorAll('#astMsgs .ast-msg.ia')];
+            const pediuNome = !!(ias.length >= 2 && ias[ias.length - 2].textContent.includes('nome do cliente'));
+            if (sep.nome.length && !sep.modelo.length && sep.nome.length <= 4 && (pediuNome || !ult))
+                return Object.assign({ acao: 'vendas', termos: '', imei: '', telefone: '', codigo: '', vendedor: '', garantia: false }, { cliente: sep.nome.join(' ') });
+        }
+        if (!ult) return local;
         const continua = /^(e|tambem|agora|so|mas|e\s+(o|a|os|as|do|da|no|na|pra|de))\b/.test(p) || p.split(/\s+/).length <= 3;
         if (local.acao !== 'desconhecido' && (local.forte || !continua)) return local;
         if (local.acao !== 'desconhecido' && local.acao === ult.acao && !continua) return local;
@@ -11118,6 +11140,28 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         return m;
     }
 
+    function astIntencaoVazia(it) {
+        if (!it) return true;
+        const v = x => !String(x || '').trim();
+        if (it.acao === 'vendas') return v(it.termos) && v(it.cliente) && v(it.imei) && v(it.codigo) && v(it.telefone) && v(it.vendedor);
+        if (it.acao === 'os') return v(it.termos) && v(it.cliente) && v(it.os_codigo) && v(it.tecnico) && v(it.telefone) && (!it.status || it.status === 'todas');
+        if (it.acao === 'pecas' || it.acao === 'precos') return v(it.termos);
+        return false;
+    }
+    // Palavras de aparelho/modelo: o que não for isso (e não tiver número) é nome de pessoa.
+    const AST_PALAVRAS_APARELHO = new Set('iphone apple samsung galaxy motorola moto mto xiaomi redmi rm poco note pro max plus ultra mini lite se fe realme lg asus zenfone edge infinix tecno nokia oppo vivo honor huawei ip sam fold flip power play neo prime turbo 4g 5g gb tb celular aparelho smartphone'.split(' '));
+    function astSepararNomes(termos) {
+        const toks = astTokens(termos);
+        const nome = toks.filter(w => !/\d/.test(w) && !AST_PALAVRAS_APARELHO.has(w) && !astEhServico(w) && w.length >= 3);
+        return { nome, modelo: toks.filter(w => !nome.includes(w)) };
+    }
+    // "marcia" -> "m_rc__": acha "Márcia" no banco mesmo com acento (o _ vale 1 letra qualquer)
+    function astPadraoNome(n) { return '%' + astNorm(n).trim().replace(/[aeiouc]/g, '_').replace(/\s+/g, '%') + '%'; }
+    function astNomeBate(nomeBanco, procurado) {
+        const alvo = ' ' + astNorm(nomeBanco).replace(/[^a-z0-9]+/g, ' ') + ' ';
+        return astNorm(procurado).split(/\s+/).filter(Boolean).every(t => alvo.includes(' ' + t));
+    }
+
     // ---- comparação de termos ("tela s23" casa com "Tela s23 ULTRA SOFT") ----
     const AST_SINONIMOS = { samsung:['samsung','sam','galaxy'], sam:['samsung','sam'], galaxy:['samsung','sam','galaxy'], motorola:['motorola','moto','mto'], moto:['motorola','moto','mto'], mto:['motorola','moto','mto'],
         redmi:['redmi','rm'], rm:['redmi','rm'], iphone:['iphone','ip'], ip:['iphone','ip'], tela:['tela','display','oled','lcd'], display:['tela','display','oled','lcd'], camera:['camera','cam'], bateria:['bateria','bat'] };
@@ -11134,6 +11178,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (!pergunta) return;
         _astOcupado = true; document.getElementById('astEnviarBtn').disabled = true;
         inp.value = ''; astMsgEu(pergunta);
+        _astFalas.push(pergunta); _astFalas = _astFalas.slice(-10);
         const bolha = astMsgIa('');
         bolha.classList.add('carregando');
         astOrbe(bolha, 'working', 'Pensando');
@@ -11143,16 +11188,21 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const { data, error } = await supabaseDB.functions.invoke('assistente', { body: { pergunta, contexto } });
             if (!error && data && data.ok && data.intencao) { intencao = data.intencao; fonte = 'gemini'; }
         } catch (e) { /* cai no intérprete local */ }
+        // Rede de segurança: o Gemini às vezes devolve a ação certa com os filtros vazios
+        // ("vendas" sem o nome). Aí o que o app tirou da própria frase completa a busca.
+        const local = astMesclarContexto(astInterpretarLocal(pergunta), pergunta);
         if (!intencao || intencao.acao === 'desconhecido') {
-            const local = astMesclarContexto(astInterpretarLocal(pergunta), pergunta);
             if (!intencao || local.acao !== 'desconhecido') { intencao = local; fonte = 'local'; }
+        } else if (astIntencaoVazia(intencao)) {
+            if (local.acao !== 'desconhecido' && !astIntencaoVazia(local)) { intencao = local; fonte = 'local'; }
+            else if (local.termos) intencao = Object.assign({}, intencao, { termos: local.termos });
         }
         try {
             astOrbe(bolha, AST_ORBE_POR_ACAO[intencao.acao] || 'searching', 'Procurando');
             bolha.innerHTML = await astExecutar(intencao);
             bolha.classList.remove('carregando');
             bolha.dataset.fonte = fonte; // gemini | local (só pra conferência, não aparece na tela)
-            if (intencao.acao !== 'desconhecido') { _astHist.push({ p: pergunta, i: intencao }); _astHist = _astHist.slice(-6); }
+            if (intencao.acao !== 'desconhecido' && !astIntencaoVazia(intencao)) { _astHist.push({ p: pergunta, i: intencao }); _astHist = _astHist.slice(-6); }
         } catch (e) {
             bolha.classList.remove('carregando');
             bolha.innerHTML = `<span class="mp-erro">Não consegui buscar: ${mpEsc(e.message || e)}</span>`;
@@ -11169,7 +11219,8 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (it.acao === 'relatorio') return astRelatorio(it);
         if (it.acao === 'os') return astBuscarOS(it);
         if (it.acao === 'precos') return astBuscarPrecos(it);
-        return `Não entendi bem. Tente perguntar sobre uma <b>venda/garantia</b> ("garantia do a54"), uma <b>peça</b> ("tem tela de s23?"), uma <b>O.S.</b> ("como tá a os da maria?", "quais estão prontas?"), um <b>preço de serviço</b> ("troca de tela do iphone 11"), um <b>aparelho à venda</b> ("tem iphone 13?") ou, no perfil Gestão, <b>números</b> ("faturamento da assistência", "quantas garantias tivemos").`;
+        if (it.acao === 'aniversarios') return astBuscarAniversarios(it);
+        return `Não entendi bem. Tente perguntar sobre uma <b>venda/garantia</b> ("garantia do a54"), uma <b>peça</b> ("tem tela de s23?"), uma <b>O.S.</b> ("como tá a os da maria?", "quais estão prontas?"), um <b>preço de serviço</b> ("troca de tela do iphone 11"), um <b>aparelho à venda</b> ("tem iphone 13?") <b>aniversariantes</b> ("quem faz aniversário hoje?") ou, no perfil Gestão, <b>números</b> ("faturamento da assistência", "quantas garantias tivemos").`;
     }
     function astResumoFiltro(it) {
         return [it.termos, it.cliente, it.imei && 'IMEI ' + it.imei, it.codigo && 'código ' + it.codigo, it.telefone && 'tel. ' + it.telefone, it.vendedor && 'vendedor ' + it.vendedor].filter(Boolean).join(', ');
@@ -11180,22 +11231,24 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     }
 
     async function astBuscarVendas(it) {
+        it = Object.assign({}, it);
+        if (!it.cliente) { const sep = astSepararNomes(it.termos); if (sep.nome.length) { it.cliente = sep.nome.join(' '); it.termos = sep.modelo.join(' '); } }
         const tokens = astTokens(it.termos);
         if (!tokens.length && !it.cliente && !it.imei && !it.codigo && !it.telefone && !it.vendedor)
-            return 'Me diga o modelo, o nome do cliente, o IMEI ou o código para eu procurar a venda.';
+            return 'Me diga o nome do cliente, o modelo, o IMEI ou o código.';
         let q = supabaseDB.from('crm_clientes').select('id, nome, telefone, produto, imei, codigo_aparelho, data_compra, dias_garantia, data_fim_garantia, vendedor, loja_id')
             .order('data_compra', { ascending: false }).limit(500);
         const forte = tokens.find(t => /\d/.test(t));
         if (forte) q = q.ilike('produto', `%${forte}%`);
         const lojaVendas = typeof lojaIdParaFiltro === 'function' ? lojaIdParaFiltro() : null;
         if (lojaVendas) q = q.eq('loja_id', lojaVendas);
-        if (it.cliente) q = q.ilike('nome', `%${it.cliente}%`);
+        if (it.cliente) q = q.ilike('nome', astPadraoNome(it.cliente.split(/\s+/)[0]));
         if (it.imei) q = q.ilike('imei', `%${it.imei}%`);
         if (it.codigo) q = q.ilike('codigo_aparelho', `%${it.codigo}%`);
         if (it.vendedor) q = q.ilike('vendedor', `%${it.vendedor}%`);
         const { data, error } = await q;
         if (error) throw new Error(error.message);
-        let lista = (data || []).filter(c => !tokens.length || astBate(c.produto, tokens));
+        let lista = (data || []).filter(c => (!tokens.length || astBate(c.produto, tokens)) && (!it.cliente || astNomeBate(c.nome, it.cliente)));
         if (it.telefone) lista = lista.filter(c => String(c.telefone || '').replace(/\D/g, '').includes(it.telefone));
         if (!lista.length) return `Não achei venda de <b>${mpEsc(astResumoFiltro(it))}</b>.`;
         const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
@@ -11346,21 +11399,23 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     const AST_NOME_STATUS = { abertas: 'em andamento', orcando: 'orçando', aguardando: 'aguardando aprovação', aprovadas: 'com orçamento aprovado',
         prontas: 'prontas', custodia: 'em custódia', retiradas: 'retiradas', reprovadas: 'com orçamento reprovado', reabertas: 'reabertas (voltaram em garantia)' };
     async function astBuscarOS(it) {
+        it = Object.assign({}, it);
+        if (!it.cliente) { const sep = astSepararNomes(it.termos); if (sep.nome.length) { it.cliente = sep.nome.join(' '); it.termos = sep.modelo.join(' '); } }
         let q = supabaseDB.from('ordens_servico')
             .select('codigo, data, cliente, telefone, modelo, status, tecnico, reparo, total, garantia_ate, retornos, loja_id, criado_em')
             .order('data', { ascending: false }).order('criado_em', { ascending: false }).limit(300);
         const lojaOS = typeof lojaIdParaFiltro === 'function' ? lojaIdParaFiltro() : null;
         if (lojaOS) q = q.eq('loja_id', lojaOS);
         if (it.os_codigo) q = q.ilike('codigo', `%${it.os_codigo}%`);
-        if (it.cliente) q = q.ilike('cliente', `%${it.cliente}%`);
-        if (it.tecnico) q = q.ilike('tecnico', `%${it.tecnico}%`);
+        if (it.cliente) q = q.ilike('cliente', astPadraoNome(it.cliente.split(/\s+/)[0]));
+        if (it.tecnico) q = q.ilike('tecnico', astPadraoNome(it.tecnico));
         if (AST_FILTRO_STATUS[it.status]) q = q.in('status', AST_FILTRO_STATUS[it.status]);
         if (it.status === 'abertas') q = q.not('status', 'in', '("Aparelho retirado","Orçamento reprovado")');
         if (it.status === 'reabertas') q = q.gt('retornos', 0).neq('status', 'Aparelho retirado');
         const { data, error } = await q;
         if (error) throw new Error(error.message);
         const tokens = astTokens(it.termos);
-        let lista = (data || []).filter(o => !tokens.length || astBate(o.modelo, tokens));
+        let lista = (data || []).filter(o => (!tokens.length || astBate(o.modelo, tokens)) && (!it.cliente || astNomeBate(o.cliente, it.cliente)));
         if (it.telefone) lista = lista.filter(o => String(o.telefone || '').replace(/\D/g, '').includes(it.telefone));
         const filtro = [it.os_codigo, it.cliente && 'cliente ' + it.cliente, it.termos, it.tecnico && 'técnico ' + it.tecnico].filter(Boolean).join(', ');
         const nomeSt = AST_NOME_STATUS[it.status] || '';
@@ -11412,6 +11467,39 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         return nomes.map(nome => `<b>${mpEsc(nome)}</b><div class="ast-res">${porModelo[nome].sort((a, b) => a.valor - b.valor).map(i =>
             `<div class="ast-item"><div class="l1"><span>${mpEsc(i.servico)}</span><span class="mp-valor">${mpMoeda(i.valor)}</span></div></div>`).join('')}</div>`).join('<div style="height:8px"></div>')
             + (Object.keys(porModelo).length > 4 ? `<div class="ast-fonte">…e mais ${Object.keys(porModelo).length - 4} modelos.</div>` : '');
+    }
+
+    // ---- Aniversariantes (clientes do Cadastro de Vendas; mesma loja do perfil) ----
+    async function astBuscarAniversarios(it) {
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const per = it.periodo === 'semana' ? 'semana' : it.periodo === 'mes_atual' ? 'mes' : it.periodo === 'amanha' ? 'amanha' : 'hoje';
+        const dias = [];
+        const add = n => { const d = new Date(hoje); d.setDate(d.getDate() + n); dias.push(d); };
+        if (per === 'hoje') add(0); else if (per === 'amanha') add(1); else if (per === 'semana') for (let i = 0; i < 7; i++) add(i);
+        const chaveDia = d => String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const alvo = new Set(dias.map(chaveDia));
+        let q = supabaseDB.from('crm_clientes').select('nome, telefone, data_nascimento, aniversario_confirmado_ano, produto, loja_id').not('data_nascimento', 'is', null).limit(5000);
+        const loja = typeof lojaIdParaFiltro === 'function' ? lojaIdParaFiltro() : null;
+        if (loja) q = q.eq('loja_id', loja);
+        const { data, error } = await q;
+        if (error) throw new Error(error.message);
+        const vistos = new Set();
+        const lista = (data || []).filter(c => {
+            const md = String(c.data_nascimento).slice(5, 10);
+            const ok = per === 'mes' ? md.slice(0, 2) === String(hoje.getMonth() + 1).padStart(2, '0') : alvo.has(md);
+            const k = astNorm(c.nome) + '|' + c.data_nascimento; // o mesmo cliente pode ter várias compras
+            if (!ok || vistos.has(k)) return false; vistos.add(k); return true;
+        }).sort((a, b) => String(a.data_nascimento).slice(5, 10).localeCompare(String(b.data_nascimento).slice(5, 10)));
+        const rotulo = { hoje: 'hoje', amanha: 'amanhã', semana: 'nos próximos 7 dias', mes: 'neste mês' }[per];
+        if (!lista.length) return `Ninguém faz aniversário ${rotulo}.`;
+        const ano = String(hoje.getFullYear());
+        return `<b>${lista.length}</b> cliente${lista.length > 1 ? 's fazem' : ' faz'} aniversário ${rotulo}:` + astLimitar(lista, 10, c => {
+            const [a, m, d] = String(c.data_nascimento).split('-');
+            const idade = hoje.getFullYear() - parseInt(a, 10);
+            const enviado = String(c.aniversario_confirmado_ano || '') === ano;
+            return `<div class="ast-item"><div class="l1"><span>${mpEsc(c.nome || '-')}</span><span class="ast-tag ${enviado ? 'ok' : 'zero'}">${enviado ? 'parabéns enviado' : d + '/' + m}</span></div>
+                <div class="l2">${idade > 0 && idade < 120 ? idade + ' anos · ' : ''}${mpEsc(c.telefone || 'sem telefone')}${c.produto ? ' · ' + mpEsc(c.produto) : ''}</div></div>`;
+        });
     }
 
     async function astBuscarAparelhos(it) {
