@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261023120000">
+    <meta name="app-build" content="20261023180000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -185,6 +185,14 @@
         .config-item:hover { background: rgba(255,255,255,.05); color: var(--text-main); }
         body.modo-claro .config-item:hover { background: rgba(0,0,0,.05); }
         .config-item.ativo { background: rgba(212,175,55,.14); color: var(--primary); font-weight: 600; }
+        /* Insumos de loja: quanto cada categoria pesou no mês */
+        .ins-cats { display: flex; flex-direction: column; gap: 8px; }
+        .ins-cat { display: grid; grid-template-columns: 150px 1fr 110px; align-items: center; gap: 10px; font-size: 12.5px; }
+        .ins-cat-barra { height: 8px; border-radius: 6px; background: rgba(255,255,255,.06); overflow: hidden; }
+        body.modo-claro .ins-cat-barra { background: rgba(0,0,0,.06); }
+        .ins-cat-barra i { display: block; height: 100%; border-radius: 6px; background: var(--primary); }
+        .ins-cat-valor { text-align: right; font-family: 'JetBrains Mono', monospace; }
+        @media (max-width: 600px) { .ins-cat { grid-template-columns: 1fr 90px; } .ins-cat-barra { grid-column: 1 / -1; grid-row: 2; } }
         @media (max-width: 900px) {
             .config-coluna { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); padding: 14px; }
             .config-coluna-nav { flex-direction: row; flex-wrap: wrap; }
@@ -2594,11 +2602,13 @@ body.modo-claro .main-content {
             align-items: stretch;
         }
 
-        /* --- PERDAS EM GARANTIA: TELA CHEIA --- */
+        /* --- GASTOS DE OPERAÇÃO (Garantias e Insumos de loja): TELA CHEIA --- */
+        body:has(#menu-insumos:not(.hidden)) .main-content,
         body:has(#menu-perdasgarantia:not(.hidden)) .main-content {
             padding: 0 !important;
             align-items: stretch !important;
         }
+        body:has(#menu-insumos:not(.hidden)) .workspace-card,
         body:has(#menu-perdasgarantia:not(.hidden)) .workspace-card {
             max-width: 100% !important;
             height: 100vh !important;
@@ -2610,6 +2620,7 @@ body.modo-claro .main-content {
             box-shadow: none !important;
             overflow-y: auto;
         }
+        #menu-insumos:not(.hidden),
         #menu-perdasgarantia:not(.hidden) {
             display: flex !important;
             width: 100%;
@@ -3296,7 +3307,7 @@ body.modo-claro .main-content {
             <button class="nav-btn" id="tab-tarefas" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('tarefas', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span class="nav-label">Tarefas</span><span class="tf-badge-menu" id="tfBadgeMenu"></span></button>
             <button class="nav-btn" id="tab-clientes" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('clientes', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="nav-label">Clientes</span></button>
             <button class="nav-btn" id="tab-dashboard" data-perfis="gestao" onclick="mudarAba('dashboard', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nav-label">Dashboard</span></button>
-            <button class="nav-btn" id="tab-perdasgarantia" data-perfis="gestao" onclick="mudarAba('perdasgarantia', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></span><span class="nav-label">Perdas em Garantia</span></button>
+            <button class="nav-btn" id="tab-perdasgarantia" data-perfis="gestao" onclick="abrirGastos(this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg></span><span class="nav-label">Gastos de operação</span></button>
             <button class="nav-btn" id="tab-admin" data-perfis="gestao" onclick="abrirConfiguracoes(this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></span><span class="nav-label">Configurações</span></button>
             <button class="nav-btn" id="tab-laudotecnico" data-perfis="gestao" onclick="mudarAba('laudotecnico', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h6"/></svg></span><span class="nav-label">Laudo Técnico</span></button>
             <button class="nav-btn" id="tab-avisos" data-perfis="gestao" onclick="mudarAba('avisos', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><span class="nav-label">Avisos</span></button>
@@ -3328,6 +3339,18 @@ body.modo-claro .main-content {
             <button class="config-item" data-sec="backup" onclick="mostrarConfig('backup', this)"><i data-lucide="shield-check" style="width:14px;height:14px;"></i> Backup e restauração</button>
             <button class="config-item" data-sec="funcionariomes" onclick="mostrarConfig('funcionariomes', this)"><i data-lucide="award" style="width:14px;height:14px;"></i> Funcionário do mês</button>
             <button class="config-item" data-sec="historico" onclick="mostrarConfig('historico', this)"><i data-lucide="history" style="width:14px;height:14px;"></i> Histórico de alterações</button>
+        </nav>
+    </aside>
+
+    <!-- Segunda coluna: submenu de Gastos de operação (mesmo visual de Configurações). -->
+    <aside class="config-coluna hidden" id="gastosColuna">
+        <div class="config-coluna-topo">
+            <span>Gastos de operação</span>
+            <button onclick="fecharGastos()" title="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+        </div>
+        <nav class="config-coluna-nav">
+            <button class="config-item gastos-item" data-gsec="perdasgarantia" onclick="mostrarGasto('perdasgarantia', this)"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i> Garantias</button>
+            <button class="config-item gastos-item" data-gsec="insumos" onclick="mostrarGasto('insumos', this)"><i data-lucide="shopping-basket" style="width:14px;height:14px;"></i> Insumos de loja</button>
         </nav>
     </aside>
 
@@ -3947,8 +3970,8 @@ body.modo-claro .main-content {
                 <div class="ep-wrap">
                     <div class="ep-header">
                         <span class="ep-icon"><i data-lucide="trending-down" style="width:20px;height:20px;"></i></span>
-                        <h1>Perdas em Garantia</h1>
-                        <span class="ep-tag">controle mensal</span>
+                        <h1>Garantias</h1>
+                        <span class="ep-tag">perdas em garantia</span>
                     </div>
 
                     <!-- ESTATÍSTICAS DO MÊS -->
@@ -4035,6 +4058,115 @@ body.modo-claro .main-content {
                             </thead>
                             <tbody id="pgLinhas">
                                 <tr><td colspan="8" class="ep-empty">Carregando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="menu-insumos" class="modulo-aba hidden">
+                <div class="ep-wrap">
+                    <div class="ep-header">
+                        <span class="ep-icon"><i data-lucide="shopping-basket" style="width:20px;height:20px;"></i></span>
+                        <h1>Insumos de loja</h1>
+                        <span class="ep-tag">mercado, limpeza, escritório...</span>
+                    </div>
+
+                    <div class="ep-stats">
+                        <div class="ep-stat saida">
+                            <div class="ep-stat-label">Total do mês</div>
+                            <div class="ep-stat-value" id="insStatTotal">—</div>
+                        </div>
+                        <div class="ep-stat">
+                            <div class="ep-stat-label">Mês anterior</div>
+                            <div class="ep-stat-value" id="insStatAnterior">—</div>
+                        </div>
+                        <div class="ep-stat">
+                            <div class="ep-stat-label">Maior categoria</div>
+                            <div class="ep-stat-value" id="insStatMaior" style="font-size:15px;">—</div>
+                        </div>
+                        <div class="ep-stat">
+                            <div class="ep-stat-label">Registros (mês)</div>
+                            <div class="ep-stat-value" id="insStatQtd">—</div>
+                        </div>
+                    </div>
+
+                    <div class="ep-panel">
+                        <div class="ep-panel-title">Registrar gasto</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+                            <div class="ep-field">
+                                <label>Data</label>
+                                <input type="date" id="insData">
+                            </div>
+                            <div class="ep-field">
+                                <label>Categoria</label>
+                                <select id="insCategoria">
+                                    <option>Mercado</option>
+                                    <option>Limpeza</option>
+                                    <option>Café e água</option>
+                                    <option>Escritório e papelaria</option>
+                                    <option>Embalagens</option>
+                                    <option>Manutenção</option>
+                                    <option>Outros</option>
+                                </select>
+                            </div>
+                            <div class="ep-field" style="grid-column: span 2;">
+                                <label>O que foi comprado</label>
+                                <input type="text" id="insDescricao" placeholder="Ex: café, açúcar e copos" maxlength="160" onkeydown="if(event.key==='Enter') insRegistrar()">
+                            </div>
+                            <div class="ep-field">
+                                <label>Valor (R$)</label>
+                                <input type="number" id="insValor" min="0" step="0.01" placeholder="0,00" onkeydown="if(event.key==='Enter') insRegistrar()">
+                            </div>
+                            <div class="ep-field">
+                                <label>Pago com</label>
+                                <select id="insPagamento">
+                                    <option>Dinheiro do caixa</option>
+                                    <option>Pix</option>
+                                    <option>Cartão</option>
+                                    <option>Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="ep-btn" id="insBtnRegistrar" style="margin-top:14px;" onclick="insRegistrar()">+ Registrar gasto</button>
+                    </div>
+
+                    <div class="ep-panel" id="insPainelCats" style="display:none;">
+                        <div class="ep-panel-title">Por categoria (mês)</div>
+                        <div class="ins-cats" id="insCats"></div>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; max-width:1300px; margin-bottom:12px; flex-wrap:wrap;">
+                        <select id="insFiltroMes" onchange="insCarregar()" style="width:auto; min-width:180px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px; cursor:pointer;">
+                            <option value="">Mês atual</option>
+                        </select>
+                        <select id="insFiltroCategoria" onchange="insCarregar()" style="width:auto; min-width:180px; padding:8px 10px; border-radius:6px; border:1px solid var(--border-color); background:var(--surface-2); color:var(--text-main); font-size:13px; cursor:pointer;">
+                            <option value="">Todas as categorias</option>
+                            <option>Mercado</option>
+                            <option>Limpeza</option>
+                            <option>Café e água</option>
+                            <option>Escritório e papelaria</option>
+                            <option>Embalagens</option>
+                            <option>Manutenção</option>
+                            <option>Outros</option>
+                        </select>
+                    </div>
+
+                    <div class="ep-table-wrap">
+                        <table class="ep-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Categoria</th>
+                                    <th>O que foi comprado</th>
+                                    <th>Pago com</th>
+                                    <th style="text-align:right;">Valor</th>
+                                    <th>Loja</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="insLinhas">
+                                <tr><td colspan="7" class="ep-empty">Carregando...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -4263,6 +4395,7 @@ body.modo-claro .main-content {
                             <option>Serviços</option>
                             <option>Funcionários</option>
                             <option>Avaliação</option>
+                            <option>Gastos de operação</option>
                         </select>
                         <select id="histPeriodo" onchange="histCarregar(true)">
                             <option value="1">Hoje</option>
@@ -6611,6 +6744,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             if (window.epRecarregarAposTrocaDeLoja) window.epRecarregarAposTrocaDeLoja();
         }
         if (typeof pgCarregar === 'function' && document.getElementById('menu-perdasgarantia') && !document.getElementById('menu-perdasgarantia').classList.contains('hidden')) pgCarregar();
+        if (typeof insCarregar === 'function' && document.getElementById('menu-insumos') && !document.getElementById('menu-insumos').classList.contains('hidden')) insCarregar();
         if (typeof dashboardCarregar === 'function' && document.getElementById('menu-dashboard') && !document.getElementById('menu-dashboard').classList.contains('hidden')) dashboardCarregar();
         if (document.getElementById('menu-os') && !document.getElementById('menu-os').classList.contains('hidden')) vendedoresPopularSelect('osVendedor');
         if (typeof vendedoresAdminCarregar === 'function' && document.getElementById('menu-admin') && !document.getElementById('menu-admin').classList.contains('hidden')) vendedoresAdminCarregar();
@@ -6947,6 +7081,129 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         } catch (e) {
             console.error('Erro ao carregar perdas em garantia:', e);
             tbody.innerHTML = '<tr><td colspan="8" class="ep-empty" style="color:#f87171;">Erro ao carregar.</td></tr>';
+        }
+    }
+
+    // ==========================================
+    // GASTOS DE OPERAÇÃO — segunda coluna (igual Configurações) com Garantias e Insumos de loja
+    // ==========================================
+    let _gastosSecaoAtual = null;
+    function abrirGastos(btn) {
+        const alvo = _gastosSecaoAtual || 'perdasgarantia';
+        mostrarGasto(alvo, document.querySelector(`.gastos-item[data-gsec="${alvo}"]`), btn);
+    }
+    function mostrarGasto(secao, item, btnMenu) {
+        _gastosSecaoAtual = secao;
+        mudarAba(secao, btnMenu || document.getElementById('tab-perdasgarantia'));
+        document.getElementById('gastosColuna').classList.remove('hidden');
+        document.querySelectorAll('.gastos-item').forEach(el => el.classList.toggle('ativo', el === item));
+        if (window.lucide) lucide.createIcons();
+    }
+    function fecharGastos() {
+        document.getElementById('gastosColuna').classList.add('hidden');
+        mudarAba('inicio', document.getElementById('tab-inicio'));
+    }
+
+    // ---------- Insumos de loja (mercado, limpeza, escritório...) — só Gestão ----------
+    let _insRegistrando = false;
+    function insIniciar() {
+        const campoData = document.getElementById('insData');
+        if (campoData && !campoData.value) campoData.valueAsDate = new Date();
+        carregarLojas().then(insCarregar);
+    }
+    async function insRegistrar() {
+        if (_insRegistrando) return;
+        const data = document.getElementById('insData').value || pgMesAtualStr() + '-' + String(new Date().getDate()).padStart(2, '0');
+        const categoria = document.getElementById('insCategoria').value;
+        const descricao = document.getElementById('insDescricao').value.trim();
+        const valor = parseFloat(String(document.getElementById('insValor').value).replace(',', '.'));
+        const forma_pagamento = document.getElementById('insPagamento').value;
+        if (!descricao) { mostrarToast('Digite o que foi comprado.', 'erro'); return; }
+        if (!(valor > 0)) { mostrarToast('Digite o valor do gasto.', 'erro'); return; }
+        const lojaId = lojaIdParaGravar();
+        if (!lojaId) { mostrarToast('Escolha uma loja no seletor à esquerda antes de registrar.', 'erro'); return; }
+        _insRegistrando = true;
+        const btn = document.getElementById('insBtnRegistrar'); if (btn) btn.disabled = true;
+        try {
+            const { error } = await medirPromise('Insumos de loja', () =>
+                supabaseDB.from('insumos_loja').insert({ loja_id: lojaId, data, categoria, descricao, valor: Math.round(valor * 100) / 100, forma_pagamento }));
+            if (error) throw new Error(error.message);
+            mostrarToast('Gasto registrado!');
+            document.getElementById('insDescricao').value = '';
+            document.getElementById('insValor').value = '';
+            document.getElementById('insDescricao').focus();
+            await insCarregar();
+        } catch (e) { mostrarToast('' + e.message, 'erro'); }
+        finally { _insRegistrando = false; if (btn) btn.disabled = false; }
+    }
+    async function insExcluir(id) {
+        if (!confirm('Excluir esse gasto?')) return;
+        try {
+            const { error } = await medirPromise('Insumos de loja', () => supabaseDB.from('insumos_loja').delete().eq('id', id));
+            if (error) throw new Error(error.message);
+            mostrarToast('Gasto excluído.');
+            await insCarregar();
+        } catch (e) { mostrarToast('' + e.message, 'erro'); }
+    }
+    function insEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+    async function insCarregar() {
+        const tbody = document.getElementById('insLinhas');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="7" class="ep-empty">Carregando...</td></tr>';
+        try {
+            let query = supabaseDB.from('insumos_loja').select('*').order('data', { ascending: false }).order('criado_em', { ascending: false });
+            const filtroLoja = lojaIdParaFiltro();
+            if (filtroLoja) query = query.eq('loja_id', filtroLoja);
+            const { data: todos, error } = await medirPromise('Insumos de loja', () => query);
+            if (error) throw new Error(error.message);
+
+            // Mesmo seletor de meses das Garantias (reaproveita a função, em outro <select>)
+            const sel = document.getElementById('insFiltroMes');
+            const atual = sel.value;
+            const meses = Array.from(new Set((todos || []).map(p => String(p.data || '').slice(0, 7)).filter(Boolean))).sort().reverse();
+            const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+            sel.innerHTML = '<option value="">Mês atual</option>' + meses.map(am => { const [a, m] = am.split('-'); return `<option value="${am}">${nomesMeses[parseInt(m, 10) - 1]}/${a}</option>`; }).join('');
+            if (atual && meses.includes(atual)) sel.value = atual;
+
+            const mesFiltro = sel.value || pgMesAtualStr();
+            const catFiltro = document.getElementById('insFiltroCategoria').value;
+            const doMes = (todos || []).filter(p => String(p.data || '').slice(0, 7) === mesFiltro);
+            const lista = catFiltro ? doMes.filter(p => p.categoria === catFiltro) : doMes;
+            const nomeLoja = id => { const l = LOJAS_CACHE.find(x => x.id === id); return l ? l.nome : '-'; };
+
+            tbody.innerHTML = lista.length ? lista.map(p => `
+                <tr>
+                    <td class="ep-mono" style="font-size:11px;">${pgFormatarDataBR(p.data)}</td>
+                    <td><span class="ep-badge saida">${insEsc(p.categoria)}</span></td>
+                    <td>${insEsc(p.descricao)}</td>
+                    <td style="color:var(--text-muted);font-size:12px;">${insEsc(p.forma_pagamento || '-')}</td>
+                    <td class="ep-mono" style="text-align:right;">${pgFormatarMoeda(p.valor)}</td>
+                    <td style="font-size:11px;color:var(--text-muted);">${insEsc(nomeLoja(p.loja_id))}</td>
+                    <td style="text-align:center;"><button onclick="insExcluir('${p.id}')" style="display:inline-flex;background:none;border:none;color:#f87171;cursor:pointer;" title="Excluir"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></td>
+                </tr>`).join('') : '<tr><td colspan="7" class="ep-empty">Nenhum gasto registrado nesse período.</td></tr>';
+
+            // Totais do mês (independem do filtro de categoria) + mês anterior pra comparar
+            const soma = l => l.reduce((s, p) => s + (parseFloat(p.valor) || 0), 0);
+            const [a, m] = mesFiltro.split('-').map(Number);
+            const ant = new Date(a, m - 2, 1);
+            const mesAnt = ant.getFullYear() + '-' + String(ant.getMonth() + 1).padStart(2, '0');
+            const totalMes = soma(doMes);
+            const totalAnt = soma((todos || []).filter(p => String(p.data || '').slice(0, 7) === mesAnt));
+            const porCat = {};
+            doMes.forEach(p => { porCat[p.categoria] = (porCat[p.categoria] || 0) + (parseFloat(p.valor) || 0); });
+            const cats = Object.entries(porCat).sort((x, y) => y[1] - x[1]);
+            document.getElementById('insStatTotal').textContent = pgFormatarMoeda(totalMes);
+            document.getElementById('insStatAnterior').textContent = pgFormatarMoeda(totalAnt);
+            document.getElementById('insStatMaior').textContent = cats.length ? cats[0][0] : '—';
+            document.getElementById('insStatQtd').textContent = doMes.length;
+            const painel = document.getElementById('insPainelCats');
+            painel.style.display = cats.length ? '' : 'none';
+            document.getElementById('insCats').innerHTML = cats.map(([c, v]) => `
+                <div class="ins-cat"><span>${insEsc(c)}</span><div class="ins-cat-barra"><i style="width:${totalMes ? Math.max(3, Math.round(v / totalMes * 100)) : 0}%"></i></div><span class="ins-cat-valor">${pgFormatarMoeda(v)}</span></div>`).join('');
+            if (window.lucide) lucide.createIcons();
+        } catch (e) {
+            console.error('Erro ao carregar insumos de loja:', e);
+            tbody.innerHTML = '<tr><td colspan="7" class="ep-empty" style="color:#f87171;">Erro ao carregar.</td></tr>';
         }
     }
 
@@ -7318,6 +7575,11 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
             const col = document.getElementById('configColuna');
             if (col) col.classList.add('hidden');
         }
+        // Sair de Gastos de operação esconde a coluna dele
+        if (idAba !== 'perdasgarantia' && idAba !== 'insumos') {
+            const colG = document.getElementById('gastosColuna');
+            if (colG) colG.classList.add('hidden');
+        }
         document.querySelectorAll('.modulo-aba').forEach(el => {
             el.classList.add('hidden'); el.classList.remove('fade-in');
         });
@@ -7337,6 +7599,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         if (idAba === 'clientes') clientesCarregar();
         if (idAba === 'dashboard') dashboardCarregar();
         if (idAba === 'perdasgarantia') pgIniciar();
+        if (idAba === 'insumos') insIniciar();
         if (idAba === 'admin') { carregarDadosAdminAvaliacao(); setTimeout(atualizarPreviewPDF, 100); svaIniciar(); carregarConfigSeguranca(); vendedoresAdminCarregar(); }
         if (idAba === 'laudotecnico') ltIniciar();
         if (idAba === 'avisos') avisosCarregar();
