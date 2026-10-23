@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261023210000">
+    <meta name="app-build" content="20261024090000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -311,6 +311,34 @@
         }
 
         .nav-btn:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
+        /* "App desatualizado": aparece no topo do menu quando a pessoa adia a atualização */
+        .nav-btn.nav-desatualizado { color: #f5b942; border-color: rgba(245,185,66,.35); background: rgba(245,185,66,.08); margin-bottom: 6px; }
+        .nav-btn.nav-desatualizado:hover { background: rgba(245,185,66,.16); color: #ffd27a; }
+        body.modo-claro .nav-btn.nav-desatualizado { color: #a86a00; background: rgba(245,185,66,.14); }
+        .nav-desatualizado .nav-ponto { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: #f5b942; animation: navPontoPulsa 1.6s ease-in-out infinite; }
+        @keyframes navPontoPulsa { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
+        /* Aviso de versão nova: cartão no topo, não trava a tela */
+        .aviso-versao { position: fixed; top: 16px; left: 50%; transform: translate(-50%, -20px); opacity: 0; z-index: 99990;
+            width: min(420px, calc(100vw - 24px)); background: #1b1b20; border: 1px solid rgba(245,185,66,.45);
+            border-radius: 14px; padding: 14px 16px; box-shadow: 0 18px 50px rgba(0,0,0,.45); display: flex; gap: 12px; align-items: flex-start;
+            transition: transform .3s ease, opacity .3s ease; padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+        body.modo-claro .aviso-versao { background: #fff; }
+        .aviso-versao.visivel { transform: translate(-50%, 0); opacity: 1; }
+        .aviso-versao b { display: block; font-size: 14px; color: var(--text-main); margin-bottom: 3px; }
+        .aviso-versao p { margin: 0 0 10px; font-size: 12.5px; color: var(--text-muted); line-height: 1.45; }
+        .aviso-versao .botoes { display: flex; gap: 8px; }
+        .aviso-versao button { border-radius: 8px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; border: 1px solid var(--border-color, #333); }
+        .aviso-versao .agora { background: var(--primary, #d4af37); color: #1a1200; border-color: transparent; }
+        .aviso-versao .depois { background: none; color: var(--text-main); }
+        /* No celular o menu é uma barra que rola de lado: o aviso também vira uma pílula no topo */
+        .pilula-desatualizado { display: none; }
+        @media (max-width: 768px) {
+            .pilula-desatualizado { display: inline-flex; position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+                z-index: 9000; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(245,185,66,.5);
+                background: #1b1b20; color: #f5b942; font-size: 11.5px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+            body.modo-claro .pilula-desatualizado { background: #fff; color: #a86a00; }
+        }
+        @media (prefers-reduced-motion: reduce) { .aviso-versao { transition: none; } .nav-desatualizado .nav-ponto { animation: none; } }
         .nav-btn .nav-icon { display: inline-flex; }
         .nav-btn .nav-icon svg { width: 16px; height: 16px; flex-shrink: 0; }
 
@@ -3298,6 +3326,7 @@ body.modo-claro .main-content {
         </div>
 
         <nav class="nav-menu">
+            <button class="nav-btn nav-desatualizado" id="navAppDesatualizado" style="display:none;" onclick="atualizarAppAgora()" title="Saiu uma versão nova. Clique para atualizar (salve o que estiver fazendo antes)."><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></span><span class="nav-label">App desatualizado</span><span class="nav-ponto"></span></button>
             <button class="nav-btn" id="tab-inicio" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('inicio', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></span><span class="nav-label">Avaliação</span></button>
             <button class="nav-btn" id="tab-crm" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('crm', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span><span class="nav-label">Cadastro de Vendas</span><span class="nav-badge" id="navBadgeCrm"></span></button>
             <button class="nav-btn" id="tab-pecas" data-perfis="loja_norte,loja_sul,gestao" onclick="mudarAba('pecas', this)"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><span class="nav-label">Valores de Serviços</span></button>
@@ -12638,7 +12667,7 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
     // Não existe número de versão pra manter atualizado a cada deploy: a gente
     // simplesmente pergunta pro servidor "esse arquivo mudou desde que eu carreguei?"
     // usando o cabeçalho ETag/Last-Modified que o GitHub Pages já manda sozinho.
-    // Se mudou, é porque saiu um deploy novo — trava a tela com aviso pra recarregar.
+    // Se mudou, é porque saiu um deploy novo — avisa num cartão que dá pra adiar.
     // ==========================================
     let _versaoAppCarregada = null;
     let _verificarVersaoInterval = null;
@@ -12668,22 +12697,53 @@ Aparelhos Desligados/Sem Teste: Se o aparelho entrou desligado ou sem condiçõe
         }
     }
 
+    // Saiu versão nova: em vez de travar a tela, mostra um cartão no topo com "Atualizar agora"
+    // ou "Depois". Adiou? Fica só o item "App desatualizado" no topo do menu, que atualiza
+    // quando a pessoa clicar — sem perder o que estava fazendo no meio.
     function mostrarAvisoNovaVersao() {
-        if (document.getElementById('overlayNovaVersao')) return; // já está mostrando, evita duplicar
         if (_verificarVersaoInterval) clearInterval(_verificarVersaoInterval); // já achou, para de checar
-
-        const overlay = document.createElement('div');
-        overlay.id = 'overlayNovaVersao';
-        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
-        overlay.innerHTML = `
-            <div style="background:var(--bg-card, #1a1a1a);border:1px solid var(--border-color, #333);border-radius:14px;padding:32px 28px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-                <div style="margin-bottom:10px;display:flex;justify-content:center;"><i data-lucide="refresh-cw" style="width:42px;height:42px;color:var(--primary, #d4af37);"></i></div>
-                <h3 style="margin:0 0 10px;color:var(--text-main, #fff);font-size:18px;">Nova versão disponível</h3>
-                <p style="margin:0 0 22px;color:var(--text-muted, #999);font-size:13.5px;line-height:1.5;">O sistema foi atualizado. Recarregue a página pra continuar usando a versão mais recente — pode salvar o que estiver fazendo antes.</p>
-                <button onclick="window.location.reload()" style="width:100%;padding:13px;border:none;border-radius:8px;background:var(--primary, #d4af37);color:#1a1200;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;"><i data-lucide="refresh-cw" style="width:15px;height:15px;"></i> Atualizar agora</button>
+        if (document.getElementById('avisoNovaVersao')) return;
+        const adiado = (() => { try { return sessionStorage.getItem('appAtualizacaoAdiada') === '1'; } catch (e) { return false; } })();
+        if (adiado) { mostrarItemDesatualizado(); return; }
+        const aviso = document.createElement('div');
+        aviso.id = 'avisoNovaVersao';
+        aviso.className = 'aviso-versao';
+        aviso.setAttribute('role', 'status');
+        aviso.innerHTML = `
+            <i data-lucide="refresh-cw" style="width:20px;height:20px;color:#f5b942;flex-shrink:0;margin-top:2px;"></i>
+            <div style="flex:1;min-width:0;">
+                <b>Nova versão disponível</b>
+                <p>Atualize quando puder. Se estiver no meio de algo, termine e salve antes.</p>
+                <div class="botoes">
+                    <button type="button" class="agora" onclick="atualizarAppAgora()">Atualizar agora</button>
+                    <button type="button" class="depois" onclick="adiarAtualizacaoApp()">Depois</button>
+                </div>
             </div>`;
-        document.body.appendChild(overlay);
+        document.body.appendChild(aviso);
         if (window.lucide) lucide.createIcons();
+        requestAnimationFrame(() => aviso.classList.add('visivel'));
+    }
+    function adiarAtualizacaoApp() {
+        try { sessionStorage.setItem('appAtualizacaoAdiada', '1'); } catch (e) {}
+        const aviso = document.getElementById('avisoNovaVersao');
+        if (aviso) { aviso.classList.remove('visivel'); setTimeout(() => aviso.remove(), 320); }
+        mostrarItemDesatualizado();
+    }
+    function mostrarItemDesatualizado() {
+        const item = document.getElementById('navAppDesatualizado');
+        if (item) item.style.display = '';
+        if (!document.getElementById('pilulaDesatualizado')) {
+            const p = document.createElement('button');
+            p.type = 'button'; p.id = 'pilulaDesatualizado'; p.className = 'pilula-desatualizado';
+            p.title = 'Saiu uma versão nova. Toque para atualizar.';
+            p.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg> App desatualizado';
+            p.onclick = atualizarAppAgora;
+            document.body.appendChild(p);
+        }
+    }
+    function atualizarAppAgora() {
+        try { sessionStorage.removeItem('appAtualizacaoAdiada'); } catch (e) {}
+        window.location.reload();
     }
 
     function iniciarVerificacaoDeAtualizacao() {
