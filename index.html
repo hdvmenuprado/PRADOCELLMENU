@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br"><head>
     <meta charset="UTF-8">
-    <meta name="app-build" content="20261023180000">
+    <meta name="app-build" content="20261023210000">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WORKSPACE PRADO</title>
     <link rel="icon" type="image/png" href="logo.png">
@@ -13187,6 +13187,8 @@ function osPreencherDatasetLinha(tr, os) {
     tr.dataset.data = os.data || '';
     tr.dataset.criadoEm = os.criadoEm || '';
     tr.dataset.total = parseFloat(os.total||0).toFixed(2);
+    tr.dataset.custoPeca = parseFloat(os.custoPeca||0).toFixed(2);
+    tr.dataset.maoDeObra = parseFloat(os.maoDeObra||0).toFixed(2);
 }
 
 // Uma linha é considerada "em edição" quando o usuário está DIGITANDO em algum campo dela
@@ -13211,7 +13213,11 @@ function osLinhaEmEdicao(tr) {
 // Quando `forcarTudo` é true (linha recém-criada), atualiza também os campos editáveis;
 // caso contrário, respeita o que o usuário estiver digitando/tiver focado.
 function osAtualizarLinha(tr, os, forcarTudo) {
+    // Peça e mão de obra entram na conta: mover R$ de uma pra outra mantém o total igual,
+    // e antes isso fazia o outro PC nunca atualizar esses dois campos.
     const dadosMudaram = tr.dataset.total !== parseFloat(os.total||0).toFixed(2)
+        || tr.dataset.custoPeca !== parseFloat(os.custoPeca||0).toFixed(2)
+        || tr.dataset.maoDeObra !== parseFloat(os.maoDeObra||0).toFixed(2)
         || tr.dataset.reparo !== (os.reparo||'')
         || tr.dataset.descricao !== (os.descricao||'')
         || tr.dataset.garantiaDias !== osGarantiaDiasStr(os.garantiaDias)
@@ -13392,6 +13398,12 @@ function osRenderizarLista(lista) {
         if (tr) {
             if (!osLinhaProtegida(chave) && !osLinhaEmEdicao(tr)) {
                 osAtualizarLinha(tr, os, false);
+                delete tr.dataset.atrasada;
+            } else {
+                // Pulada agora (alguém com o cursor nela ou acabou de salvar). Fica marcada pra
+                // ser reaplicada assim que liberar — antes o refresh dava o dado como "visto" e a
+                // linha só se corrigia com F5.
+                tr.dataset.atrasada = '1';
             }
         } else {
             tr = osCriarLinha(os);
@@ -13402,9 +13414,26 @@ function osRenderizarLista(lista) {
         anterior = tr;
     });
 
+    _osTemAtrasada = !!tbody.querySelector('tr[data-atrasada]');
     osAtualizarTotal();
     if (window.lucide) lucide.createIcons();
 }
+let _osTemAtrasada = false;
+
+// Re-renderiza a tabela a partir da lista já baixada, sem buscar de novo (mantém o scroll)
+function osReaplicarAtrasadas() {
+    if (!_osTemAtrasada || !_osCarregouUmaVez) return;
+    const mainContent = document.querySelector('.main-content');
+    const scrollPos = mainContent ? mainContent.scrollTop : 0;
+    osFiltrarTabela();
+    if (mainContent) mainContent.scrollTop = scrollPos;
+}
+// Saiu do campo de uma linha que ficou pra trás: reaplica logo depois (dá tempo do foco ir
+// pro próximo campo e de um "Salvar" proteger a linha antes).
+document.addEventListener('focusout', e => {
+    if (!_osTemAtrasada || !e.target.closest || !e.target.closest('#osLinhas')) return;
+    setTimeout(osReaplicarAtrasadas, 800);
+});
 
 // Escopo da busca: 'mes' = somente mês atual, 'todos' = todos os meses
 let _osEscopoBusca = 'mes';
@@ -13756,18 +13785,24 @@ function osCarregar() {
 }
 
 // Atualização silenciosa: busca dados, compara com o último hash conhecido, só renderiza se mudou
+let _osRefreshDesde = 0; // quando a busca em segundo plano que está a caminho começou (0 = nenhuma)
 function osAutoRefreshSilencioso() {
+    // Internet lenta: se a busca anterior ainda não voltou, não dispara outra. Antes cada nova
+    // busca (a cada 3s) fazia a resposta anterior ser jogada fora, e com respostas demorando
+    // mais de 3s nenhuma atualização chegava. Passou de 15s, considera perdida e tenta de novo.
+    if (_osRefreshDesde && Date.now() - _osRefreshDesde < 15000) return;
     const escopo = osEscopoParaBackend();
     // Se o escopo mudou desde a última busca (usuário trocou o filtro entre um poll e
     // outro), delega pro osCarregar — que já mostra "Carregando..." e busca o escopo
     // certo — em vez de comparar hash de dois escopos diferentes (mês atual vs. todos).
     if (escopo !== _osUltimoEscopoCarregado) { osCarregar(); return; }
     const seq = ++_osFetchSeq;
+    const minhaVez = _osRefreshDesde = Date.now();
     medirPromise('O.S.', () => osBuscarLista(escopo)).then(lista=>{
-        if (seq !== _osFetchSeq) return; // resposta atrasada de uma busca antiga — ignora
+        if (seq !== _osFetchSeq) return; // um osCarregar mais novo passou na frente — ignora
         atualizarIndicadorConexao(true);
         const novoHash = JSON.stringify(lista);
-        if (novoHash === _osUltimoHash) return; // nada mudou, não mexe na tela
+        if (novoHash === _osUltimoHash) { osReaplicarAtrasadas(); return; } // nada novo; só tenta de novo as linhas que ficaram pra trás
         _osListaCompleta = lista;
         osPopularFiltroMes();
         // Salva posição do scroll antes de atualizar (o diff já preserva a posição na maioria
@@ -13789,8 +13824,15 @@ function osAutoRefreshSilencioso() {
         // dar pra descobrir a causa real se voltar a travar em algum dispositivo.
         console.error('Falha ao atualizar O.S. em segundo plano:', err);
         atualizarIndicadorConexao(false);
-    });
+    }).finally(() => { if (_osRefreshDesde === minhaVez) _osRefreshDesde = 0; });
 }
+
+// (4) Janela minimizada/outra aba: o navegador desacelera os timers (até 1 busca por minuto).
+// Ao voltar pra janela, ou quando a internet volta, busca na hora.
+function osAtualizarAoVoltar() { if (_osCarregouUmaVez && !document.hidden) osAutoRefreshSilencioso(); }
+document.addEventListener('visibilitychange', osAtualizarAoVoltar);
+window.addEventListener('focus', osAtualizarAoVoltar);
+window.addEventListener('online', osAtualizarAoVoltar);
 
 // Intervalo do auto-refresh silencioso da aba OS: mais rápido enquanto a aba
 // está aberta na tela, mais espaçado quando o usuário está em outra aba —
